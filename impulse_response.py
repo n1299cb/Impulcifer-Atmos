@@ -12,7 +12,7 @@ import nnresample
 from copy import deepcopy
 from autoeq.frequency_response import FrequencyResponse
 from utils import magnitude_response, get_ylim, running_mean
-from constants import COLORS
+from constants import COLORS, PRESERVE_ROOM_RESPONSE
 
 
 class ImpulseResponse:
@@ -279,6 +279,8 @@ class ImpulseResponse:
 
     def crop_head(self, head_ms=1):
         """Crops away head."""
+        if PRESERVE_ROOM_RESPONSE:
+            return
         self.data = self.data[self.peak_index() - int(self.fs * head_ms / 1000):]
 
     def equalize(self, fir):
@@ -317,6 +319,8 @@ class ImpulseResponse:
         Returns:
             None
         """
+        if PRESERVE_ROOM_RESPONSE:
+            return
         peak_index, knee_point_index, _, _ = self.decay_params()
         edt, rt20, rt30, rt60 = self.decay_times()
         rt_slope = None
@@ -384,6 +388,11 @@ class ImpulseResponse:
         Returns:
             Figure
         """
+        # Skips plotting if empty or silent
+        if self.data is None or np.allclose(self.data, 0.0):
+            print(f"[WARN] Skipping plot — Impulse response is empty or silent.")
+            return fig
+
         if fig is None:
             # Create figure and axises for the plots
             fig = plt.figure()

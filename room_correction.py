@@ -9,7 +9,7 @@ from autoeq.frequency_response import FrequencyResponse
 from impulse_response import ImpulseResponse
 from hrir import HRIR
 from utils import sync_axes, save_fig_as_png, read_wav, get_ylim, config_fr_axis
-from constants import SPEAKER_NAMES, SPEAKER_LIST_PATTERN, IR_ROOM_SPL, COLORS
+from constants import SPEAKER_NAMES, SPEAKER_LIST_PATTERN, APPLY_ROOM_CORRECTION, IR_ROOM_SPL, COLORS
 
 
 def room_correction(
@@ -38,6 +38,10 @@ def room_correction(
         - Room Impulse Responses as HRIR or None
         - Equalization frequency responses as dict of dicts (similar to HRIR) or None
     """
+    #Bypass Room Correction Logic
+    if not APPLY_ROOM_CORRECTION:
+        return None, None
+    
     # Open files
     target = open_room_target(estimator, dir_path, target=target)
     mic_calibration = open_mic_calibration(estimator, dir_path, mic_calibration=mic_calibration)

@@ -104,7 +104,7 @@ def get_ylim(x, padding=0.1):
     return lower, upper
 
 
-def versus_distance(angle=30, distance=3, breadth=0.148, ear='primary', sound_field='reverberant', sound_velocity=343):
+def versus_distance(angle=30, distance=3, breadth=0.148, ear='primary', sound_field='diffuse', sound_velocity=343):
     """Calculates speaker-ear distance delta, dealy delta and SPL delta
 
     Speaker-ear distance delta is the difference between distance from speaker to middle of the head and distance from

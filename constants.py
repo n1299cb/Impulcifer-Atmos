@@ -1,44 +1,78 @@
 # -*- coding: utf-8 -*-
 
 from utils import versus_distance
+# **GPT INSERT**
+SPEAKER_NAMES = [
+    'FL', 'FR',  # 0–1
+    'FC',        # 2
+    'LFE',       # 3
+    'SL', 'SR',  # 4–5 (Side surrounds)
+    'BL', 'BR',  # 6–7 (Back surrounds)
+    'WL', 'WR',  # 8–9 (Wide L/R)
+    'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR'  # 10–15
+]
 
-# https://en.wikipedia.org/wiki/Surround_sound
-SPEAKER_NAMES = ['FL', 'FR', 'FC', 'BL', 'BR', 'SL', 'SR']
+# OLD SPEAKER NAMES - PRE GPT
+#SPEAKER_NAMES = ['FL', 'FR', 'FC', 'BL', 'BR', 'SL', 'SR', 'WL', 'WR', 'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR']
 
+# **GPT INSERT** FOR REFERENTIAL LAYOUTS - OMITS LFE
+SPEAKER_LAYOUT_INDEXES = {
+    "2.0": [(0, 1)],        # Front Left, Front Right
+    "5.1": [(0, 1), (2,), (6, 7)],        # 2.0 plus Center, Back Left and Back Right
+    "7.1": [(0, 1), (2,), (4, 5), (6, 7)], # 5.1 plus Side Left, Side Right, then Back Left Back Right
+    "7.1.4": [(0, 1), (2,), (4, 5), (6, 7), (10, 11), (14, 15)],
+    "9.1.6": [
+        (0, 1),    # Front Left, Front Right
+        (2,),      # Center
+        (4, 5),    # Side Left, Side Right
+        (6, 7),    # Back Left, Back Right
+        (8, 9),    # Wide Left, Wide Right
+        (10, 11),  # Top Front Left, Top Front Right
+        (12, 13),  # Top Middle Left, Top Middle Right
+        (14, 15)   # Top Back Left, Top Back Right
+    ]
+}
+# **GPT INSERT**
+# === Resolved layout mappings (label groups)
+SPEAKER_LAYOUTS = {
+    name: [[SPEAKER_NAMES[i] for i in group] for group in groups]
+    for name, groups in SPEAKER_LAYOUT_INDEXES.items()
+}
+# **GPT INSERT**
+# === Regex patterns and helpers (unchanged)
 SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
-SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(speaker_pattern=SPEAKER_PATTERN)
+SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(
+    speaker_pattern=SPEAKER_PATTERN
+)
 
-SPEAKER_ANGLES = {
-    'FL': 30,
-    'FR': -30,
-    'FC': 0,
-    'BL': 150,
-    'BR': -150,
-    'SL': 90,
-    'SR': -90
-}
+# OLD SPEAKER PATTERN LOGIC - PRE GPT
+#SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
+#SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(speaker_pattern=SPEAKER_PATTERN)
 
-# Speaker delays relative to the nearest speaker
-SPEAKER_DELAYS = {
-    _speaker: versus_distance(angle=abs(SPEAKER_ANGLES[_speaker]), ear='primary')[1] for _speaker in SPEAKER_NAMES
-}
-for _speaker in SPEAKER_DELAYS.keys():
-    SPEAKER_DELAYS[_speaker] -= min(*SPEAKER_DELAYS.values())
+SPEAKER_DELAYS = { _speaker: 0 for _speaker in SPEAKER_NAMES }
+
+# Applies diffuse-field compensation to HRIRs
+APPLY_DIFFUSE_FIELD_COMPENSATION = False
+
+# Applies headphone EQ compensation
+APPLY_HEADPHONE_EQ = True
+
+# Applies room correction filtering (e.g., smoothing or flattening)
+APPLY_ROOM_CORRECTION = False
+
+# If True, preserves the room's full impulse response, avoids normalization/truncation
+PRESERVE_ROOM_RESPONSE = True
+
+# Applies directional gains in order to correctly calibrate ITD
+APPLY_DIRECTIONAL_GAINS = False
 
 # Each channel, left and right
 IR_ORDER = []
-# SPL change relative to middle of the head
-IR_ROOM_SPL = dict()
-for _speaker in SPEAKER_NAMES:
-    if _speaker not in IR_ROOM_SPL:
-        IR_ROOM_SPL[_speaker] = dict()
-    for _side in ['left', 'right']:
-        IR_ORDER.append(f'{_speaker}-{_side}')
-        IR_ROOM_SPL[_speaker][_side] = versus_distance(
-            angle=abs(SPEAKER_ANGLES[_speaker]),
-            ear='primary' if _side[0] == _speaker.lower()[1] else 'secondary'
-        )[2]
-
+# SPL change relative to middle of the head - disable
+IR_ROOM_SPL =  {
+    sp: {'left': 0.0, 'right': 0.0}
+    for sp in SPEAKER_NAMES
+}
 COLORS = {
     'lightblue': '#7db4db',
     'blue': '#1f77b4',
@@ -50,8 +84,40 @@ COLORS = {
 }
 
 HESUVI_TRACK_ORDER = ['FL-left', 'FL-right', 'SL-left', 'SL-right', 'BL-left', 'BL-right', 'FC-left', 'FR-right',
-                      'FR-left', 'SR-right', 'SR-left', 'BR-right', 'BR-left', 'FC-right']
+                      'FR-left', 'SR-right', 'SR-left', 'BR-right', 'BR-left', 'FC-right', 'WL-left', 'WL-right', 'WR-left', 'WR-right', 'TFL-left', 'TFL-right',
+                             'TFR-left', 'TFR-right', 'TSL-left', 'TSL-right', 'TSR-left', 'TSR-right',
+                             'TBL-left', 'TBL-right', 'TBR-left', 'TBR-right']
 
 HEXADECAGONAL_TRACK_ORDER = ['FL-left', 'FL-right', 'FR-left', 'FR-right', 'FC-left', 'FC-right', 'LFE-left',
                              'LFE-right', 'BL-left', 'BL-right', 'BR-left', 'BR-right', 'SL-left', 'SL-right',
-                             'SR-left', 'SR-right']
+                             'SR-left', 'SR-right', 'WL-left', 'WL-right', 'WR-left', 'WR-right', 'TFL-left', 'TFL-right',
+                             'TFR-left', 'TFR-right', 'TSL-left', 'TSL-right', 'TSR-left', 'TSR-right',
+                             'TBL-left', 'TBL-right', 'TBR-left', 'TBR-right']
+
+# **GPT INSERT** For manual channel assignment in GUI or presets
+# Dynamically map channel index to name using the default layout (first entry in SPEAKER_NAMES)
+CHANNEL_LABELS = {i: name for i, name in enumerate(SPEAKER_NAMES)}
+# **GPT INSERT**
+# Optional: if you want to reverse it for label-to-index usage in GUI
+CHANNEL_LABELS_REVERSE = {name: i for i, name in CHANNEL_LABELS.items()}
+# **GPT INSERT**
+# Map layout name to flat list of speaker indices
+FORMAT_PRESETS = {
+    name: [idx for group in groups for idx in group]
+    for name, groups in SPEAKER_LAYOUT_INDEXES.items()
+}
+# SMPTE layout index definitions per format
+SMPTE_LAYOUT_INDEXES = {
+    "2.0": [(0, 1)],
+    "5.1": [(0, 1), (2,), (3,), (6, 7)],
+    "7.1": [(0, 1), (2,), (3,), (4, 5), (6, 7)],
+    "7.1.4": [(0, 1), (2,), (3,), (4, 5), (6, 7), (10, 11), (14, 15)],
+    "9.1.6": [(0, 1), (2,), (3,), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13), (14, 15)]
+}
+# Preset orders using SPEAKER_LAYOUT_INDEXES for SMPTE
+# Flattened versions for GUI use
+SMPTE_ORDER = {
+    fmt: [i for group in SMPTE_LAYOUT_INDEXES[fmt] for i in group]
+    for fmt in SMPTE_LAYOUT_INDEXES
+}
+

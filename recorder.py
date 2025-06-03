@@ -41,6 +41,8 @@ def record_target(file_path, length, fs, channels=2, append=False):
             recording = np.pad(data, [(0, 0), (0, data.shape[1] - recording.shape[1])])
         # Add recording to the end of the existing data
         recording = np.vstack([data, recording])
+    if args.output_file:
+        file_path = args.output_file
     write_wav(file_path, fs, recording)
     print(f'Headroom: {-1.0*max_gain:.1f} dB')
 
@@ -194,6 +196,13 @@ def play_and_record(
     out_dir, out_file = os.path.split(os.path.abspath(record))
     os.makedirs(out_dir, exist_ok=True)
 
+    # Validate speaker layout from filename
+    speaker_names = os.path.splitext(out_file)[0].split(',')
+    if len(speaker_names) != channels:
+        print(f"Warning: {len(speaker_names)} speaker labels in filename, but {channels} output channels specified.")
+        expected_layout = "FL,FR,FC,SL,SR,BL,BR,WL,WR,TFL,TFR,TSL,TSR,TBL,TBR"
+        print(f"Expected speaker layout for 9.1.6:\n  {expected_layout}")
+    
     # Read playback file
     fs, data = read_wav(play)
     n_channels = data.shape[0]
@@ -243,12 +252,14 @@ def create_cli():
                                  'find out which devices are available. It\'s possible to add host API at the end of '
                                  'the output device name separated by space to specify which host API to use. For '
                                  'example: "Zoom H1n WASAPI"')
+    arg_parser.add_argument('--output_file', type=str, default=None,
+                            help='Optional custom output filename (e.g., headphones.wav). Overrides automatic naming.')
     arg_parser.add_argument('--host_api', type=str, default=argparse.SUPPRESS,
                             help='Host API name to prefer for input and output devices. Supported options on Windows '
                                  'are: "MME", "DirectSound" and "WASAPI". This is used when input and '
                                  'output devices have not been specified (using system defaults) or if they have no '
                                  'host API specified.')
-    arg_parser.add_argument('--channels', type=int, default=2, help='Number of output channels.')
+    arg_parser.add_argument('--channels', type=int, default=16, help='Number of output channels.')
     arg_parser.add_argument('--append', action='store_true',
                             help='Add track(s) to existing file? Silence will be added to the end of all tracks to '
                                  'make the equal in length.')

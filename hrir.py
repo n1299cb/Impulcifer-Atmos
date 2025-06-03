@@ -2,14 +2,16 @@
 
 import os
 import warnings
+import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal, fftpack
+from scipy.signal import correlate
 from PIL import Image
 from autoeq.frequency_response import FrequencyResponse
 from impulse_response import ImpulseResponse
 from utils import read_wav, write_wav, magnitude_response, sync_axes
-from constants import SPEAKER_NAMES, SPEAKER_DELAYS, HEXADECAGONAL_TRACK_ORDER
+from constants import SPEAKER_NAMES, SPEAKER_DELAYS, HEXADECAGONAL_TRACK_ORDER, APPLY_DIFFUSE_FIELD_COMPENSATION, APPLY_HEADPHONE_EQ, PRESERVE_ROOM_RESPONSE
 
 
 class HRIR:
@@ -45,6 +47,10 @@ class HRIR:
                              'estimator\'s sampling rate.')
 
         fs, recording = read_wav(file_path, expand=True)
+
+        # Print Sample Rate of Estimator and Recorder
+        print(f"Recording fs: {fs}, Estimator fs: {self.fs}")
+
         if fs != self.fs:
             raise ValueError('Sampling rate of recording must match sampling rate of test signal.')
 
@@ -127,7 +133,12 @@ class HRIR:
             if ch not in ir_order:
                 irs.append(np.zeros(len(irs[0])))
                 ir_order.append(ch)
+        # New array stacking stability code **GPT INSERT**
+        max_len = max(ir.shape[0] for ir in irs)
+        irs = [np.pad(ir, (0, max_len - len(ir))) for ir in irs]
         irs = np.vstack(irs)
+        # Old stability code
+        #irs = np.vstack(irs)
 
         # Sort to output order
         irs = irs[[ir_order.index(ch) for ch in track_order], :]
@@ -141,42 +152,53 @@ class HRIR:
         Args:
             peak_target: Target gain of the peak in dB
             avg_target: Target gain of the mid frequencies average in dB
-
-        Returns:
-            None
         """
-        # Stack and sum all left and right ear impulse responses separately
+        # 왼쪽과 오른쪽 IR을 합산하여 전체 신호 생성
         left = []
         right = []
         for speaker, pair in self.irs.items():
             left.append(pair['left'].data)
             right.append(pair['right'].data)
+        # New Sum for Left and Right **GPT INSERT**
+        max_len = max(ir.shape[0] for ir in left)
+        left = [np.pad(ir, (0, max_len - len(ir))) for ir in left]
         left = np.sum(np.vstack(left), axis=0)
-        right = np.sum(np.vstack(right), axis=0)
+        max_len = max(ir.shape[0] for ir in right)
+        right = [np.pad(ir, (0, max_len - len(ir))) for ir in right]
+        right = np.sum(np.vstack(left), axis=0)
 
-        # Calculate magnitude responses
+        # Old Sum for Left and Right
+        #left = np.sum(np.vstack(left), axis=0)
+        #right = np.sum(np.vstack(right), axis=0)
+
+        # Magnitude response 계산
         f_l, mr_l = magnitude_response(left, self.fs)
         f_r, mr_r = magnitude_response(right, self.fs)
 
+        # gain 계산 (피크 또는 중역 평균 중 하나만 사용)
         if peak_target is not None and avg_target is None:
-            # Maximum absolute gain from both sides
-            gain = np.max(np.vstack([mr_l, mr_r])) * -1 + peak_target
-
+            # New **GPT INSERT**
+            gain = max(np.max(mr_l), np.max(mr_r)) * -1 + peak_target
+            # Old LionLion original logic
+            #gain = np.max(np.vstack([mr_l, mr_r])) * -1 + peak_target
         elif peak_target is None and avg_target is not None:
-            # Mid frequencies average from both sides
             gain = np.mean(np.concatenate([
                 mr_l[np.logical_and(f_l > 80, f_l < 6000)],
                 mr_r[np.logical_and(f_r > 80, f_r < 6000)]
-            ]))
-            gain = gain * -1 + avg_target
-
+            ])) * -1 + avg_target
         else:
             raise ValueError('One and only one of the parameters "peak_target" and "avg_target" must be given!')
 
-        # Scale impulse responses
+        # 전체 정규화 gain만 출력
+        print(f">>>>>>>>> Applied a normalization gain of {gain:.2f} dB to all channels")
+
+        # 계산된 gain 적용
+        factor = 10 ** (gain / 20)
         for speaker, pair in self.irs.items():
-            for ir in pair.values():
-                ir.data *= 10 ** (gain / 20)
+            for side, ir in pair.items():
+                ir.data *= factor
+
+
 
     def crop_heads(self, head_ms=1):
         """Crops heads of impulse responses
@@ -198,7 +220,7 @@ class HRIR:
             itd = np.abs(peak_left - peak_right) / self.fs
 
             # Speaker channel delay
-            head = head_ms * self.fs // 1000
+            head = int(head_ms * self.fs / 1000)
             delay = int(np.round(SPEAKER_DELAYS[speaker] * self.fs)) + head  # Channel delay in samples
 
             if peak_left < peak_right:
@@ -237,6 +259,9 @@ class HRIR:
 
     def crop_tails(self):
         """Crops out tails after every impulse response has decayed to noise floor."""
+        if PRESERVE_ROOM_RESPONSE:
+            return
+        
         if self.fs != self.estimator.fs:
             raise ValueError('Refusing to crop tails because HRIR\'s sampling rate doesn\'t match impulse response '
                              'estimator\'s sampling rate.')
@@ -259,6 +284,46 @@ class HRIR:
             for ir in pair.values():
                 ir.data = ir.data[:tail_ind]
                 ir.data *= np.concatenate([np.ones(len(ir.data) - len(window)), window])
+        
+    def align_ipsilateral_all(self,
+                              speaker_pairs=None,
+                              segment_ms=30):
+        if speaker_pairs is None:
+            speaker_pairs = [('FL','FR'),
+                             ('SL','SR'),
+                             ('BL','BR'),
+                             ('WL','WR'),
+                             ('TFL','TFR'),
+                             ('TSL','TSR'),
+                             ('TBL','TBR'),
+                             ('FC','FC')]
+            
+        fs = self.fs
+        seg_len = int(fs * segment_ms / 1000)
+
+        for sp1, sp2 in speaker_pairs:
+            if sp1 not in self.irs or sp2 not in self.irs:
+                continue
+
+            data1 = self.irs[sp1]['left'].data[:seg_len]
+            data2 = self.irs[sp2]['right'].data[:seg_len]
+
+            corr  = correlate(data1, data2, mode='full')
+            lags  = np.arange(-len(data1)+1, len(data1))
+            lag   = lags[np.argmax(corr)]
+
+            if lag > 0:
+                for side in ('left','right'):
+                    d = self.irs[sp2][side].data
+                    padded = np.concatenate((np.zeros(lag), d))[:len(d)]
+                    self.irs[sp2][side].data = padded
+
+            elif lag < 0:
+                neg = -lag
+                for side in ('left','right'):
+                    d = self.irs[sp1][side].data
+                    padded = np.concatenate((np.zeros(neg), d))[:len(d)]
+                    self.irs[sp1][side].data = padded
 
     def channel_balance_firs(self, left_fr, right_fr, method):
         """Creates FIR filters for correcting channel balance
@@ -275,6 +340,7 @@ class HRIR:
         Returns:
             List of two FIR filters as numpy arrays, first for left and second for right
         """
+
         if method == 'mids':
             # Find gain for right side
             # R diff - L diff = L mean - R mean
@@ -388,7 +454,7 @@ class HRIR:
 
         # Group the same left and right side speakers
         eqir = HRIR(self.estimator)
-        for speakers in [['FC'], ['FL', 'FR'], ['SL', 'SR'], ['BL', 'BR']]:
+        for speakers in [['FC'], ['FL', 'FR'], ['SL', 'SR'], ['BL', 'BR'], ['WL', 'WR'], ['TFL', 'TFR'], ['TSL', 'TSR'], ['TBL', 'TBR']]:
             if len([ch for ch in speakers if ch in self.irs]) < len(speakers):
                 # All the speakers in the current speaker group must exist, otherwise balancing makes no sense
                 continue
@@ -397,11 +463,25 @@ class HRIR:
             for speaker in speakers:
                 left.append(self.irs[speaker]['left'].data)
                 right.append(self.irs[speaker]['right'].data)
+            
             # Create frequency responses
+            # New **GPT INSERT**
+            max_len = max(ir.shape[0] for ir in left)
+            left = [np.pad(ir, (0, max_len - len(ir))) for ir in left]
             left_fr = ImpulseResponse(np.mean(np.vstack(left), axis=0), self.fs).frequency_response()
+            max_len = max(ir.shape[0] for ir in right)
+            right = [np.pad(ir, (0, max_len - len(ir))) for ir in right]
             right_fr = ImpulseResponse(np.mean(np.vstack(right), axis=0), self.fs).frequency_response()
-            # Create EQ FIR filters
-            firs = self.channel_balance_firs(left_fr, right_fr, method)
+            # Old freq response lacking padding for length ^^ see above for new
+            #left_fr = ImpulseResponse(np.mean(np.vstack(left), axis=0), self.fs).frequency_response()
+            #right_fr = ImpulseResponse(np.mean(np.vstack(right), axis=0), self.fs).frequency_response()
+
+            # Heaphone EQ Logic
+            if not APPLY_HEADPHONE_EQ:
+                firs = [signal.unit_impulse(128), signal.unit_impulse(128)]
+            else:
+                # Create EQ FIR filters
+                firs = self.channel_balance_firs(left_fr, right_fr, method)
             # Assign to speakers in EQ HRIR
             for speaker in speakers:
                 self.irs[speaker]['left'].equalize(firs[0])
@@ -411,13 +491,13 @@ class HRIR:
 
     def plot(self,
              dir_path=None,
-             plot_recording=True,
-             plot_spectrogram=True,
-             plot_ir=True,
-             plot_fr=True,
-             plot_decay=True,
-             plot_waterfall=True,
-             close_plots=True):
+             plot_recording=False,
+             plot_spectrogram=False,
+             plot_ir=False,
+             plot_fr=False,
+             plot_decay=False,
+             plot_waterfall=False,
+             close_plots=False):
         """Plots all impulse responses."""
         # Plot and save max limits
         figs = dict()
@@ -481,10 +561,20 @@ class HRIR:
         for speaker, pair in self.irs.items():
             for i, ir in enumerate(pair.values()):
                 stacks[i].append(ir.data)
-        left = ImpulseResponse(np.sum(np.vstack(stacks[0]), axis=0), self.fs)
+        # New Plot Logic **GPT INSERT**
+        max_len = max(ir.shape[0] for ir in stacks[0])
+        left_stack = [np.pad(ir, (0, max_len - len(ir))) for ir in stacks[0]]
+        left = ImpulseResponse(np.sum(np.vstack(left_stack), axis=0), self.fs)
+        # Old Plot Logic
+        #left = ImpulseResponse(np.sum(np.vstack(stacks[0]), axis=0), self.fs)
         left_fr = left.frequency_response()
         left_fr.smoothen_fractional_octave(window_size=1 / 3, treble_f_lower=20000, treble_f_upper=23999)
-        right = ImpulseResponse(np.sum(np.vstack(stacks[1]), axis=0), self.fs)
+        # New Plot Logic **GPT INSERT**
+        max_len = max(ir.shape[0] for ir in stacks[0])
+        right_stack = [np.pad(ir, (0, max_len - len(ir))) for ir in stacks[0]]
+        right = ImpulseResponse(np.sum(np.vstack(right_stack), axis=0), self.fs)
+        # Old Plot Logic
+        #right = ImpulseResponse(np.sum(np.vstack(stacks[1]), axis=0), self.fs)
         right_fr = right.frequency_response()
         right_fr.smoothen_fractional_octave(window_size=1 / 3, treble_f_lower=20000, treble_f_upper=23999)
 
