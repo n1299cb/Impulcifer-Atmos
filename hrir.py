@@ -165,7 +165,7 @@ class HRIR:
         left = np.sum(np.vstack(left), axis=0)
         max_len = max(ir.shape[0] for ir in right)
         right = [np.pad(ir, (0, max_len - len(ir))) for ir in right]
-        right = np.sum(np.vstack(left), axis=0)
+        right = np.sum(np.vstack(right), axis=0)
 
         # Old Sum for Left and Right
         #left = np.sum(np.vstack(left), axis=0)
@@ -570,8 +570,8 @@ class HRIR:
         left_fr = left.frequency_response()
         left_fr.smoothen_fractional_octave(window_size=1 / 3, treble_f_lower=20000, treble_f_upper=23999)
         # New Plot Logic **GPT INSERT**
-        max_len = max(ir.shape[0] for ir in stacks[0])
-        right_stack = [np.pad(ir, (0, max_len - len(ir))) for ir in stacks[0]]
+        max_len = max(ir.shape[0] for ir in stacks[1])
+        right_stack = [np.pad(ir, (0, max_len - len(ir))) for ir in stacks[1]]
         right = ImpulseResponse(np.sum(np.vstack(right_stack), axis=0), self.fs)
         # Old Plot Logic
         #right = ImpulseResponse(np.sum(np.vstack(stacks[1]), axis=0), self.fs)
