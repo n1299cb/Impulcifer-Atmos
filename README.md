@@ -1,4 +1,7 @@
 # Impulcifer
+Built off of Jaakopanen's Impulcifer project.
+Modified and expanded to include 9.1.6 speaker formats.
+
 Impulcifer is a tool for creating binaural room impulse responses (BRIR) for speaker virtualization on headphones.
 
 Normally headphones sound inside your head which is a clear disadvantage for games and movies but also for music
