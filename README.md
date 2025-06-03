@@ -1,5 +1,5 @@
 # Impulcifer
-Built off of Jaakopanen's Impulcifer project.
+Built off of jaakkopasanen's Impulcifer project.
 Modified and expanded to include 9.1.6 speaker formats.
 
 Impulcifer is a tool for creating binaural room impulse responses (BRIR) for speaker virtualization on headphones.
@@ -346,11 +346,3 @@ time is longer than the given target, the impulse response tails will be shorten
 decay velocity. Decay times are not increased if the target is longer than the natural one. The decay time management
 can be a powerful tool for controlling ringing in the room without having to do any physical room treatments.
 
-## Contact
-[Issues](https://github.com/jaakkopasanen/AutoEq/issues) are the way to go if you are experiencing problems, have
-ideas or if there is something unclear about how things are done or documented.
-
-You can find me in [Reddit](https://www.reddit.com/user/jaakkopasanen) and
-[Head-fi](https://www.head-fi.org/members/jaakkopasanen.491235/) if you just want to say hello.
-
-There is also a [Head-fi thread about Impulcifer](https://www.head-fi.org/threads/recording-impulse-responses-for-speaker-virtualization.890719/).
