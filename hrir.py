@@ -165,7 +165,7 @@ class HRIR:
         left = np.sum(np.vstack(left), axis=0)
         max_len = max(ir.shape[0] for ir in right)
         right = [np.pad(ir, (0, max_len - len(ir))) for ir in right]
-        right = np.sum(np.vstack(left), axis=0)
+        right = np.sum(np.vstack(right), axis=0)
 
         # Old Sum for Left and Right
         #left = np.sum(np.vstack(left), axis=0)
