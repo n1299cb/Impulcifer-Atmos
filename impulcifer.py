@@ -211,7 +211,7 @@ def main(dir_path=None,
         print('Generating jamesdsp.wav (FL/FR only, normalized to FL/FR)...')
         import contextlib, io
 
-        # Save channels in the order FL-L, FL-R, FR-L, FR-R
+        # Copy the entire HRIR and remove all channels except FL/FR
         dsp_hrir = copy.deepcopy(hrir)
         for sp in list(dsp_hrir.irs.keys()):
             if sp not in ['FL', 'FR']:
@@ -223,7 +223,7 @@ def main(dir_path=None,
                 avg_target=target_level
             )
 
-        # FL‑L, FL‑R, FR‑L, FR‑R 순서로 파일 생성
+        # Save channels in the order FL-L, FL-R, FR-L, FR-R
         jd_order = ['FL-left', 'FL-right', 'FR-left', 'FR-right']
         out_path = os.path.join(dir_path, 'jamesdsp.wav')
         dsp_hrir.write_wav(out_path, track_order=jd_order)

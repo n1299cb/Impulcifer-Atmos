@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from utils import versus_distance
-# **GPT INSERT**
 SPEAKER_NAMES = [
     'FL', 'FR',  # 0–1
     'FC',        # 2
@@ -12,10 +10,7 @@ SPEAKER_NAMES = [
     'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR'  # 10–15
 ]
 
-# OLD SPEAKER NAMES - PRE GPT
-#SPEAKER_NAMES = ['FL', 'FR', 'FC', 'BL', 'BR', 'SL', 'SR', 'WL', 'WR', 'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR']
-
-# **GPT INSERT** FOR REFERENTIAL LAYOUTS - OMITS LFE
+# Speaker layout indexes (without LFE channel for reference formats)
 SPEAKER_LAYOUT_INDEXES = {
     "1.0": [(0,)],             # Mono (front left)
     "2.0": [(0, 1)],        # Front Left, Front Right
@@ -33,24 +28,18 @@ SPEAKER_LAYOUT_INDEXES = {
         (14, 15)   # Top Back Left, Top Back Right
     ]
 }
-# **GPT INSERT**
-# === Resolved layout mappings (label groups)
+# Resolved layout mappings (label groups)
 SPEAKER_LAYOUTS = {
     name: [[SPEAKER_NAMES[i] for i in group] for group in groups]
     for name, groups in SPEAKER_LAYOUT_INDEXES.items()
 }
-# **GPT INSERT**
-# === Regex patterns and helpers (unchanged)
+# Regex patterns and helpers
 SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
 SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(
     speaker_pattern=SPEAKER_PATTERN
 )
 
-# OLD SPEAKER PATTERN LOGIC - PRE GPT
-#SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
-#SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(speaker_pattern=SPEAKER_PATTERN)
-
-SPEAKER_DELAYS = { _speaker: 0 for _speaker in SPEAKER_NAMES }
+SPEAKER_DELAYS = {_speaker: 0 for _speaker in SPEAKER_NAMES}
 
 # Applies diffuse-field compensation to HRIRs
 APPLY_DIFFUSE_FIELD_COMPENSATION = False
@@ -61,7 +50,7 @@ APPLY_HEADPHONE_EQ = True
 # Applies room correction filtering (e.g., smoothing or flattening)
 APPLY_ROOM_CORRECTION = False
 
-# If True, preserves the room's full impulse response, avoids normalization/truncation
+# Preserve the room's full impulse response without normalization or truncation
 PRESERVE_ROOM_RESPONSE = True
 
 # Applies directional gains in order to correctly calibrate ITD
@@ -70,7 +59,7 @@ APPLY_DIRECTIONAL_GAINS = False
 # Each channel, left and right
 IR_ORDER = []
 # SPL change relative to middle of the head - disable
-IR_ROOM_SPL =  {
+IR_ROOM_SPL = {
     sp: {'left': 0.0, 'right': 0.0}
     for sp in SPEAKER_NAMES
 }
@@ -95,13 +84,10 @@ HEXADECAGONAL_TRACK_ORDER = ['FL-left', 'FL-right', 'FR-left', 'FR-right', 'FC-l
                              'TFR-left', 'TFR-right', 'TSL-left', 'TSL-right', 'TSR-left', 'TSR-right',
                              'TBL-left', 'TBL-right', 'TBR-left', 'TBR-right']
 
-# **GPT INSERT** For manual channel assignment in GUI or presets
-# Dynamically map channel index to name using the default layout (first entry in SPEAKER_NAMES)
+# Map channel index to name using the default layout (first entry in SPEAKER_NAMES)
 CHANNEL_LABELS = {i: name for i, name in enumerate(SPEAKER_NAMES)}
-# **GPT INSERT**
-# Optional: if you want to reverse it for label-to-index usage in GUI
+# Optional reverse lookup for GUI usage
 CHANNEL_LABELS_REVERSE = {name: i for i, name in CHANNEL_LABELS.items()}
-# **GPT INSERT**
 # Map layout name to flat list of speaker indices
 FORMAT_PRESETS = {
     name: [idx for group in groups for idx in group]

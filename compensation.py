@@ -7,7 +7,8 @@ def diffuse_field_compensation(hrir):
     """
     Apply diffuse-field compensation to HRIR.
 
-    This modifies each impulse response in-place using the AutoEQ diffuse-field target.
+    This modifies each impulse response in-place using
+    the AutoEQ diffuse-field target.
 
     Args:
         hrir: HRIR instance containing impulse responses to be compensated.
