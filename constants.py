@@ -17,6 +17,7 @@ SPEAKER_NAMES = [
 
 # **GPT INSERT** FOR REFERENTIAL LAYOUTS - OMITS LFE
 SPEAKER_LAYOUT_INDEXES = {
+    "1.0": [(0,)],             # Mono (front left)
     "2.0": [(0, 1)],        # Front Left, Front Right
     "5.1": [(0, 1), (2,), (6, 7)],        # 2.0 plus Center, Back Left and Back Right
     "7.1": [(0, 1), (2,), (4, 5), (6, 7)], # 5.1 plus Side Left, Side Right, then Back Left Back Right
@@ -108,6 +109,7 @@ FORMAT_PRESETS = {
 }
 # SMPTE layout index definitions per format
 SMPTE_LAYOUT_INDEXES = {
+    "1.0": [(0,)],
     "2.0": [(0, 1)],
     "5.1": [(0, 1), (2,), (3,), (6, 7)],
     "7.1": [(0, 1), (2,), (3,), (4, 5), (6, 7)],

@@ -150,7 +150,6 @@ class ImpulseResponse:
             # In that case the noise floor will be calculated from the last half of the last window
             noise_floor_start_time = min(noise_floor_start_time, t_windows[-1])
 
-            # noise_floor_end_time = noise_floor_start_time + 0.1 * len(squared) / ir.fs  # TODO: Until the very end?
             # Noise floor estimation range ends one full decay time after the start, truncated to the IR length
             noise_floor_end_time = min(noise_floor_start_time + knee_point_time, self.duration())
             noise_floor = np.mean(squared[np.logical_and(
@@ -698,10 +697,10 @@ class ImpulseResponse:
 
         z_min = -100
 
-        # Window
-        window_duration = 0.01  # TODO
+        # Window parameters
+        window_duration = 0.01
         nfft = min(int(self.fs * window_duration), int(len(self.data) / 10))
-        noverlap = int(nfft * 0.9)  # 90% overlap TODO
+        noverlap = int(nfft * 0.9)  # 90% overlap
         ascend_ms = 10  # 10 ms ascending window
         ascend = int(ascend_ms / 1000 * self.fs)
         plateu = int((nfft - ascend) * 3 / 4)  # 75%
