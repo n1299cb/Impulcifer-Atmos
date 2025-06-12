@@ -241,7 +241,7 @@ def main(dir_path=None,
 
         # Hrir.wav 기준 최대 채널 순서
         full_order = [
-            'FL','FR','FC','LFE','BL','BR','SL','SR',
+            'FL','FR','FC','LFE','SL','SR','BL','BR',
             'WL','WR','TFL','TFR','TSL','TSR','TBL','TBR'
         ]
         processed = [sp for sp in full_order if sp in hrir.irs]

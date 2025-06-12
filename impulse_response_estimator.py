@@ -154,42 +154,62 @@ class ImpulseResponseEstimator(object):
     def sweep_sequence(self, speakers, tracks):
         """Creates sine sweep sequence data with multiple tracks
 
-        Output depends on the speakers and tracks in a way that speakers define which physical speakers will should be
-        used during the playback and tracks define how many tracks the the output should have.
+        Output depends on ``speakers`` and ``tracks`` in a way that
+        ``speakers`` define which physical speakers should be used during the
+        playback and ``tracks`` defines the multichannel format of the output.
 
-        When speakers is [FL, FR] and tracks is "stereo" the output will contain two tracks of which the first is the FL
-        and the second is FR. In this case the FL will play first and FR track will be silent and the FR will play while
-        the FL is silent.
+        Supported track formats and their SMPTE channel orders are:
 
-        When speakers is [FL, FR] and tracks is "7.1" the output will contain 8 tracks of which first two are FL and FR.
-        All other tracks in the output data are silent throughout the whole sequence. When speakers is [FL, FC, FR, SR,
-        BR, BL, SL] there will be 7 tracks with sine sweep and one silent track (LFE) and physical speakers will play
-        the sweeps in the order given in speakers.
+            ``5.1``    → ``['FL', 'FR', 'FC', 'LFE', 'SL', 'SR']``
+            ``7.1``    → ``['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR']``
+            ``7.1.4``  → ``['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR',
+                              'TFL', 'TFR', 'TBL', 'TBR']``
+            ``9.1.6``  → ``['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR',
+                              'WL', 'WR', 'TFL', 'TFR', 'TSL', 'TSR',
+                              'TBL', 'TBR']``
 
-        Mono sequences can be made by single speaker name in speakers. In most cases tracks should not be "mono" when
-        playing back mono sequences because the single track might get upmixed to stereo. In most systems it's required
-        to have tracks as "stereo" or higher when playing mono sequences. Playing mono sweep on center channel could
-        be achieved by setting speakers to [FC] and tracks to "7.1" or "5.1". Playing mono sweep on left channel could
-        be achieved by setting speakers to [FL] and tracks to "stereo" (or higher depending on the speaker system).
+        Mono sequences can be made by a single speaker name in ``speakers``. In
+        most cases ``tracks`` should not be ``"mono"`` when playing back mono
+        sequences because the single track might get upmixed to stereo. In most
+        systems it's required to have ``tracks`` as ``"stereo"`` or higher when
+        playing mono sequences. Playing a mono sweep on the center channel could
+        be achieved by setting ``speakers`` to ``['FC']`` and ``tracks`` to
+        ``"5.1"`` or ``"7.1"``. Playing a mono sweep on the left channel could
+        be achieved by setting ``speakers`` to ``['FL']`` and ``tracks`` to
+        ``"stereo"`` (or higher depending on the speaker system).
 
         Args:
-            speakers: List of speaker names to use in the sequence
-            tracks: Tracks configuration. "7.1", "5.1", "stereo" or "mono".
+            speakers: List of speaker names to use in the sequence.
+            tracks:  Track configuration. One of ``"mono"``, ``"stereo"``,
+                ``"5.1"``, ``"7.1"``, ``"7.1.4"`` or ``"9.1.6"``.
 
         Returns:
-            Sweep sequence data as Numpy array. Each row represents a single track.
+            Sweep sequence data as Numpy array. Each row represents a single
+            track.
         """
         unique_speakers = []
         for speaker in speakers:
             if speaker in unique_speakers:
                 raise ValueError('All speaker names in speakers must be unique.')
 
-        # Remap channels
-        if tracks == '7.1':
-            standard_order = 'FL FR FC LFE BL BR SL SR'.split()
+        # Remap channels according to SMPTE order
+        if tracks == '9.1.6':
+            standard_order = [
+                'FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR',
+                'WL', 'WR', 'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR'
+            ]
+            n_tracks = 16
+        elif tracks == '7.1.4':
+            standard_order = [
+                'FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR',
+                'TFL', 'TFR', 'TBL', 'TBR'
+            ]
+            n_tracks = 12
+        elif tracks == '7.1':
+            standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR']
             n_tracks = 8
         elif tracks == '5.1':
-            standard_order = 'FL FR FC LFE BL BR'.split()
+            standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR']
             n_tracks = 6
         elif tracks == 'stereo':
             standard_order = 'FL FR'.split()
@@ -208,6 +228,10 @@ class ImpulseResponseEstimator(object):
                     tracks=tracks
                 ))
         speaker_indices = [standard_order.index(ch) for ch in speakers]
+        if speaker_indices != sorted(speaker_indices):
+            raise ValueError(
+                'Speakers must follow SMPTE order: {}'.format(','.join(standard_order))
+            )
 
         # Create test signal sequence
         data = np.zeros((n_tracks, int((self.fs * 2.0 + len(self)) * len(speakers) + self.fs * 2.0)))
@@ -274,11 +298,13 @@ def create_cli():
                                  'order of given speaker channels. Stereo sequence can be generated by supplying value '
                                  '"FL,FR". Supported channel names are "FL", "FR", "FC", "SL", "SR", "BL" and "BR".')
     arg_parser.add_argument('--tracks', type=str, required=False, default='mono',
-                            help='WAV file track configuration. Supported values are "mono", "stereo", "5.1" and '
-                                 '"7.1". This should be set according to sound card. Supported speaker names for '
-                                 '"stereo" are "FL" and "FR". Supported speaker names for "7.1" are "FL", "FR", "FC", '
-                                 '"BL" and "BR". Supported speaker names for "5.1" are "FL", "FR", "FC", '
-                                 '"SL", "SR", "BL" and "BR". "mono" will force speakers to "FL".')
+                            help='WAV file track configuration. Supported values are "mono", "stereo", "5.1", '
+                                 '"7.1", "7.1.4" and "9.1.6". This should be set according to sound card. '
+                                 'Supported speaker names for "stereo" are "FL" and "FR". Supported speaker '
+                                 'names for "5.1" are "FL", "FR", "FC", "LFE", "BL" and "BR". Supported speaker '
+                                 'names for "7.1" are the same as 5.1 with "BL" and "BR" added. Formats '
+                                 '"7.1.4" and "9.1.6" extend 7.1 with top speaker pairs. "mono" will force '
+                                 'speakers to "FL".')
     cli_args = arg_parser.parse_args()
     if not os.path.isdir(cli_args.dir_path):
         # File path is required

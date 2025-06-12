@@ -149,6 +149,39 @@ Steps and commands for doing measurements with 7.1 surround system:
 | Put microphones in ears, put headphones on | `python recorder.py --play="data/sweep-seg-FL,FR-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/headphones.wav"` |
 | Take heaphones off, look forward | `python recorder.py --play="data/sweep-seg-FL,FC,FR,SR,BR,BL,SL-7.1-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/FL,FC,FR,SR,BR,BL,SL.wav"` |
 
+### 7.1.4 Speaker Setup
+SMPTE channel order: `FL, FR, FC, LFE, SL, SR, BL, BR, TFL, TFR, TBL, TBR`
+
+Example sweep generation:
+```bash
+python impulse_response_estimator.py --dir_path=data \
+    --fs=48000 --speakers=FL,FC,FR,SL,SR,BL,BR,TFL,TFR,TBL,TBR --tracks=7.1.4
+```
+
+Steps and commands for doing measurements with 7.1.4 surround system:
+
+| Setup | Command |
+|-------|---------|
+| Put microphones in ears, put headphones on | `python recorder.py --play="data/sweep-seg-FL,FR-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/headphones.wav"` |
+| Take heaphones off, look forward | `python recorder.py --play="data/sweep-seg-FL,FC,FR,SL,SR,BL,BR,TFL,TFR,TBL,TBR-7.1.4-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/FL,FC,FR,SL,SR,BL,BR,TFL,TFR,TBL,TBR.wav"` |
+
+### 9.1.6 Speaker Setup
+SMPTE channel order: `FL, FR, FC, LFE, SL, SR, BL, BR, WL, WR, TFL, TFR, TSL, TSR, TBL, TBR`
+
+Example sweep generation:
+```bash
+python impulse_response_estimator.py --dir_path=data \
+    --fs=48000 --speakers=FL,FC,FR,SL,SR,BL,BR,WL,WR,TFL,TFR,TSL,TSR,TBL,TBR --tracks=9.1.6
+```
+
+Steps and commands for doing measurements with 9.1.6 speaker layout:
+
+| Setup | Command |
+|-------|---------|
+| Put microphones in ears, put headphones on | `python recorder.py --play="data/sweep-seg-FL,FR-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/headphones.wav"` |
+| Take heaphones off, look forward | `python recorder.py --play="data/sweep-seg-FL,FC,FR,SL,SR,BL,BR,WL,WR,TFL,TFR,TSL,TSR,TBL,TBR-9.1.6-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/FL,FC,FR,SL,SR,BL,BR,WL,WR,TFL,TFR,TSL,TSR,TBL,TBR.wav"` |
+
+
 ### Stereo Speaker Setup
 Steps and commands for doing measurements with two speakers in four stages:
 
@@ -346,3 +379,12 @@ time is longer than the given target, the impulse response tails will be shorten
 decay velocity. Decay times are not increased if the target is longer than the natural one. The decay time management
 can be a powerful tool for controlling ringing in the room without having to do any physical room treatments.
 
+## Tests
+
+Simple test scripts are included for quickly validating the processing pipeline. They require sample HRIR recordings in
+`data/test_capture` and can be run directly with Python:
+
+```bash
+python test_impulcifer.py       # 9.1.6 layout
+python test_impulcifer_714.py   # 7.1.4 layout
+```

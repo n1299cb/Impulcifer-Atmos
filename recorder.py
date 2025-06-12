@@ -7,6 +7,7 @@ from utils import read_wav, write_wav
 import numpy as np
 from threading import Thread
 import argparse
+from constants import SPEAKER_NAMES, SMPTE_ORDER
 
 
 class DeviceNotFoundError(Exception):
@@ -200,8 +201,17 @@ def play_and_record(
     speaker_names = os.path.splitext(out_file)[0].split(',')
     if len(speaker_names) != channels:
         print(f"Warning: {len(speaker_names)} speaker labels in filename, but {channels} output channels specified.")
-        expected_layout = "FL,FR,FC,SL,SR,BL,BR,WL,WR,TFL,TFR,TSL,TSR,TBL,TBR"
-        print(f"Expected speaker layout for 9.1.6:\n  {expected_layout}")
+        layout_name = None
+        expected_order = None
+        for name, order in SMPTE_ORDER.items():
+            if len(order) == channels:
+                layout_name = name
+                expected_order = ','.join(SPEAKER_NAMES[i] for i in order)
+                break
+        if layout_name:
+            print(f"Expected SMPTE layout {layout_name} order:\n  {expected_order}")
+        else:
+            print("No matching SMPTE layout for the given channel count.")
     
     # Read playback file
     fs, data = read_wav(play)
