@@ -1,6 +1,5 @@
 import os
 import sys
-import pytest
 
 # Allow importing modules from repository root
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

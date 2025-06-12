@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from autoeq.frequency_response import FrequencyResponse
 from constants import APPLY_DIFFUSE_FIELD_COMPENSATION
 
 def diffuse_field_compensation(hrir):

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib.mlab import specgram
 from matplotlib.ticker import LinearLocator, FormatStrFormatter, FuncFormatter
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import signal, stats, ndimage, interpolate
 import nnresample
@@ -130,7 +129,7 @@ class ImpulseResponse:
         try:
             knee_point_index = np.argwhere(t_windows >= knee_point_time)[0, 0]
             knee_point_value = windows[knee_point_index]
-        except IndexError as err:
+        except IndexError:
             # Probably tail has already been cropped
             return peak_index, len(self), noise_floor, w
         # print(f'    Knee point: {knee_point_value:.2f} dB @ {knee_point_time * 1000:.0f} ms')
@@ -268,7 +267,7 @@ class ImpulseResponse:
             try:
                 start = np.argwhere(schroeder <= start_target)[0, 0]
                 end = np.argwhere(schroeder <= end_target)[0, 0]
-            except IndexError as err:
+            except IndexError:
                 # Targets not found on the Schroeder curve
                 continue
             slope, intercept, _, _, _ = stats.linregress(t[start:end], schroeder[start:end])
@@ -389,7 +388,7 @@ class ImpulseResponse:
         """
         # Skips plotting if empty or silent
         if self.data is None or np.allclose(self.data, 0.0):
-            print(f"[WARN] Skipping plot — Impulse response is empty or silent.")
+            print("[WARN] Skipping plot — Impulse response is empty or silent.")
             return fig
 
         if fig is None:
@@ -524,7 +523,7 @@ class ImpulseResponse:
         ax.set_xlabel('Time (ms)')
         ax.set_ylabel('Amplitude')
         ax.grid(True)
-        ax.set_title('Impulse response'.format(ms=int(end * 1000)))
+        ax.set_title(f'Impulse response ({end * 1000:.0f} ms)')
 
         if plot_file_path:
             fig.savefig(plot_file_path)

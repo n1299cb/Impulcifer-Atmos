@@ -2,7 +2,6 @@
 
 import os
 import warnings
-import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal, fftpack
@@ -11,7 +10,7 @@ from PIL import Image
 from autoeq.frequency_response import FrequencyResponse
 from impulse_response import ImpulseResponse
 from utils import read_wav, write_wav, magnitude_response, sync_axes
-from constants import SPEAKER_NAMES, SPEAKER_DELAYS, HEXADECAGONAL_TRACK_ORDER, APPLY_DIFFUSE_FIELD_COMPENSATION, APPLY_HEADPHONE_EQ, PRESERVE_ROOM_RESPONSE
+from constants import SPEAKER_NAMES, SPEAKER_DELAYS, HEXADECAGONAL_TRACK_ORDER, APPLY_HEADPHONE_EQ, PRESERVE_ROOM_RESPONSE
 
 
 class HRIR:
@@ -572,7 +571,7 @@ class HRIR:
         ax.legend(['Left raw', 'Right raw', 'Left smoothed', 'Right smoothed', 'Difference'])
 
         # Save figures
-        file_path = os.path.join(dir_path, f'results.png')
+        file_path = os.path.join(dir_path, 'results.png')
         fig.savefig(file_path, bbox_inches='tight')
         plt.close(fig)
         # Optimize file size

@@ -1,7 +1,6 @@
 import sys
 import os
 import subprocess
-import json
 import sounddevice as sd
 import matplotlib
 matplotlib.use("QtAgg")
@@ -9,10 +8,9 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFileDialog, QComboBox, QLineEdit,
-    QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSpinBox
+    QTabWidget, QMessageBox, QTextEdit, QCheckBox
 )
 from PySide6.QtGui import QShortcut, QKeySequence
-from PySide6.QtCore import Qt
 
 import datetime
 

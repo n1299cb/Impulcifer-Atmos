@@ -14,7 +14,7 @@ class DeviceNotFoundError(Exception):
     pass
 
 
-def record_target(file_path, length, fs, channels=2, append=False):
+def record_target(file_path, length, fs, channels=2, append=False, output_file=None):
     """Records audio and writes it to a file.
 
     Args:
@@ -24,6 +24,7 @@ def record_target(file_path, length, fs, channels=2, append=False):
         channels: Number of channels in the recording
         append: Add track(s) to an existing file? Silence will be added to end of each track to make all equal in
                 length
+        output_file: Optional custom file path for recording output
 
     Returns:
         None
@@ -42,8 +43,8 @@ def record_target(file_path, length, fs, channels=2, append=False):
             recording = np.pad(data, [(0, 0), (0, data.shape[1] - recording.shape[1])])
         # Add recording to the end of the existing data
         recording = np.vstack([data, recording])
-    if args.output_file:
-        file_path = args.output_file
+    if output_file:
+        file_path = output_file
     write_wav(file_path, fs, recording)
     print(f'Headroom: {-1.0*max_gain:.1f} dB')
 
@@ -177,7 +178,8 @@ def play_and_record(
         output_device=None,
         host_api=None,
         channels=2,
-        append=False):
+        append=False,
+        output_file=None):
     """Plays one file and records another at the same time
 
     Args:
@@ -232,7 +234,7 @@ def play_and_record(
     recorder = Thread(
         target=record_target,
         args=(record, data.shape[1], fs),
-        kwargs={'channels': channels, 'append': append}
+        kwargs={'channels': channels, 'append': append, 'output_file': output_file}
     )
     recorder.start()
     sd.play(np.transpose(data), samplerate=fs, blocking=True)
