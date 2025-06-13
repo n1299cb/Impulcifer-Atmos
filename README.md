@@ -379,6 +379,18 @@ time is longer than the given target, the impulse response tails will be shorten
 decay velocity. Decay times are not increased if the target is longer than the natural one. The decay time management
 can be a powerful tool for controlling ringing in the room without having to do any physical room treatments.
 
+### Layout Preparation Tool
+
+`generate_layout.py` helps to set up a capture folder. It writes the expected
+file names for a speaker layout and now also creates placeholder sweep files for
+each recording. The folder can later be checked for missing or unexpected files
+with the `--verify` flag.
+
+```bash
+python generate_layout.py --layout=9.1.6 --dir=data/test_capture
+python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
+```
+
 ## Tests
 
 Simple test scripts are included for quickly validating the processing pipeline. They require sample HRIR recordings in
