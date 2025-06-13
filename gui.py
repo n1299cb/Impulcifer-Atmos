@@ -2,13 +2,14 @@ import sys
 import os
 import subprocess
 import sounddevice as sd
+import soundfile as sf
 import matplotlib
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFileDialog, QComboBox, QLineEdit,
-    QTabWidget, QMessageBox, QTextEdit, QCheckBox
+    QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog
 )
 from PySide6.QtGui import QShortcut, QKeySequence
 
@@ -292,7 +293,7 @@ class ImpulciferGUI(QMainWindow):
         if self.target_level_var.text():
             args.extend(["--target_level", self.target_level_var.text()])
         if self.channel_balance_toggle.isChecked():
-            args.extend(["--channel_balance", self.channel_balance_var.currentText()])
+            args.extend(["--channel_balance", self.channel_balance_var.currentData()])
         if self.specific_limit_toggle.isChecked() and self.specific_limit_var.text():
             args.extend(["--specific_limit", self.specific_limit_var.text()])
         if self.generic_limit_toggle.isChecked() and self.generic_limit_var.text():
@@ -470,8 +471,17 @@ class ImpulciferGUI(QMainWindow):
         layout.addLayout(self.labeled_row("Target Level (dB):", self.target_level_var, self.target_level_toggle))
 
         self.channel_balance_var = QComboBox()
-        self.channel_balance_var.addItems(["off", "left", "right", "average", "trend"])
-        self.channel_balance_var.setCurrentText("trend")
+        self.channel_balance_var.addItem("Off", "off")
+        self.channel_balance_var.addItem("Left", "left")
+        self.channel_balance_var.addItem("Right", "right")
+        self.channel_balance_var.addItem("Average", "avg")
+        self.channel_balance_var.addItem("Minimum", "min")
+        self.channel_balance_var.addItem("Mids", "mids")
+        self.channel_balance_var.addItem("Trend", "trend")
+        # Default strategy
+        idx = self.channel_balance_var.findData("trend")
+        if idx != -1:
+            self.channel_balance_var.setCurrentIndex(idx)
         self.channel_balance_toggle = QCheckBox("Enable")
         self.channel_balance_toggle.setChecked(False)
         balance_row = QHBoxLayout()
@@ -724,9 +734,11 @@ class ImpulciferGUI(QMainWindow):
 
         button_layout = QHBoxLayout()
         play_btn = QPushButton("Play")
+        stop_btn = QPushButton("Stop")
         apply_btn = QPushButton("Apply")
         close_btn = QPushButton("Close")
         button_layout.addWidget(play_btn)
+        button_layout.addWidget(stop_btn)
         button_layout.addWidget(apply_btn)
         button_layout.addWidget(close_btn)
         main_layout.addLayout(button_layout)
@@ -757,23 +769,34 @@ class ImpulciferGUI(QMainWindow):
             sd.play(data, fs)
 
         play_btn.clicked.connect(play)
+        stop_btn.clicked.connect(sd.stop)
 
         def apply():
             gain_db = slider.value() / 10
-            text = f"{gain_db:.1f}"
-            existing = [self.channel_balance_var.itemText(i) for i in range(self.channel_balance_var.count())]
-            if text not in existing:
-                self.channel_balance_var.addItem(text)
-            self.channel_balance_var.setCurrentText(text)
+            cli_val = f"{gain_db:.1f}"
+            label = f"{cli_val} dB"
+            # Find existing entry with same data
+            index = self.channel_balance_var.findData(cli_val)
+            if index == -1:
+                self.channel_balance_var.addItem(label, cli_val)
+                index = self.channel_balance_var.count() - 1
+            self.channel_balance_var.setCurrentIndex(index)
             self.channel_balance_toggle.setChecked(True)
+            sd.stop()
             dialog.accept()
 
         apply_btn.clicked.connect(apply)
-        close_btn.clicked.connect(dialog.close)
+
+        def close_dialog():
+            sd.stop()
+            dialog.close()
+
+        close_btn.clicked.connect(close_dialog)
 
         dialog.setLayout(main_layout)
         dialog.exec()
 
+    
     def setup_shortcuts(self):
         QShortcut(QKeySequence("Meta+1"), self, activated=lambda: self.tabs.setCurrentIndex(
             self.tabs.indexOf(self.tabs.widget(0))  # Assumes Execution tab is at index 0

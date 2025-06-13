@@ -342,7 +342,8 @@ different strategies available for channel balance correction.
 
 The Processing Options tab of the GUI includes a **Preview…** button which lets you audition channel balance changes
 with any audio file. Move the slider to adjust right channel gain in real time and apply the chosen value directly to
-the channel balance option.
+the channel balance option. The drop-down list now exposes all strategies (`avg`, `min`, `left`, `right`, `mids`, and
+`trend`) along with any numeric values added through the preview dialog.
 
 Setting `--channel_balance=trend` will equalize right side by the difference trend of left and right sides. This is a
 very smooth difference curve over the entire spectrum. Trend will not affect small deviations and therefore doesn't
