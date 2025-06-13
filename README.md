@@ -384,17 +384,12 @@ time is longer than the given target, the impulse response tails will be shorten
 decay velocity. Decay times are not increased if the target is longer than the natural one. The decay time management
 can be a powerful tool for controlling ringing in the room without having to do any physical room treatments.
 
-### Layout Preparation Tool
+### Customizing Speaker Layouts in the GUI
 
-`generate_layout.py` helps to set up a capture folder. It writes the expected
-file names for a speaker layout and now also creates placeholder sweep files for
-each recording. The folder can later be checked for missing or unexpected files
-with the `--verify` flag.
-
-```bash
-python generate_layout.py --layout=9.1.6 --dir=data/test_capture
-python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
-```
+The Setup tab now features a **Speaker Layout** selector. Choose any of the
+presets from `constants.FORMAT_PRESETS` or select **Custom…** to load a
+comma-separated or JSON list of speaker names. Loaded layouts are used when
+mapping playback channels in the **Map Channels** dialog.
 
 ### Layout Preparation Tool
 
@@ -407,6 +402,7 @@ with the `--verify` flag.
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
 ```
+
 
 ## Tests
 

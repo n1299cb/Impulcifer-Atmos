@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog
 )
 from PySide6.QtGui import QShortcut, QKeySequence
-
+from constants import FORMAT_PRESETS, SPEAKER_NAMES
 import datetime
 
 class ImpulciferGUI(QMainWindow):
@@ -22,6 +22,11 @@ class ImpulciferGUI(QMainWindow):
         self.resize(700, 700)
 
         self.channel_mappings = {}
+        
+        # Default speaker layout
+        self.selected_layout_name = next(iter(FORMAT_PRESETS))
+        self.selected_layout = [SPEAKER_NAMES[i] for i in FORMAT_PRESETS[self.selected_layout_name]]
+
 
         self.tabs = QTabWidget()
         self.tab_order = []
@@ -76,6 +81,14 @@ class ImpulciferGUI(QMainWindow):
         browse_dir.setMaximumWidth(100)
         browse_dir.clicked.connect(self.browse_measurement_dir)
         layout.addLayout(self.labeled_row("Select Measurement Directory:", self.measurement_dir_var, browse_dir))
+        
+        # Layout selection
+        self.layout_var = QComboBox()
+        self.layout_var.addItems(FORMAT_PRESETS.keys())
+        self.layout_var.addItem("Custom...")
+        self.layout_var.setCurrentText(self.selected_layout_name)
+        self.layout_var.currentTextChanged.connect(self.handle_layout_change)
+        layout.addLayout(self.labeled_row("Speaker Layout:", self.layout_var))
 
         self.playback_device_var = QComboBox()
         self.playback_device_var.setMaximumWidth(200)
@@ -424,10 +437,7 @@ class ImpulciferGUI(QMainWindow):
     def update_compensation_file_state(self):
         is_custom = self.compensation_type_var.currentText().lower() == "custom"
         self.compensation_custom_widget.setVisible(is_custom)
-
-        def update_compensation_file_state(self):
-            is_custom = self.compensation_type_var.currentText().lower() == "custom"
-            self.compensation_file_path_var.setEnabled(is_custom)
+        self.compensation_file_path_var.setEnabled(is_custom)
 
     def browse_headphone_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Headphone EQ File", "", "Wave Files (*.wav);;All Files (*)")
@@ -459,7 +469,7 @@ class ImpulciferGUI(QMainWindow):
         self.decay_time_toggle = QCheckBox("Enable")
         self.decay_time_toggle.setChecked(False)
         self.decay_time_var.setPlaceholderText("e.g., 0.2")
-        self.decay_time_var.setText(None)
+        self.decay_time_var.clear()
         layout.addLayout(self.labeled_row("Decay Time (seconds):", self.decay_time_var, self.decay_time_toggle))
 
         self.target_level_var = QLineEdit()
@@ -467,7 +477,7 @@ class ImpulciferGUI(QMainWindow):
         self.target_level_toggle = QCheckBox("Enable")
         self.target_level_toggle.setChecked(False)
         self.target_level_var.setPlaceholderText("e.g., -12.5")
-        self.target_level_var.setText(None)
+        self.target_level_var.clear()
         layout.addLayout(self.labeled_row("Target Level (dB):", self.target_level_var, self.target_level_toggle))
 
         self.channel_balance_var = QComboBox()
@@ -494,7 +504,6 @@ class ImpulciferGUI(QMainWindow):
         layout.addLayout(balance_row)
 
         self.room_correction_var = QCheckBox("Enable Room Correction")
-        self.room_correction_var.stateChanged.connect(self.update_room_correction_fields)
         self.room_correction_var.stateChanged.connect(self.update_room_correction_fields)
         layout.addWidget(self.room_correction_var)
 
@@ -596,6 +605,40 @@ class ImpulciferGUI(QMainWindow):
         if dir_path:
             self.measurement_dir_var.setText(dir_path)
 
+        def handle_layout_change(self, text):
+            if text == "Custom...":
+                self.load_custom_layout()
+                return
+            self.selected_layout_name = text
+            self.selected_layout = [SPEAKER_NAMES[i] for i in FORMAT_PRESETS[text]]
+
+    def load_custom_layout(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Layout File", "", "Text or JSON (*.txt *.json);;All Files (*)")
+        if not file_path:
+            # Revert to previous selection
+            self.layout_var.setCurrentText(self.selected_layout_name)
+            return
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+            try:
+                import json
+                names = json.loads(content)
+                if isinstance(names, dict):
+                    names = names.get("speakers", [])
+            except json.JSONDecodeError:
+                names = [n.strip() for n in content.split(',') if n.strip()]
+            if not names:
+                raise ValueError("No speakers defined in layout file")
+            self.selected_layout_name = os.path.basename(file_path)
+            self.selected_layout = names
+            if self.layout_var.findText(self.selected_layout_name) == -1:
+                self.layout_var.addItem(self.selected_layout_name)
+            self.layout_var.setCurrentText(self.selected_layout_name)
+        except Exception as e:
+            QMessageBox.critical(self, "Layout Load Error", str(e))
+            self.layout_var.setCurrentText(self.selected_layout_name)
+
     def map_channels(self):
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFormLayout
 
@@ -610,7 +653,7 @@ class ImpulciferGUI(QMainWindow):
         playback_channels = sd.query_devices(playback_idx)['max_output_channels']
         record_channels = sd.query_devices(record_idx)['max_input_channels']
 
-        speaker_labels = ["Front Left", "Front Right", "Center", "LFE", "Surround Left", "Surround Right", "Rear Left", "Rear Right"]
+        speaker_labels = self.selected_layout
         mic_labels = ["Mic Left", "Mic Right"]
 
         self.speaker_channel_vars = []
@@ -618,7 +661,7 @@ class ImpulciferGUI(QMainWindow):
 
         # Speaker layout
         speaker_layout = QFormLayout()
-        speaker_layout.addRow(QLabel("Speaker Channels (Playback)"))
+        speaker_layout.addRow(QLabel(f"Speaker Channels ({self.selected_layout_name})"))
         for i, label in enumerate(speaker_labels):
             box = QComboBox()
             box.addItems([str(x + 1) for x in range(playback_channels)])
