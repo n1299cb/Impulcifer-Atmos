@@ -474,7 +474,14 @@ class ImpulciferGUI(QMainWindow):
         self.channel_balance_var.setCurrentText("trend")
         self.channel_balance_toggle = QCheckBox("Enable")
         self.channel_balance_toggle.setChecked(False)
-        layout.addLayout(self.labeled_row("Channel Balance:", self.channel_balance_var, self.channel_balance_toggle))
+        balance_row = QHBoxLayout()
+        balance_row.addWidget(QLabel("Channel Balance:"))
+        balance_row.addWidget(self.channel_balance_var)
+        balance_row.addWidget(self.channel_balance_toggle)
+        self.channel_balance_preview = QPushButton("Preview…")
+        self.channel_balance_preview.clicked.connect(self.open_channel_balance_preview)
+        balance_row.addWidget(self.channel_balance_preview)
+        layout.addLayout(balance_row)
 
         self.room_correction_var = QCheckBox("Enable Room Correction")
         self.room_correction_var.stateChanged.connect(self.update_room_correction_fields)
@@ -689,6 +696,83 @@ class ImpulciferGUI(QMainWindow):
         QMessageBox.information(self, "Channel Mappings", "Channel mappings saved successfully.")
         dialog.accept()
 
+    def open_channel_balance_preview(self):
+        from PySide6.QtCore import Qt
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Channel Balance Preview")
+
+        main_layout = QVBoxLayout()
+
+        file_layout = QHBoxLayout()
+        file_layout.addWidget(QLabel("Audio File:"))
+        file_var = QLineEdit()
+        file_layout.addWidget(file_var)
+        browse_btn = QPushButton("Browse")
+        file_layout.addWidget(browse_btn)
+        main_layout.addLayout(file_layout)
+
+        slider_layout = QHBoxLayout()
+        slider_layout.addWidget(QLabel("Right Gain:"))
+        slider = QSlider(Qt.Horizontal)
+        slider.setRange(-100, 100)
+        slider.setValue(0)
+        slider_layout.addWidget(slider)
+        gain_label = QLabel("0.0 dB")
+        slider_layout.addWidget(gain_label)
+        main_layout.addLayout(slider_layout)
+
+        button_layout = QHBoxLayout()
+        play_btn = QPushButton("Play")
+        apply_btn = QPushButton("Apply")
+        close_btn = QPushButton("Close")
+        button_layout.addWidget(play_btn)
+        button_layout.addWidget(apply_btn)
+        button_layout.addWidget(close_btn)
+        main_layout.addLayout(button_layout)
+
+        def update_label(value):
+            gain_label.setText(f"{value/10:.1f} dB")
+
+        slider.valueChanged.connect(update_label)
+
+        def browse_file():
+            file_path, _ = QFileDialog.getOpenFileName(dialog, "Select Audio File", "", "Wave Files (*.wav);;All Files (*)")
+            if file_path:
+                file_var.setText(file_path)
+
+        browse_btn.clicked.connect(browse_file)
+
+        def play():
+            if not os.path.isfile(file_var.text()):
+                QMessageBox.critical(dialog, "Error", "Please select a valid audio file.")
+                return
+            data, fs = sf.read(file_var.text(), always_2d=True)
+            if data.shape[1] < 2:
+                QMessageBox.critical(dialog, "Error", "Audio file must be stereo.")
+                return
+            gain = 10 ** ((slider.value() / 10) / 20)
+            data[:, 1] *= gain
+            sd.stop()
+            sd.play(data, fs)
+
+        play_btn.clicked.connect(play)
+
+        def apply():
+            gain_db = slider.value() / 10
+            text = f"{gain_db:.1f}"
+            existing = [self.channel_balance_var.itemText(i) for i in range(self.channel_balance_var.count())]
+            if text not in existing:
+                self.channel_balance_var.addItem(text)
+            self.channel_balance_var.setCurrentText(text)
+            self.channel_balance_toggle.setChecked(True)
+            dialog.accept()
+
+        apply_btn.clicked.connect(apply)
+        close_btn.clicked.connect(dialog.close)
+
+        dialog.setLayout(main_layout)
+        dialog.exec()
 
     def setup_shortcuts(self):
         QShortcut(QKeySequence("Meta+1"), self, activated=lambda: self.tabs.setCurrentIndex(

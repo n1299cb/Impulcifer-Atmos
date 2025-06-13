@@ -340,6 +340,10 @@ natural channel balance after headphone equalization and room correction would b
 case since there are multiple factors which affect that like placement of the binaural microphones. There are six
 different strategies available for channel balance correction.
 
+The Processing Options tab of the GUI includes a **Preview…** button which lets you audition channel balance changes
+with any audio file. Move the slider to adjust right channel gain in real time and apply the chosen value directly to
+the channel balance option.
+
 Setting `--channel_balance=trend` will equalize right side by the difference trend of left and right sides. This is a
 very smooth difference curve over the entire spectrum. Trend will not affect small deviations and therefore doesn't
 warp the frequency response which could lead to uncanny sensations. Bass, mids and treble are all centered when using
@@ -378,6 +382,18 @@ parameter. The value is a time it should take for the sound to decay by 60 dB in
 time is longer than the given target, the impulse response tails will be shortened with a slope to achieve the desired
 decay velocity. Decay times are not increased if the target is longer than the natural one. The decay time management
 can be a powerful tool for controlling ringing in the room without having to do any physical room treatments.
+
+### Layout Preparation Tool
+
+`generate_layout.py` helps to set up a capture folder. It writes the expected
+file names for a speaker layout and now also creates placeholder sweep files for
+each recording. The folder can later be checked for missing or unexpected files
+with the `--verify` flag.
+
+```bash
+python generate_layout.py --layout=9.1.6 --dir=data/test_capture
+python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
+```
 
 ### Layout Preparation Tool
 
