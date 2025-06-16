@@ -9,11 +9,12 @@ from constants import (
     X_CURVE_DEFAULT_TYPE,
 )
 
-def diffuse_field_compensation(hrir):
-    """Apply diffuse-field compensation to HRIR in-place."""
-    if not APPLY_DIFFUSE_FIELD_COMPENSATION:
-        return
 
+def diffuse_field_compensation(hrir, enabled=APPLY_DIFFUSE_FIELD_COMPENSATION):
+    """Apply diffuse-field compensation to HRIR in-place."""
+    if not enabled:
+        return
+    
     for pair in hrir.irs.values():
         for ir in pair.values():
             fr = ir.frequency_response()

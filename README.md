@@ -321,6 +321,9 @@ for IEMs but not in this case.
 
 Headphone compensation can be skipped by adding a command line argument `--no_headphone_compensation` without any value.
 
+#### Diffuse-Field Compensation
+Add `--diffuse_field_compensation` to enable diffuse-field equalization of the HRIR. By default this processing is disabled.
+
 #### X-Curve Compensation
 Cinema playback often uses the SMPTE X-Curve. Two common variants are provided:
 `minus3db_oct` (about -3 dB per octave) and `minus1p5db_oct` (about -1.5 dB per octave).

@@ -26,6 +26,7 @@ def test_impulcifer_916_pipeline(tmp_path):
         plot=False,
         do_room_correction=False,
         do_headphone_compensation=True,
+        do_diffuse_field_compensation=True,
         do_equalization=False,
         test_signal=None,
         channel_balance="avg",

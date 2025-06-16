@@ -174,6 +174,9 @@ class ImpulciferGUI(QMainWindow):
         self.headphone_eq_toggle = QCheckBox("Enable Headphone EQ")
         layout.addWidget(self.headphone_eq_toggle)
 
+        self.diffuse_field_toggle = QCheckBox("Apply Diffuse-Field Compensation")
+        layout.addWidget(self.diffuse_field_toggle)
+
         self.headphone_file_path_var = QLineEdit()
         self.headphone_file_path_var.setPlaceholderText("e.g., /path/to/headphones.wav")
         browse_hp = QPushButton("Browse")
@@ -346,6 +349,8 @@ class ImpulciferGUI(QMainWindow):
                 args.append(self.compensation_file_path_var.text())
             else:
                 args.append(self.compensation_type_var.currentText().lower().replace("-field", ""))
+        if self.diffuse_field_toggle.isChecked():
+            args.append("--diffuse_field_compensation")
         action = self.x_curve_action_var.currentText()
         if action == "Apply X-Curve":
             args.append("--apply_x_curve")

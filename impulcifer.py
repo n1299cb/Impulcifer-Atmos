@@ -15,8 +15,14 @@ from impulse_response_estimator import ImpulseResponseEstimator
 from hrir import HRIR
 from room_correction import room_correction
 from utils import sync_axes, save_fig_as_png
-from compensation import diffuse_field_compensation, apply_x_curve
-from constants import SPEAKER_NAMES, SPEAKER_LIST_PATTERN, HESUVI_TRACK_ORDER, X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES
+from constants import (
+    SPEAKER_NAMES,
+    SPEAKER_LIST_PATTERN,
+    HESUVI_TRACK_ORDER,
+    APPLY_DIFFUSE_FIELD_COMPENSATION,
+)
+from compensation import diffuse_field_compensation, apply_x_curve as apply_x_curve_filter
+from constants import X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES
 
 
 def main(dir_path=None,
@@ -37,6 +43,7 @@ def main(dir_path=None,
          tilt=0.0,
          do_room_correction=True,
          do_headphone_compensation=True,
+         do_diffuse_field_compensation=APPLY_DIFFUSE_FIELD_COMPENSATION,
          head_ms=1,
          jamesdsp=False,
          hangloose=False,
@@ -105,11 +112,11 @@ def main(dir_path=None,
     hrir = open_binaural_measurements(estimator, dir_path)
 
     # Diffuse Field Compensation Logic
-    diffuse_field_compensation(hrir)
+    diffuse_field_compensation(hrir, enabled=do_diffuse_field_compensation)
     if apply_x_curve and not x_curve_in_capture:
-        apply_x_curve(hrir, curve_type=x_curve_type)
+        apply_x_curve_filter(hrir, curve_type=x_curve_type)
     if remove_x_curve and x_curve_in_capture:
-        apply_x_curve(hrir, inverse=True, curve_type=x_curve_type)
+        apply_x_curve_filter(hrir, inverse=True, curve_type=x_curve_type)
 
     readme = write_readme(os.path.join(dir_path, 'README.md'), hrir, fs)
 
@@ -614,6 +621,9 @@ def create_cli():
                             help='Skip room correction.')
     arg_parser.add_argument('--no_headphone_compensation', action='store_false', dest='do_headphone_compensation',
                             help='Skip headphone compensation.')
+    arg_parser.add_argument('--diffuse_field_compensation', action='store_true',
+                            dest='do_diffuse_field_compensation', default=APPLY_DIFFUSE_FIELD_COMPENSATION,
+                            help='Apply diffuse-field compensation to the HRIR.')
     arg_parser.add_argument('--no_equalization', action='store_false', dest='do_equalization',
                             help='Skip equalization.')
     arg_parser.add_argument('--fs', type=int, default=argparse.SUPPRESS, help='Output sampling rate in Hertz.')
