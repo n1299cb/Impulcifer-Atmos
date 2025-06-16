@@ -605,12 +605,12 @@ class ImpulciferGUI(QMainWindow):
         if dir_path:
             self.measurement_dir_var.setText(dir_path)
 
-        def handle_layout_change(self, text):
-            if text == "Custom...":
-                self.load_custom_layout()
-                return
-            self.selected_layout_name = text
-            self.selected_layout = [SPEAKER_NAMES[i] for i in FORMAT_PRESETS[text]]
+    def handle_layout_change(self, text):
+        if text == "Custom...":
+            self.load_custom_layout()
+            return
+        self.selected_layout_name = text
+        self.selected_layout = [SPEAKER_NAMES[i] for i in FORMAT_PRESETS[text]]
 
     def load_custom_layout(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Layout File", "", "Text or JSON (*.txt *.json);;All Files (*)")
