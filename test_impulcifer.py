@@ -39,3 +39,36 @@ def test_impulcifer_916_pipeline(tmp_path):
     for speaker, pair in hrir.irs.items():
         assert np.max(pair["left"].data) >= 0
         assert np.max(pair["right"].data) >= 0
+
+
+@pytest.mark.skipif(not os.path.isdir(TEST_DIR), reason="test data missing")
+def test_x_curve_options(tmp_path):
+    hrir_files = [f for f in os.listdir(TEST_DIR) if f.lower().endswith(".wav")]
+    if not hrir_files:
+        pytest.skip("No HRIR WAV files found")
+    main(
+        dir_path=TEST_DIR,
+        plot=False,
+        do_room_correction=False,
+        do_headphone_compensation=True,
+        do_equalization=False,
+        test_signal=None,
+        channel_balance="avg",
+        fs=None,
+        apply_x_curve=True,
+        x_curve_type="minus3db_oct",
+    )
+    main(
+        dir_path=TEST_DIR,
+        plot=False,
+        do_room_correction=False,
+        do_headphone_compensation=True,
+        do_equalization=False,
+        test_signal=None,
+        channel_balance="avg",
+        fs=None,
+        remove_x_curve=True,
+        x_curve_in_capture=True,
+        x_curve_type="minus1p5db_oct",
+    )
+    assert os.path.exists(os.path.join(TEST_DIR, "responses.wav"))

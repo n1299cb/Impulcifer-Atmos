@@ -321,6 +321,13 @@ for IEMs but not in this case.
 
 Headphone compensation can be skipped by adding a command line argument `--no_headphone_compensation` without any value.
 
+#### X-Curve Compensation
+Cinema playback often uses the SMPTE X-Curve. Two common variants are provided:
+`minus3db_oct` (about -3 dB per octave) and `minus1p5db_oct` (about -1.5 dB per octave).
+Use `--apply_x_curve` to apply one of these responses or `--remove_x_curve` to flatten a capture that already
+includes it. Add `--x_curve_in_capture` when your recordings were made with the curve so that
+the chosen action is applied correctly. Select the variant with `--x_curve_type=<name>`.
+
 #### Sampling Rate
 Outputs with different sampling rates than the recording sampling rate can be produced with `--fs` parameter. This
 parameter takes a sampling rate in Hertz as value and will then resample the output BRIR to the desired sampling rate if

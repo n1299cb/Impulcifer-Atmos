@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog
 )
 from PySide6.QtGui import QShortcut, QKeySequence
-from constants import FORMAT_PRESETS, SPEAKER_NAMES
+from constants import FORMAT_PRESETS, SPEAKER_NAMES, X_CURVE_TYPES, X_CURVE_DEFAULT_TYPE
 import datetime
 
 class ImpulciferGUI(QMainWindow):
@@ -180,6 +180,20 @@ class ImpulciferGUI(QMainWindow):
         browse_hp.clicked.connect(self.browse_headphone_file)
         layout.addLayout(self.labeled_row("Headphone EQ File (headphones.wav):", self.headphone_file_path_var, browse_hp))
 
+        self.x_curve_action_var = QComboBox()
+        self.x_curve_action_var.addItems(["None", "Apply X-Curve", "Remove X-Curve"])
+        layout.addLayout(self.labeled_row("X-Curve Action:", self.x_curve_action_var))
+
+        self.x_curve_type_var = QComboBox()
+        self.x_curve_type_var.addItems(list(X_CURVE_TYPES.keys()))
+        idx = self.x_curve_type_var.findText(X_CURVE_DEFAULT_TYPE)
+        if idx >= 0:
+            self.x_curve_type_var.setCurrentIndex(idx)
+        layout.addLayout(self.labeled_row("X-Curve Type:", self.x_curve_type_var))
+
+        self.x_curve_in_capture_var = QCheckBox("Capture Includes X-Curve")
+        layout.addWidget(self.x_curve_in_capture_var)
+
         self.tabs.addTab(tab, "Compensation")
 
     def create_room_response_tab(self):
@@ -332,6 +346,15 @@ class ImpulciferGUI(QMainWindow):
                 args.append(self.compensation_file_path_var.text())
             else:
                 args.append(self.compensation_type_var.currentText().lower().replace("-field", ""))
+        action = self.x_curve_action_var.currentText()
+        if action == "Apply X-Curve":
+            args.append("--apply_x_curve")
+        elif action == "Remove X-Curve":
+            args.append("--remove_x_curve")
+        if action != "None":
+            args.extend(["--x_curve_type", self.x_curve_type_var.currentText()])
+        if self.x_curve_in_capture_var.isChecked():
+            args.append("--x_curve_in_capture")
 
         try:
             self.output_text.append(f"Running: {' '.join(args)}")

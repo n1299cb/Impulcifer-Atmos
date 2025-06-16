@@ -15,8 +15,8 @@ from impulse_response_estimator import ImpulseResponseEstimator
 from hrir import HRIR
 from room_correction import room_correction
 from utils import sync_axes, save_fig_as_png
-from constants import SPEAKER_NAMES, SPEAKER_LIST_PATTERN, HESUVI_TRACK_ORDER
-from compensation import diffuse_field_compensation
+from compensation import diffuse_field_compensation, apply_x_curve
+from constants import SPEAKER_NAMES, SPEAKER_LIST_PATTERN, HESUVI_TRACK_ORDER, X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES
 
 
 def main(dir_path=None,
@@ -40,7 +40,11 @@ def main(dir_path=None,
          head_ms=1,
          jamesdsp=False,
          hangloose=False,
-         do_equalization=True):
+         do_equalization=True,
+         apply_x_curve=False,
+         remove_x_curve=False,
+         x_curve_in_capture=False,
+         x_curve_type=X_CURVE_DEFAULT_TYPE):
     """"""
     if dir_path is None or not os.path.isdir(dir_path):
         raise NotADirectoryError(f'Given dir path "{dir_path}"" is not a directory.')
@@ -102,6 +106,10 @@ def main(dir_path=None,
 
     # Diffuse Field Compensation Logic
     diffuse_field_compensation(hrir)
+    if apply_x_curve and not x_curve_in_capture:
+        apply_x_curve(hrir, curve_type=x_curve_type)
+    if remove_x_curve and x_curve_in_capture:
+        apply_x_curve(hrir, inverse=True, curve_type=x_curve_type)
 
     readme = write_readme(os.path.join(dir_path, 'README.md'), hrir, fs)
 
@@ -661,6 +669,15 @@ def create_cli():
                                  'frequency response. 1 dB/octave will produce nearly 10 dB difference in '
                                  'desired value between 20 Hz and 20 kHz. Tilt is applied with bass boost and both '
                                  'will affect the bass gain.')
+    arg_parser.add_argument('--apply_x_curve', action='store_true',
+                            help='Apply SMPTE X-Curve to the output HRIR.')
+    arg_parser.add_argument('--remove_x_curve', action='store_true',
+                            help='Remove SMPTE X-Curve from the output HRIR.')
+    arg_parser.add_argument('--x_curve_in_capture', action='store_true',
+                            help='Capture already includes X-Curve.')
+    arg_parser.add_argument('--x_curve_type', type=str, default=X_CURVE_DEFAULT_TYPE,
+                            choices=list(X_CURVE_TYPES.keys()),
+                            help='Which X-Curve profile to use.')
     args = vars(arg_parser.parse_args())
     if 'bass_boost' in args:
         bass_boost = args['bass_boost'].split(',')

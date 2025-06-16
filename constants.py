@@ -47,6 +47,25 @@ APPLY_DIFFUSE_FIELD_COMPENSATION = False
 # Applies headphone EQ compensation
 APPLY_HEADPHONE_EQ = True
 
+# Applies X-Curve compensation (~-3 dB/oct above 2 kHz)
+APPLY_X_CURVE_COMPENSATION = False
+
+# Available X-Curve profiles with reference frequency and slope in dB/octave
+X_CURVE_TYPES = {
+    # Standard cinema X-Curve: ∼-3 dB/octave above 2 kHz
+    "minus3db_oct": {"ref_frequency": 2000, "slope": -3.0},
+    # Small room variant: ∼-1.5 dB/octave above 2 kHz
+    "minus1p5db_oct": {"ref_frequency": 2000, "slope": -1.5},
+}
+
+# Default profile used when type is not specified
+X_CURVE_DEFAULT_TYPE = "minus3db_oct"
+
+# Reference frequency for X-Curve slope in Hz (for backward compatibility)
+X_CURVE_REF_FREQUENCY = X_CURVE_TYPES[X_CURVE_DEFAULT_TYPE]["ref_frequency"]
+# Slope of X-Curve in decibels per octave (for backward compatibility)
+X_CURVE_SLOPE_DB_PER_OCTAVE = X_CURVE_TYPES[X_CURVE_DEFAULT_TYPE]["slope"]
+
 # Applies room correction filtering (e.g., smoothing or flattening)
 APPLY_ROOM_CORRECTION = False
 
