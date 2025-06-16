@@ -149,6 +149,8 @@ Steps and commands for doing measurements with 7.1 surround system:
 | Put microphones in ears, put headphones on | `python recorder.py --play="data/sweep-seg-FL,FR-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/headphones.wav"` |
 | Take heaphones off, look forward | `python recorder.py --play="data/sweep-seg-FL,FC,FR,SR,BR,BL,SL-7.1-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/FL,FC,FR,SR,BR,BL,SL.wav"` |
 
+After each capture a report file `<record>_report.txt` is written next to the WAV file with peak level, headroom and noise floor details.
+
 ### 7.1.4 Speaker Setup
 SMPTE channel order: `FL, FR, FC, LFE, SL, SR, BL, BR, TFL, TFR, TBL, TBR`
 

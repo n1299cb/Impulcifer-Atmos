@@ -14,7 +14,7 @@ class DeviceNotFoundError(Exception):
     pass
 
 
-def record_target(file_path, length, fs, channels=2, append=False, output_file=None):
+def record_target(file_path, length, fs, channels=2, append=False, output_file=None, report_file=None):
     """Records audio and writes it to a file.
 
     Args:
@@ -25,13 +25,22 @@ def record_target(file_path, length, fs, channels=2, append=False, output_file=N
         append: Add track(s) to an existing file? Silence will be added to end of each track to make all equal in
                 length
         output_file: Optional custom file path for recording output
+        report_file: Optional path for recording quality report. Defaults to "<record>_report.txt".
 
     Returns:
         None
     """
     recording = sd.rec(length, samplerate=fs, channels=channels, blocking=True)
     recording = np.transpose(recording)
-    max_gain = 20 * np.log10(np.max(np.abs(recording)))
+    peak = np.max(np.abs(recording))
+    max_gain = 20 * np.log10(peak) if peak > 0 else -np.inf
+    headroom = -max_gain
+
+    # Estimate noise floor from the last 10 %% of the recording
+    tail_start = int(recording.shape[1] * 0.9)
+    tail = recording[:, tail_start:]
+    noise_rms = np.sqrt(np.mean(tail ** 2))
+    noise_floor = 20 * np.log10(noise_rms) if noise_rms > 0 else -np.inf
     if append and os.path.isfile(file_path):
         # Adding to existing file, read the file
         _fs, data = read_wav(file_path, expand=True)
@@ -45,8 +54,22 @@ def record_target(file_path, length, fs, channels=2, append=False, output_file=N
         recording = np.vstack([data, recording])
     if output_file:
         file_path = output_file
+    
     write_wav(file_path, fs, recording)
-    print(f'Headroom: {-1.0*max_gain:.1f} dB')
+    print(f'Headroom: {headroom:.1f} dB')
+
+    if peak >= 1.0:
+        print('Warning: clipping detected!')
+    if noise_floor > -50:
+        print(f'Warning: high noise floor ({noise_floor:.1f} dBFS)')
+
+    if report_file:
+        with open(report_file, 'w') as f:
+            f.write(f'Peak level: {max_gain:.1f} dBFS\n')
+            f.write(f'Headroom: {headroom:.1f} dB\n')
+            f.write(f'Noise floor: {noise_floor:.1f} dBFS\n')
+            f.write(f'Clipping: {"yes" if peak >= 1.0 else "no"}\n')
+            f.write(f'Excess noise: {"yes" if noise_floor > -50 else "no"}\n')
 
 
 def get_host_api_names():
@@ -179,7 +202,8 @@ def play_and_record(
         host_api=None,
         channels=2,
         append=False,
-        output_file=None):
+        output_file=None,
+        report_file=None):
     """Plays one file and records another at the same time
 
     Args:
@@ -191,6 +215,7 @@ def play_and_record(
         channels: Number of output channels
         append: Add track(s) to an existing file? Silence will be added to end of each track to make all equal in
                 length
+        report_file: Path to write recording quality report. Defaults to "<record>_report.txt".
 
     Returns:
         None
@@ -198,6 +223,10 @@ def play_and_record(
     # Create output directory
     out_dir, out_file = os.path.split(os.path.abspath(record))
     os.makedirs(out_dir, exist_ok=True)
+
+    if report_file is None:
+        base = os.path.splitext(os.path.basename(output_file or record))[0]
+        report_file = os.path.join(out_dir, f"{base}_report.txt")
 
     # Validate speaker layout from filename
     speaker_names = os.path.splitext(out_file)[0].split(',')
@@ -234,7 +263,12 @@ def play_and_record(
     recorder = Thread(
         target=record_target,
         args=(record, data.shape[1], fs),
-        kwargs={'channels': channels, 'append': append, 'output_file': output_file}
+        kwargs={
+            'channels': channels,
+            'append': append,
+            'output_file': output_file,
+            'report_file': report_file,
+        }
     )
     recorder.start()
     sd.play(np.transpose(data), samplerate=fs, blocking=True)
@@ -266,6 +300,8 @@ def create_cli():
                                  'example: "Zoom H1n WASAPI"')
     arg_parser.add_argument('--output_file', type=str, default=None,
                             help='Optional custom output filename (e.g., headphones.wav). Overrides automatic naming.')
+    arg_parser.add_argument('--report_file', type=str, default=None,
+                            help='Optional path for recording quality report file.')
     arg_parser.add_argument('--host_api', type=str, default=argparse.SUPPRESS,
                             help='Host API name to prefer for input and output devices. Supported options on Windows '
                                  'are: "MME", "DirectSound" and "WASAPI". This is used when input and '
