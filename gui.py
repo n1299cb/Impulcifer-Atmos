@@ -295,9 +295,9 @@ class ImpulciferGUI(QMainWindow):
         self.recorder_button.clicked.connect(self.launch_recorder)
         layout.addWidget(self.recorder_button)
 
-        capture_btn = QPushButton("Capture Wizard")
-        capture_btn.clicked.connect(self.launch_capture_wizard)
-        layout.addWidget(capture_btn)
+        self.capture_wizard_button = QPushButton("Capture Wizard")
+        self.capture_wizard_button.clicked.connect(self.launch_capture_wizard)
+        layout.addWidget(self.capture_wizard_button)
 
         self.hp_recorder_button = QPushButton("Record Headphone EQ")
         self.hp_recorder_button.clicked.connect(self.launch_headphone_recorder)
