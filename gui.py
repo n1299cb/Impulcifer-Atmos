@@ -11,12 +11,13 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFileDialog, QComboBox, QLineEdit,
     QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog,
-    QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsTextItem
+    QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsTextItem,
+    QProgressBar
 )
 from PySide6.QtGui import (
-    QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter
+    QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter, QRadialGradient
 )
-from PySide6.QtCore import Qt, QPointF
+from PySide6.QtCore import Qt, QPointF, QTimer
 from constants import (
     FORMAT_PRESETS,
     SPEAKER_NAMES,
@@ -119,6 +120,18 @@ class ImpulciferGUI(QMainWindow):
         view_btn = QPushButton("View Layout")
         view_btn.clicked.connect(self.open_layout_viewer)
         layout.addWidget(view_btn)
+
+        # Real-time input level monitor
+        self.level_bar = QProgressBar()
+        self.level_bar.setRange(0, 100)
+        self.monitor_btn = QPushButton("Start Monitor")
+        self.monitor_btn.setCheckable(True)
+        self.monitor_btn.toggled.connect(self.toggle_monitor)
+        layout.addLayout(self.labeled_row("Input Level:", self.level_bar, self.monitor_btn))
+
+        self.monitor_timer = QTimer()
+        self.monitor_timer.timeout.connect(self.read_monitor_level)
+        self.monitor_process = None
 
         # Validation button
         self.test_signal_path_var.textChanged.connect(self.validate_measurement_setup)
@@ -814,33 +827,95 @@ class ImpulciferGUI(QMainWindow):
         dialog.exec()
 
     def open_layout_viewer(self):
+        """Interactive viewer for arranging speaker icons."""
         dialog = QDialog(self)
         dialog.setWindowTitle("Layout Viewer")
 
-        main_layout = QVBoxLayout()
+        main_layout = QVBoxLayout(dialog)
+
+        view_selector = QComboBox()
+        view_selector.addItems(["Top", "Side", "Isometric"])
+        main_layout.addWidget(view_selector)
+
         scene = QGraphicsScene()
         view = QGraphicsView(scene)
         view.setRenderHint(QPainter.Antialiasing)
+        view.setBackgroundBrush(QColor("#121212"))
         main_layout.addWidget(view)
+
+        # Reference grid
+        for r in range(50, 201, 50):
+            circle = QGraphicsEllipseItem(-r, -r, r * 2, r * 2)
+            circle.setPen(QPen(QColor("#444"), 1, Qt.DashLine))
+            circle.setBrush(Qt.NoBrush)
+            circle.setZValue(-1)
+            scene.addItem(circle)
+
+        center_item = QGraphicsEllipseItem(-5, -5, 10, 10)
+        center_item.setBrush(QBrush(QColor("#888")))
+        center_item.setPen(QPen(Qt.NoPen))
+        center_item.setZValue(-1)
+        scene.addItem(center_item)
+
+        class SpeakerItem(QGraphicsEllipseItem):
+            def __init__(self, name):
+                super().__init__(-15, -15, 30, 30)
+                grad = QRadialGradient(0, 0, 15, 0, 0)
+                grad.setColorAt(0.0, QColor("#00d0ff"))
+                grad.setColorAt(1.0, QColor("#003872"))
+                self.setBrush(QBrush(grad))
+                self.setPen(QPen(QColor("#09f"), 1.5))
+                self.setFlag(QGraphicsEllipseItem.ItemIsMovable, True)
+                self.setAcceptHoverEvents(True)
+                self.name = name
+                text = QGraphicsTextItem(name, self)
+                text.setPos(-text.boundingRect().width() / 2, -30)
+                self.setData(0, name)
+                self.setToolTip(name)
+
+            def hoverEnterEvent(self, event):
+                self.setPen(QPen(QColor("#fff"), 2))
+                super().hoverEnterEvent(event)
+
+            def hoverLeaveEvent(self, event):
+                self.setPen(QPen(QColor("#09f"), 1.5))
+                super().hoverLeaveEvent(event)
 
         items = []
         radius = 150
-        for i, name in enumerate(self.selected_layout):
-            angle = (360 / len(self.selected_layout)) * i
-            pos = getattr(self, "layout_positions", {}).get(name)
-            if pos is None:
+
+        def default_pos(index, name, view_type):
+            if view_type == "Side":
+                x = -radius + (2 * radius) * index / max(1, len(self.selected_layout) - 1)
+                y = -60 if name.startswith("T") else 60
+                return QPointF(x, y)
+            elif view_type == "Isometric":
+                angle = (360 / len(self.selected_layout)) * index
                 rad = math.radians(angle)
-                pos = QPointF(radius * math.cos(rad), radius * math.sin(rad))
-            item = QGraphicsEllipseItem(-15, -15, 30, 30)
-            item.setBrush(QBrush(QColor("#7db4db")))
-            item.setPen(QPen(Qt.black))
-            item.setFlag(QGraphicsEllipseItem.ItemIsMovable, True)
-            item.setPos(pos)
-            text = QGraphicsTextItem(name, item)
-            text.setPos(-text.boundingRect().width() / 2, -30)
-            item.setData(0, name)
+                x = radius * math.cos(rad)
+                y = radius * math.sin(rad) * 0.5
+                if name.startswith("T"):
+                    y -= 40
+                return QPointF(x, y)
+            # Top view
+            angle = (360 / len(self.selected_layout)) * index
+            rad = math.radians(angle)
+            return QPointF(radius * math.cos(rad), radius * math.sin(rad))
+
+        for i, name in enumerate(self.selected_layout):
+            item = SpeakerItem(name)
             scene.addItem(item)
             items.append(item)
+
+        def update_positions():
+            view_type = view_selector.currentText()
+            for idx, item in enumerate(items):
+                pos = getattr(self, "layout_positions", {}).get(item.name)
+                if pos is None:
+                    pos = default_pos(idx, item.name, view_type)
+                item.setPos(pos)
+
+        update_positions()
 
         btn_row = QHBoxLayout()
         save_btn = QPushButton("Save")
@@ -856,16 +931,16 @@ class ImpulciferGUI(QMainWindow):
             dialog.accept()
 
         def reset_positions():
+            view_type = view_selector.currentText()
             for idx, item in enumerate(items):
-                angle = (360 / len(items)) * idx
-                rad = math.radians(angle)
-                item.setPos(QPointF(radius * math.cos(rad), radius * math.sin(rad)))
+                target = default_pos(idx, item.name, view_type)
+                item.setPos(target)
 
         save_btn.clicked.connect(save_positions)
         reset_btn.clicked.connect(reset_positions)
         close_btn.clicked.connect(dialog.reject)
+        view_selector.currentTextChanged.connect(update_positions)
 
-        dialog.setLayout(main_layout)
         dialog.exec()
 
     def open_layout_wizard(self):
