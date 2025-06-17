@@ -62,7 +62,7 @@ class ImpulciferGUI(QMainWindow):
         In this tab, configure the test signal, measurement directory, and select
         playback and recording devices used for capturing impulse responses.
         """))
-        
+
         self.test_signal_path_var = QLineEdit()
         self.test_signal_path_var.setMaximumWidth(300)
         
@@ -88,6 +88,10 @@ class ImpulciferGUI(QMainWindow):
         self.layout_var.setCurrentText(self.selected_layout_name)
         self.layout_var.currentTextChanged.connect(self.handle_layout_change)
         layout.addLayout(self.labeled_row("Speaker Layout:", self.layout_var))
+
+        save_layout_btn = QPushButton("Save Layout…")
+        save_layout_btn.clicked.connect(self.save_layout_preset)
+        layout.addWidget(save_layout_btn)
 
         self.playback_device_var = QComboBox()
         self.playback_device_var.setMaximumWidth(200)
@@ -670,6 +674,20 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Layout Load Error", str(e))
             self.layout_var.setCurrentText(self.selected_layout_name)
 
+    def save_layout_preset(self):
+        try:
+            from constants import save_user_layout_preset
+            name, groups = self.selected_layout_name, [[sp] for sp in self.selected_layout]
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save Layout", f"{name}.json", "JSON Files (*.json);;All Files (*)")
+            if not file_path:
+                return
+            save_user_layout_preset(name, groups, file_path)
+            QMessageBox.information(self, "Layout Saved", f"Layout saved to {file_path}")
+            if self.layout_var.findText(name) == -1:
+                self.layout_var.insertItem(self.layout_var.count()-1, name)
+        except Exception as e:
+            QMessageBox.critical(self, "Save Layout Error", str(e))
+
     def map_channels(self):
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFormLayout
 
@@ -777,7 +795,6 @@ class ImpulciferGUI(QMainWindow):
 
         dialog.setLayout(main_layout)
         dialog.exec()
-
 
     def create_visualization_tab(self):
         tab = QWidget()

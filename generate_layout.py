@@ -10,7 +10,7 @@ import argparse
 import os
 import shutil
 
-from constants import SPEAKER_LAYOUTS
+from constants import SPEAKER_LAYOUTS, save_user_layout_preset
 
 DEFAULT_SWEEP = os.path.join("data", "sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav")
 
@@ -80,6 +80,7 @@ def main() -> None:
     parser.add_argument("--layout", help="Layout name to use")
     parser.add_argument("--dir", default="data/test_capture", help="Target directory")
     parser.add_argument("--verify", action="store_true", help="Verify existing files")
+    parser.add_argument("--save_preset", metavar="FILE", help="Write layout groups to JSON preset")
     args = parser.parse_args()
 
     layout_name, groups = select_layout(args.layout)
@@ -88,6 +89,9 @@ def main() -> None:
         verify_layout(layout_name, groups, args.dir)
     else:
         init_layout(layout_name, groups, args.dir)
+    
+    if args.save_preset:
+        save_user_layout_preset(layout_name, groups, args.save_preset)
 
 
 if __name__ == "__main__":

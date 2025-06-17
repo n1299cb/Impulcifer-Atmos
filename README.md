@@ -401,7 +401,9 @@ can be a powerful tool for controlling ringing in the room without having to do 
 The Setup tab now features a **Speaker Layout** selector. Choose any of the
 presets from `constants.FORMAT_PRESETS` or select **Custom…** to load a
 comma-separated or JSON list of speaker names. Loaded layouts are used when
-mapping playback channels in the **Map Channels** dialog.
+mapping playback channels in the **Map Channels** dialog. Custom layouts can be
+saved as presets in JSON format via the **Save Layout…** button so they appear in
+the selector next time the application starts.
 
 ### Layout Preparation Tool
 
@@ -409,6 +411,7 @@ mapping playback channels in the **Map Channels** dialog.
 file names for a speaker layout and now also creates placeholder sweep files for
 each recording. The folder can later be checked for missing or unexpected files
 with the `--verify` flag.
+You can also store the selected groups as a preset with `--save_preset layout.json`.
 
 These same actions can now be performed from the GUI using the **Layout Wizard**
 button in the Setup tab.
@@ -416,6 +419,7 @@ button in the Setup tab.
 ```bash
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
+python generate_layout.py --layout=9.1.6 --save_preset my_layout.json
 ```
 
 

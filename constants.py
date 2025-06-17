@@ -29,10 +29,53 @@ SPEAKER_LAYOUT_INDEXES = {
     ]
 }
 # Resolved layout mappings (label groups)
+import json
+import os
+
+USER_LAYOUT_PRESETS_FILE = os.environ.get(
+    "IMPULCIFER_LAYOUT_PRESETS", "user_layouts.json"
+)
+
+
+def load_user_layout_presets(file_path: str = USER_LAYOUT_PRESETS_FILE) -> dict:
+    """Load user-defined layouts from JSON file."""
+    if not os.path.exists(file_path):
+        return {}
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return {}
+        return {k: v for k, v in data.items() if isinstance(v, list)}
+    except Exception:
+        return {}
+
+
+def save_user_layout_preset(
+    name: str, groups: list[list[str]], file_path: str = USER_LAYOUT_PRESETS_FILE
+) -> None:
+    """Save layout preset to JSON file."""
+    layouts = load_user_layout_presets(file_path)
+    layouts[name] = groups
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(layouts, f, indent=2)
+
+
+USER_SPEAKER_LAYOUTS = load_user_layout_presets()
+
 SPEAKER_LAYOUTS = {
     name: [[SPEAKER_NAMES[i] for i in group] for group in groups]
     for name, groups in SPEAKER_LAYOUT_INDEXES.items()
 }
+SPEAKER_LAYOUTS.update(USER_SPEAKER_LAYOUTS)
+
+# Convert user layout groups to index mappings using built-in speaker names
+USER_LAYOUT_INDEXES = {
+    name: [tuple(SPEAKER_NAMES.index(ch) for ch in group) for group in groups]
+    for name, groups in USER_SPEAKER_LAYOUTS.items()
+    if all(ch in SPEAKER_NAMES for group in groups for ch in group)
+}
+SPEAKER_LAYOUT_INDEXES.update(USER_LAYOUT_INDEXES)
 # Regex patterns and helpers
 SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
 SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(
