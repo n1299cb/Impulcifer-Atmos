@@ -12,7 +12,16 @@ from PySide6.QtWidgets import (
     QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog
 )
 from PySide6.QtGui import QShortcut, QKeySequence
-from constants import FORMAT_PRESETS, SPEAKER_NAMES, X_CURVE_TYPES, X_CURVE_DEFAULT_TYPE
+from constants import (
+    FORMAT_PRESETS,
+    SPEAKER_NAMES,
+    X_CURVE_TYPES,
+    X_CURVE_DEFAULT_TYPE,
+    SPEAKER_LAYOUTS,
+)
+from generate_layout import select_layout, init_layout, verify_layout
+from contextlib import redirect_stdout
+import io
 import datetime
 
 class ImpulciferGUI(QMainWindow):
@@ -53,17 +62,7 @@ class ImpulciferGUI(QMainWindow):
         In this tab, configure the test signal, measurement directory, and select
         playback and recording devices used for capturing impulse responses.
         """))
-                                                                
         
-        
-        
-        
-        
-        
-        
-        
-        
-
         self.test_signal_path_var = QLineEdit()
         self.test_signal_path_var.setMaximumWidth(300)
         
@@ -104,7 +103,11 @@ class ImpulciferGUI(QMainWindow):
         map_btn.clicked.connect(self.map_channels)
         layout.addWidget(map_btn)
 
-                # Validation button
+        wizard_btn = QPushButton("Layout Wizard")
+        wizard_btn.clicked.connect(self.open_layout_wizard)
+        layout.addWidget(wizard_btn)
+
+        # Validation button
         self.test_signal_path_var.textChanged.connect(self.validate_measurement_setup)
         self.measurement_dir_var.textChanged.connect(self.validate_measurement_setup)
 
@@ -718,6 +721,63 @@ class ImpulciferGUI(QMainWindow):
 
         dialog.setLayout(bottom_layout)
         dialog.exec()
+
+    def open_layout_wizard(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Layout Wizard")
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(QLabel(
+            "Prepare or verify a capture folder for the selected layout."))
+
+        layout_combo = QComboBox()
+        layout_combo.addItems(SPEAKER_LAYOUTS.keys())
+        current = self.layout_var.currentText()
+        if current in SPEAKER_LAYOUTS:
+            layout_combo.setCurrentText(current)
+        main_layout.addLayout(self.labeled_row("Layout:", layout_combo))
+
+        dir_edit = QLineEdit(self.measurement_dir_var.text())
+        browse_btn = QPushButton("Browse")
+
+        def browse_dir():
+            d = QFileDialog.getExistingDirectory(dialog, "Select Directory", dir_edit.text())
+            if d:
+                dir_edit.setText(d)
+
+        browse_btn.clicked.connect(browse_dir)
+        main_layout.addLayout(self.labeled_row("Directory:", dir_edit, browse_btn))
+
+        output_box = QTextEdit()
+        output_box.setReadOnly(True)
+        main_layout.addWidget(output_box)
+
+        btn_row = QHBoxLayout()
+        init_btn = QPushButton("Initialize")
+        verify_btn = QPushButton("Verify")
+        close_btn = QPushButton("Close")
+        btn_row.addWidget(init_btn)
+        btn_row.addWidget(verify_btn)
+        btn_row.addWidget(close_btn)
+        main_layout.addLayout(btn_row)
+
+        def run_action(func):
+            name, groups = select_layout(layout_combo.currentText())
+            buffer = io.StringIO()
+            try:
+                with redirect_stdout(buffer):
+                    func(name, groups, dir_edit.text())
+            except Exception as e:
+                QMessageBox.critical(dialog, "Error", str(e))
+            output_box.setPlainText(buffer.getvalue())
+
+        init_btn.clicked.connect(lambda: run_action(init_layout))
+        verify_btn.clicked.connect(lambda: run_action(verify_layout))
+        close_btn.clicked.connect(dialog.accept)
+
+        dialog.setLayout(main_layout)
+        dialog.exec()
+
 
     def create_visualization_tab(self):
         tab = QWidget()

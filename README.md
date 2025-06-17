@@ -410,6 +410,9 @@ file names for a speaker layout and now also creates placeholder sweep files for
 each recording. The folder can later be checked for missing or unexpected files
 with the `--verify` flag.
 
+These same actions can now be performed from the GUI using the **Layout Wizard**
+button in the Setup tab.
+
 ```bash
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
