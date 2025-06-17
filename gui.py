@@ -394,12 +394,24 @@ class ImpulciferGUI(QMainWindow):
             playback_idx = self.playback_device_var.currentText().split(':')[0]
             record_idx = self.recording_device_var.currentText().split(':')[0]
 
+            output_channels = ",".join(
+                str(c) for c in self.channel_mappings.get("output_channels", [])
+            )
+            input_channels = ",".join(
+                str(c) for c in self.channel_mappings.get("input_channels", [])
+            )
+
             args = [
-                sys.executable, "recorder.py",
-                "--output_channels", output_channels,
-                "--input_channels", input_channels,
-                "--playback_device", playback_idx,
-                "--recording_device", record_idx,
+                sys.executable,
+                "recorder.py",
+                "--output_channels",
+                output_channels,
+                "--input_channels",
+                input_channels,
+                "--playback_device",
+                playback_idx,
+                "--recording_device",
+                record_idx,
                 "--output_dir", self.measurement_dir_var.text(),
                 "--test_signal", self.test_signal_path_var.text(),
                 "--output_file", os.path.join(self.measurement_dir_var.text(), "room.wav")
@@ -421,13 +433,24 @@ class ImpulciferGUI(QMainWindow):
         try:
             playback_idx = self.playback_device_var.currentText().split(':')[0]
             record_idx = self.recording_device_var.currentText().split(':')[0]
+            output_channels = ",".join(
+                str(c) for c in self.channel_mappings.get("output_channels", [])
+            )
+            input_channels = ",".join(
+                str(c) for c in self.channel_mappings.get("input_channels", [])
+            )
 
             args = [
-                sys.executable, "recorder.py",
-                "--output_channels", output_channels,
-                "--input_channels", input_channels,
-                "--playback_device", playback_idx,
-                "--recording_device", record_idx,
+                sys.executable,
+                "recorder.py",
+                "--output_channels",
+                output_channels,
+                "--input_channels",
+                input_channels,
+                "--playback_device",
+                playback_idx,
+                "--recording_device",
+                record_idx,
                 "--output_dir", self.measurement_dir_var.text(),
                 "--test_signal", self.test_signal_path_var.text(),
                 "--output_file", os.path.join(self.measurement_dir_var.text(), "headphones.wav")
@@ -449,13 +472,24 @@ class ImpulciferGUI(QMainWindow):
         try:
             playback_idx = self.playback_device_var.currentText().split(':')[0]
             record_idx = self.recording_device_var.currentText().split(':')[0]
+            output_channels = ",".join(
+                str(c) for c in self.channel_mappings.get("output_channels", [])
+            )
+            input_channels = ",".join(
+                str(c) for c in self.channel_mappings.get("input_channels", [])
+            )
 
             args = [
-                sys.executable, "recorder.py",
-                "--output_channels", output_channels,
-                "--input_channels", input_channels,
-                "--playback_device", playback_idx,
-                "--recording_device", record_idx,
+                sys.executable,
+                "recorder.py",
+                "--output_channels",
+                output_channels,
+                "--input_channels",
+                input_channels,
+                "--playback_device",
+                playback_idx,
+                "--recording_device",
+                record_idx,
                 "--output_dir", self.measurement_dir_var.text(),
                 "--test_signal", self.test_signal_path_var.text()
             ]

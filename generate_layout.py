@@ -12,7 +12,12 @@ import shutil
 
 from constants import SPEAKER_LAYOUTS, save_user_layout_preset
 
-DEFAULT_SWEEP = os.path.join("data", "sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_SWEEP = os.path.join(
+    BASE_DIR,
+    "data",
+    "sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav",
+)
 
 
 def select_layout(name: str | None) -> tuple[str, list[list[str]]]:

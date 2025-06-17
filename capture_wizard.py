@@ -3,11 +3,16 @@ import argparse
 from generate_layout import select_layout, init_layout
 import recorder
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_STEREO_SWEEP = os.path.join(
-    "data", "sweep-seg-FL,FR-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav"
+    BASE_DIR,
+    "data",
+    "sweep-seg-FL,FR-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav",
 )
 DEFAULT_MONO_SWEEP = os.path.join(
-    "data", "sweep-seg-FL-mono-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav"
+    BASE_DIR,
+    "data",
+    "sweep-seg-FL-mono-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav",
 )
 
 def run_capture(
