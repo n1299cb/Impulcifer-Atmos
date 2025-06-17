@@ -3,16 +3,20 @@ import os
 import subprocess
 import sounddevice as sd
 import soundfile as sf
+import math
 import matplotlib
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFileDialog, QComboBox, QLineEdit,
-    QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog
+    QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog,
+    QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsTextItem
 )
-from PySide6.QtGui import QShortcut, QKeySequence, QPixmap
-from PySide6.QtCore import Qt
+from PySide6.QtGui import (
+    QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter
+)
+from PySide6.QtCore import Qt, QPointF
 from constants import (
     FORMAT_PRESETS,
     SPEAKER_NAMES,
@@ -111,6 +115,10 @@ class ImpulciferGUI(QMainWindow):
         wizard_btn = QPushButton("Layout Wizard")
         wizard_btn.clicked.connect(self.open_layout_wizard)
         layout.addWidget(wizard_btn)
+
+        view_btn = QPushButton("View Layout")
+        view_btn.clicked.connect(self.open_layout_viewer)
+        layout.addWidget(view_btn)
 
         # Validation button
         self.test_signal_path_var.textChanged.connect(self.validate_measurement_setup)
@@ -803,6 +811,61 @@ class ImpulciferGUI(QMainWindow):
         bottom_layout.addWidget(save_btn)
 
         dialog.setLayout(bottom_layout)
+        dialog.exec()
+
+    def open_layout_viewer(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Layout Viewer")
+
+        main_layout = QVBoxLayout()
+        scene = QGraphicsScene()
+        view = QGraphicsView(scene)
+        view.setRenderHint(QPainter.Antialiasing)
+        main_layout.addWidget(view)
+
+        items = []
+        radius = 150
+        for i, name in enumerate(self.selected_layout):
+            angle = (360 / len(self.selected_layout)) * i
+            pos = getattr(self, "layout_positions", {}).get(name)
+            if pos is None:
+                rad = math.radians(angle)
+                pos = QPointF(radius * math.cos(rad), radius * math.sin(rad))
+            item = QGraphicsEllipseItem(-15, -15, 30, 30)
+            item.setBrush(QBrush(QColor("#7db4db")))
+            item.setPen(QPen(Qt.black))
+            item.setFlag(QGraphicsEllipseItem.ItemIsMovable, True)
+            item.setPos(pos)
+            text = QGraphicsTextItem(name, item)
+            text.setPos(-text.boundingRect().width() / 2, -30)
+            item.setData(0, name)
+            scene.addItem(item)
+            items.append(item)
+
+        btn_row = QHBoxLayout()
+        save_btn = QPushButton("Save")
+        reset_btn = QPushButton("Reset")
+        close_btn = QPushButton("Close")
+        btn_row.addWidget(save_btn)
+        btn_row.addWidget(reset_btn)
+        btn_row.addWidget(close_btn)
+        main_layout.addLayout(btn_row)
+
+        def save_positions():
+            self.layout_positions = {item.data(0): item.pos() for item in items}
+            dialog.accept()
+
+        def reset_positions():
+            for idx, item in enumerate(items):
+                angle = (360 / len(items)) * idx
+                rad = math.radians(angle)
+                item.setPos(QPointF(radius * math.cos(rad), radius * math.sin(rad)))
+
+        save_btn.clicked.connect(save_positions)
+        reset_btn.clicked.connect(reset_positions)
+        close_btn.clicked.connect(dialog.reject)
+
+        dialog.setLayout(main_layout)
         dialog.exec()
 
     def open_layout_wizard(self):
