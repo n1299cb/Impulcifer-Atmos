@@ -9,6 +9,7 @@ recordings in the directory.
 import argparse
 import os
 import shutil
+from typing import Optional
 
 from constants import SPEAKER_LAYOUTS, save_user_layout_preset
 
@@ -20,7 +21,7 @@ DEFAULT_SWEEP = os.path.join(
 )
 
 
-def select_layout(name: str | None) -> tuple[str, list[list[str]]]:
+def select_layout(name: Optional[str]) -> tuple[str, list[list[str]]]:
     """Return layout name and groups, prompting user if needed."""
     layout_names = list(SPEAKER_LAYOUTS.keys())
     if name is None:

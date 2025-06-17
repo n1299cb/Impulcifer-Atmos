@@ -49,9 +49,9 @@ class ImpulciferGUI(QMainWindow):
         self.create_compensation_tab()
         self.create_room_response_tab()
         self.create_headphone_eq_tab()
-        self.create_execution_tab()
+        self.create_execution_tab()  
+        self.create_measurement_setup_tab() # Measurement setup defines widgets used in later tabs
         self.create_visualization_tab()
-        self.create_measurement_setup_tab()  # Add Setup tab last
         self.setup_shortcuts()
 
     def create_measurement_setup_tab(self):
