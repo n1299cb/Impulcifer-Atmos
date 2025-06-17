@@ -11,7 +11,8 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QFileDialog, QComboBox, QLineEdit,
     QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog
 )
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut, QKeySequence, QPixmap
+from PySide6.QtCore import Qt
 from constants import (
     FORMAT_PRESETS,
     SPEAKER_NAMES,
@@ -114,6 +115,7 @@ class ImpulciferGUI(QMainWindow):
         # Validation button
         self.test_signal_path_var.textChanged.connect(self.validate_measurement_setup)
         self.measurement_dir_var.textChanged.connect(self.validate_measurement_setup)
+        self.measurement_dir_var.textChanged.connect(self.load_plot_files)
 
         self.tabs.addTab(tab, "Setup")
 
@@ -809,14 +811,29 @@ class ImpulciferGUI(QMainWindow):
         from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
         from matplotlib.figure import Figure
 
-        
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
 
+        control_row = QHBoxLayout()
+        self.plot_selector = QComboBox()
+        self.plot_selector.currentTextChanged.connect(self.display_selected_plot)
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.clicked.connect(self.load_plot_files)
+        control_row.addWidget(self.plot_selector)
+        control_row.addWidget(refresh_btn)
+        layout.addLayout(control_row)
+
+        self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.image_label)
+
         self.plot_button = QPushButton("Plot Example")
         self.plot_button.clicked.connect(self.plot_example)
         layout.addWidget(self.plot_button)
+
+        self.measurement_dir_var.textChanged.connect(self.load_plot_files)
+        self.load_plot_files()
 
         self.tabs.addTab(tab, "Visualization")
 
@@ -842,6 +859,37 @@ class ImpulciferGUI(QMainWindow):
         ax.set_title("Example Plot")
         self.canvas.draw()
 
+    def load_plot_files(self):
+        self.plot_selector.clear()
+        plots_dir = os.path.join(self.measurement_dir_var.text(), "plots")
+        if not os.path.isdir(plots_dir):
+            self.image_label.setText("No plots found")
+            return
+        files = []
+        for root, _, names in os.walk(plots_dir):
+            for n in names:
+                if n.lower().endswith(".png"):
+                    rel = os.path.relpath(os.path.join(root, n), plots_dir)
+                    files.append(rel)
+        files.sort()
+        self.plot_selector.addItems(files)
+        if files:
+            self.plot_selector.setCurrentIndex(0)
+            self.display_selected_plot()
+        else:
+            self.image_label.setText("No plots found")
+
+    def display_selected_plot(self):
+        rel_path = self.plot_selector.currentText()
+        if not rel_path:
+            return
+        plot_path = os.path.join(self.measurement_dir_var.text(), "plots", rel_path)
+        if os.path.isfile(plot_path):
+            pix = QPixmap(plot_path)
+            self.image_label.setPixmap(pix)
+            self.image_label.setScaledContents(True)
+        else:
+            self.image_label.setText("Plot not found")
 
 
     def save_channel_mappings(self, dialog):
