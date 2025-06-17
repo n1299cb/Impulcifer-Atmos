@@ -4,6 +4,9 @@ import subprocess
 import sounddevice as sd
 import soundfile as sf
 import math
+import numpy as np
+import queue
+import threading
 import matplotlib
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
@@ -26,6 +29,7 @@ from constants import (
     SPEAKER_LAYOUTS,
 )
 from generate_layout import select_layout, init_layout, verify_layout
+from level_meter import LevelMonitor
 from contextlib import redirect_stdout
 import io
 import datetime
@@ -131,7 +135,8 @@ class ImpulciferGUI(QMainWindow):
 
         self.monitor_timer = QTimer()
         self.monitor_timer.timeout.connect(self.read_monitor_level)
-        self.monitor_process = None
+        self.level_monitor = None
+        self.monitor_thread = None
 
         # Validation button
         self.test_signal_path_var.textChanged.connect(self.validate_measurement_setup)
@@ -1091,6 +1096,44 @@ class ImpulciferGUI(QMainWindow):
             self.image_label.setScaledContents(True)
         else:
             self.image_label.setText("Plot not found")
+
+    def toggle_monitor(self, checked):
+        if checked:
+            try:
+                dev_idx = int(self.recording_device_var.currentText().split(':')[0])
+            except Exception:
+                dev_idx = None
+            samplerate = None
+            if dev_idx is not None:
+                try:
+                    samplerate = int(sd.query_devices(dev_idx)['default_samplerate'])
+                except Exception:
+                    samplerate = None
+            self.level_monitor = LevelMonitor(device=dev_idx, samplerate=samplerate or 48000)
+            self.monitor_thread = threading.Thread(target=self.level_monitor.start, daemon=True)
+            self.monitor_thread.start()
+            self.monitor_timer.start(100)
+            self.monitor_btn.setText("Stop Monitor")
+        else:
+            self.monitor_timer.stop()
+            if self.level_monitor:
+                self.level_monitor.stop()
+            if self.monitor_thread and self.monitor_thread.is_alive():
+                self.monitor_thread.join(timeout=1.0)
+            self.level_monitor = None
+            self.monitor_thread = None
+            self.level_bar.setValue(0)
+            self.monitor_btn.setText("Start Monitor")
+
+    def read_monitor_level(self):
+        if not self.level_monitor:
+            return
+        try:
+            db = self.level_monitor.queue.get_nowait()
+        except queue.Empty:
+            return
+        value = int(np.clip((db + 60) / 60 * 100, 0, 100)) if db != -np.inf else 0
+        self.level_bar.setValue(value)
 
 
     def save_channel_mappings(self, dialog):

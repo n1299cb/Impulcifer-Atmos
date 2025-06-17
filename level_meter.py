@@ -15,6 +15,7 @@ class LevelMonitor:
         self.channels = channels
         self.blocksize = blocksize
         self.queue = queue.Queue()
+        self.running = False
 
     def _callback(self, indata, frames, time_info, status):
         if status:
@@ -25,6 +26,7 @@ class LevelMonitor:
 
     def start(self, duration=None, callback=None):
         """Start monitoring. If ``callback`` is None, prints dB levels."""
+        self.running = True
         with sd.InputStream(
             device=self.device,
             channels=self.channels,
@@ -33,19 +35,26 @@ class LevelMonitor:
             callback=self._callback,
         ):
             start_time = time.time()
-            while True:
+            while self.running:
                 try:
                     level = self.queue.get(timeout=0.1)
                 except queue.Empty:
                     if duration is not None and time.time() - start_time > duration:
                         break
                     continue
+                if not self.running:
+                    break
                 if callback:
                     callback(level)
                 else:
                     print(f"{level:.2f}")
                 if duration is not None and time.time() - start_time > duration:
                     break
+        self.running = False
+
+    def stop(self):
+        """Stop the monitor loop."""
+        self.running = False
 
 
 def main():
