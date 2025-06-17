@@ -425,6 +425,21 @@ python generate_layout.py --layout=9.1.6 --dir=data/test_capture --verify
 python generate_layout.py --layout=9.1.6 --save_preset my_layout.json
 ```
 
+### Capture Wizard
+
+`capture_wizard.py` provides a simple step‑by‑step assistant for making the HRIR
+recordings. It initializes the chosen layout directory and then records each
+speaker group in sequence.
+
+```bash
+python capture_wizard.py --layout=9.1.6 --dir=data/my_hrir
+```
+
+Follow the prompts to position yourself and start each capture.
+
+This wizard can also be launched from the **Execution** tab of the GUI via the
+new *Capture Wizard* button.
+
 
 ## Tests
 

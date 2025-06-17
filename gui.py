@@ -295,6 +295,10 @@ class ImpulciferGUI(QMainWindow):
         self.recorder_button.clicked.connect(self.launch_recorder)
         layout.addWidget(self.recorder_button)
 
+        capture_btn = QPushButton("Capture Wizard")
+        capture_btn.clicked.connect(self.launch_capture_wizard)
+        layout.addWidget(capture_btn)
+
         self.hp_recorder_button = QPushButton("Record Headphone EQ")
         self.hp_recorder_button.clicked.connect(self.launch_headphone_recorder)
         # Removed from Execution tab to move into Headphone EQ tab
@@ -387,8 +391,6 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
             return
         try:
-            output_channels = ','.join(map(str, self.channel_mappings.get("output_channels", [])))
-            input_channels = ','.join(map(str, self.channel_mappings.get("input_channels", [])))
             playback_idx = self.playback_device_var.currentText().split(':')[0]
             record_idx = self.recording_device_var.currentText().split(':')[0]
 
@@ -417,8 +419,6 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
             return
         try:
-            output_channels = ','.join(map(str, self.channel_mappings.get("output_channels", [])))
-            input_channels = ','.join(map(str, self.channel_mappings.get("input_channels", [])))
             playback_idx = self.playback_device_var.currentText().split(':')[0]
             record_idx = self.recording_device_var.currentText().split(':')[0]
 
@@ -447,8 +447,6 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
             return
         try:
-            output_channels = ','.join(map(str, self.channel_mappings.get("output_channels", [])))
-            input_channels = ','.join(map(str, self.channel_mappings.get("input_channels", [])))
             playback_idx = self.playback_device_var.currentText().split(':')[0]
             record_idx = self.recording_device_var.currentText().split(':')[0]
 
@@ -470,6 +468,37 @@ class ImpulciferGUI(QMainWindow):
             
         except Exception as e:
             QMessageBox.critical(self, "Recorder Error", str(e))
+
+    def launch_capture_wizard(self):
+        if not os.path.isfile(self.test_signal_path_var.text()) or not os.path.isdir(self.measurement_dir_var.text()):
+            QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
+            return
+
+        try:
+            name, groups = select_layout(self.layout_var.currentText())
+
+            playback_idx = self.playback_device_var.currentText().split(':')[0]
+            record_idx = self.recording_device_var.currentText().split(':')[0]
+
+            from capture_wizard import run_capture
+
+            def prompt(msg: str) -> None:
+                QMessageBox.information(self, "Capture Wizard", msg)
+
+            def message(msg: str) -> None:
+                self.output_text.append(msg)
+
+            run_capture(
+                name,
+                groups,
+                self.measurement_dir_var.text(),
+                prompt_fn=prompt,
+                message_fn=message,
+                input_device=record_idx,
+                output_device=playback_idx,
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Capture Wizard Error", str(e))
 
     def update_compensation_file_state(self):
         is_custom = self.compensation_type_var.currentText().lower() == "custom"
