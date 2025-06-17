@@ -115,9 +115,6 @@ APPLY_ROOM_CORRECTION = False
 # Preserve the room's full impulse response without normalization or truncation
 PRESERVE_ROOM_RESPONSE = True
 
-# Applies directional gains in order to correctly calibrate ITD
-APPLY_DIRECTIONAL_GAINS = False
-
 # Each channel, left and right
 IR_ORDER = []
 # SPL change relative to middle of the head - disable
