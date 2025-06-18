@@ -6,6 +6,7 @@ from models import (
 )
 from .processing import ProcessingViewModel
 from .recorder import RecordingViewModel
+from .layout import LayoutViewModel
 
 __all__ = [
     "MeasurementSetupViewModel",
@@ -14,4 +15,5 @@ __all__ = [
     "ProcessingSettings",
     "RecordingViewModel",
     "RecorderSettings",
+    "LayoutViewModel",
 ]

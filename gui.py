@@ -32,7 +32,7 @@ from constants import (
     X_CURVE_DEFAULT_TYPE,
     SPEAKER_LAYOUTS,
 )
-from generate_layout import select_layout, init_layout, verify_layout
+from viewmodel.layout import LayoutViewModel
 from level_meter import LevelMonitor
 from contextlib import redirect_stdout
 import io
@@ -48,6 +48,7 @@ class ImpulciferGUI(QMainWindow):
         self.setup_vm = MeasurementSetupViewModel()
         self.processing_vm = ProcessingViewModel()
         self.recorder_vm = RecordingViewModel()
+        self.layout_vm = LayoutViewModel()
 
         self.channel_mappings = {}
         
@@ -466,7 +467,7 @@ class ImpulciferGUI(QMainWindow):
             return
 
         try:
-            name, groups = select_layout(self.layout_var.currentText())
+            name, groups = self.layout_vm.select_layout(self.layout_var.currentText())
 
             settings = RecorderSettings(
                 measurement_dir=self.measurement_dir_var.text(),
@@ -921,7 +922,7 @@ class ImpulciferGUI(QMainWindow):
         main_layout.addLayout(btn_row)
 
         def run_action(func):
-            name, groups = select_layout(layout_combo.currentText())
+            name, groups = self.layout_vm.select_layout(layout_combo.currentText())
             buffer = io.StringIO()
             try:
                 with redirect_stdout(buffer):
@@ -930,8 +931,8 @@ class ImpulciferGUI(QMainWindow):
                 QMessageBox.critical(dialog, "Error", str(e))
             output_box.setPlainText(buffer.getvalue())
 
-        init_btn.clicked.connect(lambda: run_action(init_layout))
-        verify_btn.clicked.connect(lambda: run_action(verify_layout))
+        init_btn.clicked.connect(lambda: run_action(self.layout_vm.init_layout))
+        verify_btn.clicked.connect(lambda: run_action(self.layout_vm.verify_layout))
         close_btn.clicked.connect(dialog.accept)
 
         dialog.setLayout(main_layout)

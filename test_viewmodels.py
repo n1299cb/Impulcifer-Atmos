@@ -1,7 +1,7 @@
 import subprocess
 import pytest
 
-from viewmodel import ProcessingViewModel, RecordingViewModel
+from viewmodel import ProcessingViewModel, RecordingViewModel, LayoutViewModel
 from models import ProcessingSettings, RecorderSettings
 
 
@@ -26,6 +26,22 @@ def test_processing_vm_builds_command(monkeypatch, tmp_path):
     assert 'impulcifer.py' in captured['args']
     assert '--channel_balance' in captured['args']
     assert result.stdout == 'ok'
+
+
+def test_layout_vm_select(monkeypatch):
+    captured = {}
+
+    def fake_select(name):
+        captured['name'] = name
+        return '1.0', [['FL']]
+
+    monkeypatch.setattr('viewmodel.layout.select_layout', fake_select)
+
+    vm = LayoutViewModel()
+    layout = vm.select_layout('1.0')
+
+    assert captured['name'] == '1.0'
+    assert layout == ('1.0', [['FL']])
 
 
 def test_processing_vm_missing_calibration(tmp_path):
