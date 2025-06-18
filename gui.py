@@ -353,8 +353,23 @@ class ImpulciferGUI(QMainWindow):
         self.tabs.setCurrentWidget(tab)
 
     def run_processing(self):
-        if not os.path.isdir(self.measurement_dir_var.text()):
-            QMessageBox.critical(self, "Error", "Please ensure the measurement directory is valid before processing.")
+        # Delegate path validation to the ViewModel
+        errors = self.setup_vm.validate_paths(
+            self.test_signal_path_var.text(), self.measurement_dir_var.text()
+        )
+        if errors:
+            if "measurement_dir" in errors:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "Please ensure the measurement directory is valid before processing.",
+                )
+            if "test_signal" in errors:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "Please ensure the test signal file is valid before processing.",
+                )
             return
 
         settings = ProcessingSettings(
@@ -394,8 +409,15 @@ class ImpulciferGUI(QMainWindow):
             self.output_text.append(f"Error: {str(e)}")
 
     def launch_room_response_recorder(self):
-        if not os.path.isfile(self.test_signal_path_var.text()) or not os.path.isdir(self.measurement_dir_var.text()):
-            QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
+        errors = self.setup_vm.validate_paths(
+            self.test_signal_path_var.text(), self.measurement_dir_var.text()
+        )
+        if errors:
+            QMessageBox.critical(
+                self,
+                "Error",
+                "Please ensure the test signal and measurement directory are valid before recording.",
+            )
             return
         try:
             settings = RecorderSettings(
@@ -417,8 +439,15 @@ class ImpulciferGUI(QMainWindow):
 
 
     def launch_headphone_recorder(self):
-        if not os.path.isfile(self.test_signal_path_var.text()) or not os.path.isdir(self.measurement_dir_var.text()):
-            QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
+        errors = self.setup_vm.validate_paths(
+            self.test_signal_path_var.text(), self.measurement_dir_var.text()
+        )
+        if errors:
+            QMessageBox.critical(
+                self,
+                "Error",
+                "Please ensure the test signal and measurement directory are valid before recording.",
+            )
             return
         try:
             settings = RecorderSettings(
@@ -440,8 +469,15 @@ class ImpulciferGUI(QMainWindow):
 
 
     def launch_recorder(self):
-        if not os.path.isfile(self.test_signal_path_var.text()) or not os.path.isdir(self.measurement_dir_var.text()):
-            QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
+        errors = self.setup_vm.validate_paths(
+            self.test_signal_path_var.text(), self.measurement_dir_var.text()
+        )
+        if errors:
+            QMessageBox.critical(
+                self,
+                "Error",
+                "Please ensure the test signal and measurement directory are valid before recording.",
+            )
             return
         try:
             settings = RecorderSettings(
@@ -462,8 +498,15 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Recorder Error", str(e))
 
     def launch_capture_wizard(self):
-        if not os.path.isfile(self.test_signal_path_var.text()) or not os.path.isdir(self.measurement_dir_var.text()):
-            QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
+        errors = self.setup_vm.validate_paths(
+            self.test_signal_path_var.text(), self.measurement_dir_var.text()
+        )
+        if errors:
+            QMessageBox.critical(
+                self,
+                "Error",
+                "Please ensure the test signal and measurement directory are valid before recording.",
+            )
             return
 
         try:

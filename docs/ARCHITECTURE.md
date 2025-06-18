@@ -17,5 +17,8 @@ The project largely adheres to MVVM. The GUI delegates recording and processing 
 - Provide additional unit tests for `ProcessingViewModel` and `RecordingViewModel` to ensure command arguments are built correctly.
 - Keep GUI modules focused on presentation by placing any new processing steps in a ViewModel or domain script.
 - All processing modules should be properly separated and according to MVVM and isolated from the view/GUI section.
+- When validating measurement or test signal paths, call
+  `MeasurementSetupViewModel.validate_paths` rather than using `os.path`
+  checks directly in the view layer.
 
 This document acts as a reference for contributors aiming to keep the MVVM separation intact.
