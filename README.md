@@ -24,6 +24,14 @@ good [wow](https://www.youtube.com/watch?v=KlLMlJ2tDkg) effect. Impulcifer actua
 Impulcifer can do measurements with only one speaker so you don't need access to surround speaker setup and can do room
 acoustic corrections which are normally not possible in real rooms with DSP.
 
+## Architecture
+
+The codebase is organized using a lightweight **Model–View–ViewModel** (MVVM) pattern.
+View classes like `gui.py` interact with `viewmodel` classes that expose user
+commands and validation logic. Domain data is encapsulated in simple models under
+the `models` package. This separation keeps the GUI free of processing logic and
+makes core functionality testable without a running interface.
+
 ## Installing
 Impulcifer is used from a command line and requires some prerequisites. These installation instructions will guide you
 through installing everything that is needed to run Impulcifer on you own PC.
