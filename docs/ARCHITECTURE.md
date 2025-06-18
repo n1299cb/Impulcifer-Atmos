@@ -16,5 +16,6 @@ The project largely adheres to MVVM. The GUI delegates recording and processing 
 - Move layout selection helpers (`generate_layout.py`) under a dedicated ViewModel to further decouple the GUI from command line utilities.
 - Provide additional unit tests for `ProcessingViewModel` and `RecordingViewModel` to ensure command arguments are built correctly.
 - Keep GUI modules focused on presentation by placing any new processing steps in a ViewModel or domain script.
+- All processing modules should be properly separated and according to MVVM and isolated from the view/GUI section.
 
 This document acts as a reference for contributors aiming to keep the MVVM separation intact.
