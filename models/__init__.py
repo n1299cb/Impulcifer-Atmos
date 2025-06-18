@@ -1,11 +1,9 @@
-from .measurement_setup import MeasurementSetupViewModel
-from .processing import ProcessingViewModel, ProcessingSettings
-from .recorder import RecordingViewModel, RecorderSettings
+from .measurement_setup import MeasurementSetup
+from .processing_settings import ProcessingSettings
+from .recorder_settings import RecorderSettings
 
 __all__ = [
-    "MeasurementSetupViewModel",
-    "ProcessingViewModel",
+    "MeasurementSetup",
     "ProcessingSettings",
-    "RecordingViewModel",
     "RecorderSettings",
 ]

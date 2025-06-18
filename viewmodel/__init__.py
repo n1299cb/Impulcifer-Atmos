@@ -1,7 +1,11 @@
 from .measurement_setup import MeasurementSetupViewModel
-from models.measurement_setup import MeasurementSetup
-from .processing import ProcessingViewModel, ProcessingSettings
-from .recorder import RecordingViewModel, RecorderSettings
+from models import (
+    MeasurementSetup,
+    ProcessingSettings,
+    RecorderSettings,
+)
+from .processing import ProcessingViewModel
+from .recorder import RecordingViewModel
 
 __all__ = [
     "MeasurementSetupViewModel",

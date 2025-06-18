@@ -22,8 +22,9 @@ from PySide6.QtGui import (
 from PySide6.QtCore import Qt, QPointF, QTimer
 
 from viewmodel.measurement_setup import MeasurementSetupViewModel
-from viewmodel.processing import ProcessingViewModel, ProcessingSettings
-from viewmodel.recorder import RecordingViewModel, RecorderSettings
+from viewmodel.processing import ProcessingViewModel
+from viewmodel.recorder import RecordingViewModel
+from models import ProcessingSettings, RecorderSettings
 from constants import (
     FORMAT_PRESETS,
     SPEAKER_NAMES,
