@@ -1044,6 +1044,13 @@ class ImpulciferGUI(QMainWindow):
 
     def load_plot_files(self):
         self.plot_selector.clear()
+        errors = self.setup_vm.validate_paths(
+            measurement_dir=self.measurement_dir_var.text()
+        )
+        if "measurement_dir" in errors:
+            self.image_label.setText("No plots found")
+            return
+
         plots_dir = os.path.join(self.measurement_dir_var.text(), "plots")
         if not os.path.isdir(plots_dir):
             self.image_label.setText("No plots found")
@@ -1066,6 +1073,13 @@ class ImpulciferGUI(QMainWindow):
         rel_path = self.plot_selector.currentText()
         if not rel_path:
             return
+        errors = self.setup_vm.validate_paths(
+            measurement_dir=self.measurement_dir_var.text()
+        )
+        if "measurement_dir" in errors:
+            self.image_label.setText("Plot not found")
+            return
+
         plot_path = os.path.join(self.measurement_dir_var.text(), "plots", rel_path)
         if os.path.isfile(plot_path):
             pix = QPixmap(plot_path)
