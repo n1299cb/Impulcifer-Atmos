@@ -1,6 +1,5 @@
 import sys
 import os
-import subprocess
 import sounddevice as sd
 import soundfile as sf
 import math
@@ -23,6 +22,8 @@ from PySide6.QtGui import (
 from PySide6.QtCore import Qt, QPointF, QTimer
 
 from viewmodel.measurement_setup import MeasurementSetupViewModel
+from viewmodel.processing import ProcessingViewModel, ProcessingSettings
+from viewmodel.recorder import RecordingViewModel, RecorderSettings
 from constants import (
     FORMAT_PRESETS,
     SPEAKER_NAMES,
@@ -44,6 +45,8 @@ class ImpulciferGUI(QMainWindow):
 
         # ViewModels
         self.setup_vm = MeasurementSetupViewModel()
+        self.processing_vm = ProcessingViewModel()
+        self.recorder_vm = RecordingViewModel()
 
         self.channel_mappings = {}
         
@@ -352,65 +355,39 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the measurement directory is valid before processing.")
             return
 
-        args = [
-            sys.executable, "impulcifer.py",
-            "--dir_path", self.measurement_dir_var.text()
-        ]
-
-        if self.test_signal_path_var.text():
-            args.extend(["--input", self.test_signal_path_var.text()])
-        if self.decay_time_var.text():
-            args.extend(["--decay", self.decay_time_var.text()])
-        if self.target_level_var.text():
-            args.extend(["--target_level", self.target_level_var.text()])
-        if self.channel_balance_toggle.isChecked():
-            args.extend(["--channel_balance", self.channel_balance_var.currentData()])
-        if self.specific_limit_toggle.isChecked() and self.specific_limit_var.text():
-            args.extend(["--specific_limit", self.specific_limit_var.text()])
-        if self.generic_limit_toggle.isChecked() and self.generic_limit_var.text():
-            args.extend(["--generic_limit", self.generic_limit_var.text()])
-        if self.fr_combination_toggle.isChecked():
-            args.extend(["--fr_combination_method", self.fr_combination_var.currentText()])
-        if self.room_correction_var.isChecked():
-            args.extend(["--room_target", self.room_target_path_var.text()])
-            mic_file = self.mic_calibration_path_var.text()
-            if mic_file:
-                if not os.path.isfile(mic_file):
-                    QMessageBox.critical(self, "Error", "Mic calibration file does not exist or is unreadable.")
-                    return
-                args.extend(["--room_mic_calibration", mic_file])
-                args.extend(["--room_mic_calibration", self.mic_calibration_path_var.text()])
-        if self.enable_compensation_var.isChecked():
-            args.append("--compensation")
-            if self.headphone_eq_toggle.isChecked() and self.headphone_file_path_var.text():
-                args.extend(["--headphones", self.headphone_file_path_var.text()])
-            if not self.headphone_eq_toggle.isChecked():
-                args.append("--no_headphone_compensation")
-            if self.compensation_type_var.currentText().lower() == "custom":
-                args.append(self.compensation_file_path_var.text())
-            else:
-                args.append(self.compensation_type_var.currentText().lower().replace("-field", ""))
-        if self.diffuse_field_toggle.isChecked():
-            args.append("--diffuse_field_compensation")
-        action = self.x_curve_action_var.currentText()
-        if action == "Apply X-Curve":
-            args.append("--apply_x_curve")
-        elif action == "Remove X-Curve":
-            args.append("--remove_x_curve")
-        if action != "None":
-            args.extend(["--x_curve_type", self.x_curve_type_var.currentText()])
-        if self.x_curve_in_capture_var.isChecked():
-            args.append("--x_curve_in_capture")
-
+        settings = ProcessingSettings(
+            measurement_dir=self.measurement_dir_var.text(),
+            test_signal=self.test_signal_path_var.text(),
+            decay_time=self.decay_time_var.text(),
+            target_level=self.target_level_var.text(),
+            channel_balance_enabled=self.channel_balance_toggle.isChecked(),
+            channel_balance=self.channel_balance_var.currentData(),
+            specific_limit_enabled=self.specific_limit_toggle.isChecked(),
+            specific_limit=self.specific_limit_var.text(),
+            generic_limit_enabled=self.generic_limit_toggle.isChecked(),
+            generic_limit=self.generic_limit_var.text(),
+            fr_combination_enabled=self.fr_combination_toggle.isChecked(),
+            fr_combination_method=self.fr_combination_var.currentText(),
+            room_correction=self.room_correction_var.isChecked(),
+            room_target=self.room_target_path_var.text(),
+            mic_calibration=self.mic_calibration_path_var.text(),
+            enable_compensation=self.enable_compensation_var.isChecked(),
+            headphone_eq_enabled=self.headphone_eq_toggle.isChecked(),
+            headphone_file=self.headphone_file_path_var.text(),
+            compensation_type=(self.compensation_file_path_var.text() if self.compensation_type_var.currentText().lower() == "custom" else self.compensation_type_var.currentText().lower().replace("-field", "")),
+            diffuse_field=self.diffuse_field_toggle.isChecked(),
+            x_curve_action=self.x_curve_action_var.currentText(),
+            x_curve_type=self.x_curve_type_var.currentText(),
+            x_curve_in_capture=self.x_curve_in_capture_var.isChecked(),
+        )
         try:
-            self.output_text.append(f"Running: {' '.join(args)}")
-            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            result = self.processing_vm.run(settings)
+            cmd = ' '.join(result.args)
+            self.output_text.append(f"Running: {cmd}")
             if result.stdout:
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
                 self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
-            return
-            
         except Exception as e:
             self.output_text.append(f"Error: {str(e)}")
 
@@ -419,33 +396,16 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
             return
         try:
-            playback_idx = self.playback_device_var.currentText().split(':')[0]
-            record_idx = self.recording_device_var.currentText().split(':')[0]
-
-            output_channels = ",".join(
-                str(c) for c in self.channel_mappings.get("output_channels", [])
+            settings = RecorderSettings(
+                measurement_dir=self.measurement_dir_var.text(),
+                test_signal=self.test_signal_path_var.text(),
+                playback_device=self.playback_device_var.currentText().split(':')[0],
+                recording_device=self.recording_device_var.currentText().split(':')[0],
+                output_channels=self.channel_mappings.get("output_channels", []),
+                input_channels=self.channel_mappings.get("input_channels", []),
+                output_file=os.path.join(self.measurement_dir_var.text(), "room.wav"),
             )
-            input_channels = ",".join(
-                str(c) for c in self.channel_mappings.get("input_channels", [])
-            )
-
-            args = [
-                sys.executable,
-                "recorder.py",
-                "--output_channels",
-                output_channels,
-                "--input_channels",
-                input_channels,
-                "--playback_device",
-                playback_idx,
-                "--recording_device",
-                record_idx,
-                "--output_dir", self.measurement_dir_var.text(),
-                "--test_signal", self.test_signal_path_var.text(),
-                "--output_file", os.path.join(self.measurement_dir_var.text(), "room.wav")
-            ]
-
-            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            result = self.recorder_vm.run_recorder(settings)
             if result.stdout:
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
@@ -459,32 +419,16 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
             return
         try:
-            playback_idx = self.playback_device_var.currentText().split(':')[0]
-            record_idx = self.recording_device_var.currentText().split(':')[0]
-            output_channels = ",".join(
-                str(c) for c in self.channel_mappings.get("output_channels", [])
+            settings = RecorderSettings(
+                measurement_dir=self.measurement_dir_var.text(),
+                test_signal=self.test_signal_path_var.text(),
+                playback_device=self.playback_device_var.currentText().split(':')[0],
+                recording_device=self.recording_device_var.currentText().split(':')[0],
+                output_channels=self.channel_mappings.get("output_channels", []),
+                input_channels=self.channel_mappings.get("input_channels", []),
+                output_file=os.path.join(self.measurement_dir_var.text(), "headphones.wav"),
             )
-            input_channels = ",".join(
-                str(c) for c in self.channel_mappings.get("input_channels", [])
-            )
-
-            args = [
-                sys.executable,
-                "recorder.py",
-                "--output_channels",
-                output_channels,
-                "--input_channels",
-                input_channels,
-                "--playback_device",
-                playback_idx,
-                "--recording_device",
-                record_idx,
-                "--output_dir", self.measurement_dir_var.text(),
-                "--test_signal", self.test_signal_path_var.text(),
-                "--output_file", os.path.join(self.measurement_dir_var.text(), "headphones.wav")
-            ]
-
-            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            result = self.recorder_vm.run_recorder(settings)
             if result.stdout:
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
@@ -498,31 +442,15 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.critical(self, "Error", "Please ensure the test signal and measurement directory are valid before recording.")
             return
         try:
-            playback_idx = self.playback_device_var.currentText().split(':')[0]
-            record_idx = self.recording_device_var.currentText().split(':')[0]
-            output_channels = ",".join(
-                str(c) for c in self.channel_mappings.get("output_channels", [])
+            settings = RecorderSettings(
+                measurement_dir=self.measurement_dir_var.text(),
+                test_signal=self.test_signal_path_var.text(),
+                playback_device=self.playback_device_var.currentText().split(':')[0],
+                recording_device=self.recording_device_var.currentText().split(':')[0],
+                output_channels=self.channel_mappings.get("output_channels", []),
+                input_channels=self.channel_mappings.get("input_channels", []),
             )
-            input_channels = ",".join(
-                str(c) for c in self.channel_mappings.get("input_channels", [])
-            )
-
-            args = [
-                sys.executable,
-                "recorder.py",
-                "--output_channels",
-                output_channels,
-                "--input_channels",
-                input_channels,
-                "--playback_device",
-                playback_idx,
-                "--recording_device",
-                record_idx,
-                "--output_dir", self.measurement_dir_var.text(),
-                "--test_signal", self.test_signal_path_var.text()
-            ]
-
-            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            result = self.recorder_vm.run_recorder(settings)
             if result.stdout:
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
@@ -539,10 +467,14 @@ class ImpulciferGUI(QMainWindow):
         try:
             name, groups = select_layout(self.layout_var.currentText())
 
-            playback_idx = self.playback_device_var.currentText().split(':')[0]
-            record_idx = self.recording_device_var.currentText().split(':')[0]
-
-            from capture_wizard import run_capture
+            settings = RecorderSettings(
+                measurement_dir=self.measurement_dir_var.text(),
+                test_signal=self.test_signal_path_var.text(),
+                playback_device=self.playback_device_var.currentText().split(':')[0],
+                recording_device=self.recording_device_var.currentText().split(':')[0],
+                output_channels=self.channel_mappings.get("output_channels", []),
+                input_channels=self.channel_mappings.get("input_channels", []),
+            )
 
             def prompt(msg: str) -> None:
                 QMessageBox.information(self, "Capture Wizard", msg)
@@ -550,14 +482,12 @@ class ImpulciferGUI(QMainWindow):
             def message(msg: str) -> None:
                 self.output_text.append(msg)
 
-            run_capture(
+            self.recorder_vm.run_capture_wizard(
                 name,
                 groups,
-                self.measurement_dir_var.text(),
+                settings,
                 prompt_fn=prompt,
                 message_fn=message,
-                input_device=record_idx,
-                output_device=playback_idx,
             )
         except Exception as e:
             QMessageBox.critical(self, "Capture Wizard Error", str(e))
