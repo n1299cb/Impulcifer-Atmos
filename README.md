@@ -31,6 +31,7 @@ View classes like `gui.py` interact with `viewmodel` classes that expose user
 commands and validation logic. Domain data is encapsulated in simple models under
 the `models` package. This separation keeps the GUI free of processing logic and
 makes core functionality testable without a running interface.
+For more details see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Installing
 Impulcifer is used from a command line and requires some prerequisites. These installation instructions will guide you
