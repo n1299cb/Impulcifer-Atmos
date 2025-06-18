@@ -21,6 +21,8 @@ from PySide6.QtGui import (
     QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter, QRadialGradient
 )
 from PySide6.QtCore import Qt, QPointF, QTimer
+
+from viewmodel.measurement_setup import MeasurementSetupViewModel
 from constants import (
     FORMAT_PRESETS,
     SPEAKER_NAMES,
@@ -39,6 +41,9 @@ class ImpulciferGUI(QMainWindow):
         super().__init__()
         self.setWindowTitle("Impulcifer GUI")
         self.resize(700, 700)
+
+        # ViewModels
+        self.setup_vm = MeasurementSetupViewModel()
 
         self.channel_mappings = {}
         
@@ -148,26 +153,23 @@ class ImpulciferGUI(QMainWindow):
     def validate_measurement_setup(self):
         test_signal = self.test_signal_path_var.text()
         measurement_dir = self.measurement_dir_var.text()
-        errors = []
+        # Validate using ViewModel and apply simple error highlighting
+        errors = self.setup_vm.validate_paths(test_signal, measurement_dir)
 
-        # Reset styles
-        self.test_signal_path_var.setStyleSheet("")
-        self.measurement_dir_var.setStyleSheet("")
-
-        if not os.path.isfile(test_signal):
-            self.test_signal_path_var.setStyleSheet("border: 2px solid red;")
-            errors.append("Test signal file path is invalid or does not exist. ")
-        else:
-            self.test_signal_path_var.setStyleSheet("border: 2px solid green;")
-
-        if not os.path.isdir(measurement_dir):
-            self.measurement_dir_var.setStyleSheet("border: 2px solid red;")
-            errors.append("Measurement directory path is invalid or does not exist.")
-        else:
-            self.measurement_dir_var.setStyleSheet("border: 2px solid green;")
+        self.test_signal_path_var.setStyleSheet(
+            "border: 2px solid red;" if "test_signal" in errors else "border: 2px solid green;"
+        )
+        self.measurement_dir_var.setStyleSheet(
+            "border: 2px solid red;" if "measurement_dir" in errors else "border: 2px solid green;"
+        )
 
         if errors:
-            QMessageBox.critical(self, "Validation Failed", "".join(errors))
+            messages = []
+            if "test_signal" in errors:
+                messages.append("Test signal file path is invalid or does not exist. ")
+            if "measurement_dir" in errors:
+                messages.append("Measurement directory path is invalid or does not exist.")
+            QMessageBox.critical(self, "Validation Failed", "".join(messages))
         else:
             QMessageBox.information(self, "Validation Passed", "All paths are valid.")
 
