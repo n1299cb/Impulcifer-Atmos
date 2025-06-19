@@ -432,7 +432,8 @@ names for a speaker layout. Placeholder sweep files are copied for each
 recording so you can verify the channel order before doing real measurements.
 Run it again with `--verify` to check that all required WAV files exist and to
 list any extras. The selected groups can be saved as a JSON preset with
-`--save_preset layout.json`.
+`--save_preset layout.json`. Use `--list` to show all layouts or
+`--preset_file presets.json` to load custom presets.
 
 The GUI exposes the same functionality via the **Layout Wizard** button on the
 Setup tab. The wizard prompts for a layout and target directory then runs the

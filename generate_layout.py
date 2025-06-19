@@ -11,7 +11,11 @@ import os
 import shutil
 from typing import Optional
 
-from constants import SPEAKER_LAYOUTS, save_user_layout_preset
+from constants import (
+    SPEAKER_LAYOUTS,
+    save_user_layout_preset,
+    load_and_register_user_layouts,
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_SWEEP = os.path.join(
@@ -81,13 +85,29 @@ def verify_layout(layout_name: str, groups: list[list[str]], out_dir: str) -> No
             print(f"- {e}")
 
 
+def list_layouts() -> None:
+    """Print available layout names."""
+    print("Available layouts:\n")
+    for name in SPEAKER_LAYOUTS:
+        print(f"- {name}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare or verify capture folders")
     parser.add_argument("--layout", help="Layout name to use")
     parser.add_argument("--dir", default="data/test_capture", help="Target directory")
     parser.add_argument("--verify", action="store_true", help="Verify existing files")
     parser.add_argument("--save_preset", metavar="FILE", help="Write layout groups to JSON preset")
+    parser.add_argument("--preset_file", help="JSON file with additional layouts")
+    parser.add_argument("--list", action="store_true", help="List available layouts and exit")
     args = parser.parse_args()
+
+    if args.preset_file:
+        load_and_register_user_layouts(args.preset_file)
+
+    if args.list:
+        list_layouts()
+        return
 
     layout_name, groups = select_layout(args.layout)
 

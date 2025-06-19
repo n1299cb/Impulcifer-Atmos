@@ -76,6 +76,24 @@ USER_LAYOUT_INDEXES = {
     if all(ch in SPEAKER_NAMES for group in groups for ch in group)
 }
 SPEAKER_LAYOUT_INDEXES.update(USER_LAYOUT_INDEXES)
+
+
+def register_user_layouts(layouts: dict[str, list[list[str]]]) -> None:
+    """Register additional user layout presets at runtime."""
+    for name, groups in layouts.items():
+        SPEAKER_LAYOUTS[name] = groups
+        SPEAKER_LAYOUT_INDEXES[name] = [
+            tuple(SPEAKER_NAMES.index(ch) for ch in group)
+            for group in groups
+            if all(ch in SPEAKER_NAMES for ch in group)
+        ]
+
+
+def load_and_register_user_layouts(file_path: str) -> dict:
+    """Load presets from ``file_path`` and register them."""
+    layouts = load_user_layout_presets(file_path)
+    register_user_layouts(layouts)
+    return layouts
 # Regex patterns and helpers
 SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
 SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(
