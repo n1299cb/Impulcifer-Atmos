@@ -419,14 +419,16 @@ the selector next time the application starts.
 
 ### Layout Preparation Tool
 
-`generate_layout.py` helps to set up a capture folder. It writes the expected
-file names for a speaker layout and now also creates placeholder sweep files for
-each recording. The folder can later be checked for missing or unexpected files
-with the `--verify` flag.
-You can also store the selected groups as a preset with `--save_preset layout.json`.
+`generate_layout.py` sets up a new capture folder by writing the expected file
+names for a speaker layout. Placeholder sweep files are copied for each
+recording so you can verify the channel order before doing real measurements.
+Run it again with `--verify` to check that all required WAV files exist and to
+list any extras. The selected groups can be saved as a JSON preset with
+`--save_preset layout.json`.
 
-These same actions can now be performed from the GUI using the **Layout Wizard**
-button in the Setup tab.
+The GUI exposes the same functionality via the **Layout Wizard** button on the
+Setup tab. The wizard prompts for a layout and target directory then runs the
+helper behind the scenes.
 
 ```bash
 python generate_layout.py --layout=9.1.6 --dir=data/test_capture
@@ -436,9 +438,11 @@ python generate_layout.py --layout=9.1.6 --save_preset my_layout.json
 
 ### Capture Wizard
 
-`capture_wizard.py` provides a simple step‑by‑step assistant for making the HRIR
-recordings. It initializes the chosen layout directory and then records each
-speaker group in sequence.
+`capture_wizard.py` guides you through recording each speaker group. It opens
+with a headphone capture, then plays the correct sweep for every group you
+defined when preparing the layout. Use the `--input_device` and `--output_device`
+options to select the recording interface. Alternative sweep files can be
+specified with `--stereo_sweep` and `--mono_sweep`.
 
 ```bash
 python capture_wizard.py --layout=9.1.6 --dir=data/my_hrir
@@ -446,8 +450,12 @@ python capture_wizard.py --layout=9.1.6 --dir=data/my_hrir
 
 Follow the prompts to position yourself and start each capture.
 
-This wizard can also be launched from the **Execution** tab of the GUI via the
-new *Capture Wizard* button.
+You can also launch this helper from the **Execution** tab of the GUI via the
+*Capture Wizard* button. It uses the same prompts but displays them inside a
+dialog window.
+
+For a deeper walkthrough of these helpers, see
+[docs/TOOLS.md](docs/TOOLS.md).
 
 
 ## Tests
