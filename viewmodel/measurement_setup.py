@@ -28,3 +28,11 @@ class MeasurementSetupViewModel:
         if not os.path.isdir(self.setup.measurement_dir):
             errors.append("measurement_dir")
         return errors
+
+    def file_exists(self, path: str) -> bool:
+        """Return True if the given file path exists."""
+        return os.path.isfile(path)
+
+    def directory_exists(self, path: str) -> bool:
+        """Return True if the given directory path exists."""
+        return os.path.isdir(path)

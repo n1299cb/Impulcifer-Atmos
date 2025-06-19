@@ -1052,7 +1052,7 @@ class ImpulciferGUI(QMainWindow):
             return
 
         plots_dir = os.path.join(self.measurement_dir_var.text(), "plots")
-        if not os.path.isdir(plots_dir):
+        if not self.setup_vm.directory_exists(plots_dir):
             self.image_label.setText("No plots found")
             return
         files = []
@@ -1081,7 +1081,7 @@ class ImpulciferGUI(QMainWindow):
             return
 
         plot_path = os.path.join(self.measurement_dir_var.text(), "plots", rel_path)
-        if os.path.isfile(plot_path):
+        if self.setup_vm.file_exists(plot_path):
             pix = QPixmap(plot_path)
             self.image_label.setPixmap(pix)
             self.image_label.setScaledContents(True)
@@ -1187,7 +1187,7 @@ class ImpulciferGUI(QMainWindow):
         browse_btn.clicked.connect(browse_file)
 
         def play():
-            if not os.path.isfile(file_var.text()):
+            if not self.setup_vm.file_exists(file_var.text()):
                 QMessageBox.critical(dialog, "Error", "Please select a valid audio file.")
                 return
             data, fs = sf.read(file_var.text(), always_2d=True)

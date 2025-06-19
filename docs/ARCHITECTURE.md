@@ -20,5 +20,8 @@ The project largely adheres to MVVM. The GUI delegates recording and processing 
 - When validating measurement or test signal paths, call
   `MeasurementSetupViewModel.validate_paths` rather than using `os.path`
   checks directly in the view layer.
-
+- For simple file or directory checks, use the
+  `MeasurementSetupViewModel.file_exists` and `directory_exists` helpers
+  from the view layer.
+  
 This document acts as a reference for contributors aiming to keep the MVVM separation intact.
