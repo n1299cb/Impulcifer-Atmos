@@ -126,6 +126,10 @@ python -m pip install -U -r requirements.txt
 ```
 You can always invoke the update for required packages, it does no harm when nothing has changed.
 
+## Development
+For contributor setup and test instructions see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+
 ## Demo
 The actual BRIR measurements require a little investment in measurement gear and the chances are that you're here before
 you have acquired them. There is a demo available for testing out Impulcifer without having to do the actual
