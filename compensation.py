@@ -3,14 +3,12 @@
 import numpy as np
 from autoeq.frequency_response import FrequencyResponse
 from constants import (
-    APPLY_DIFFUSE_FIELD_COMPENSATION,
-    APPLY_X_CURVE_COMPENSATION,
     X_CURVE_TYPES,
     X_CURVE_DEFAULT_TYPE,
 )
+from config import settings
 
-
-def diffuse_field_compensation(hrir, enabled=APPLY_DIFFUSE_FIELD_COMPENSATION):
+def diffuse_field_compensation(hrir, enabled=settings.apply_diffuse_field_compensation):
     """Apply diffuse-field compensation to HRIR in-place."""
     if not enabled:
         return
@@ -35,7 +33,7 @@ def apply_x_curve(hrir, inverse=False, curve_type=X_CURVE_DEFAULT_TYPE):
     curve_type: str
         Which curve profile from :data:`constants.X_CURVE_TYPES` to use.
     """
-    if not APPLY_X_CURVE_COMPENSATION and not inverse:
+    if not settings.apply_x_curve_compensation and not inverse:
         return
 
     if curve_type not in X_CURVE_TYPES:

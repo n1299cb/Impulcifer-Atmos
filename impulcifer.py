@@ -19,8 +19,8 @@ from constants import (
     SPEAKER_NAMES,
     SPEAKER_LIST_PATTERN,
     HESUVI_TRACK_ORDER,
-    APPLY_DIFFUSE_FIELD_COMPENSATION,
 )
+from config import settings
 from compensation import diffuse_field_compensation, apply_x_curve as apply_x_curve_filter
 from constants import X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES
 
@@ -43,7 +43,7 @@ def main(dir_path=None,
          tilt=0.0,
          do_room_correction=True,
          do_headphone_compensation=True,
-         do_diffuse_field_compensation=APPLY_DIFFUSE_FIELD_COMPENSATION,
+         do_diffuse_field_compensation=settings.apply_diffuse_field_compensation,
          head_ms=1,
          jamesdsp=False,
          hangloose=False,
@@ -622,7 +622,7 @@ def create_cli():
     arg_parser.add_argument('--no_headphone_compensation', action='store_false', dest='do_headphone_compensation',
                             help='Skip headphone compensation.')
     arg_parser.add_argument('--diffuse_field_compensation', action='store_true',
-                            dest='do_diffuse_field_compensation', default=APPLY_DIFFUSE_FIELD_COMPENSATION,
+                            dest='do_diffuse_field_compensation', default=settings.apply_diffuse_field_compensation,
                             help='Apply diffuse-field compensation to the HRIR.')
     arg_parser.add_argument('--no_equalization', action='store_false', dest='do_equalization',
                             help='Skip equalization.')

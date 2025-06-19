@@ -84,14 +84,16 @@ SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(
 
 SPEAKER_DELAYS = {_speaker: 0 for _speaker in SPEAKER_NAMES}
 
+# Centralised processing configuration
+from config import settings
+
 # Applies diffuse-field compensation to HRIRs
-APPLY_DIFFUSE_FIELD_COMPENSATION = False
+# (previously ``APPLY_DIFFUSE_FIELD_COMPENSATION``)
 
 # Applies headphone EQ compensation
-APPLY_HEADPHONE_EQ = True
+# (previously ``APPLY_HEADPHONE_EQ``)
 
 # Applies X-Curve compensation (~-3 dB/oct above 2 kHz)
-APPLY_X_CURVE_COMPENSATION = False
 
 # Available X-Curve profiles with reference frequency and slope in dB/octave
 X_CURVE_TYPES = {
@@ -109,11 +111,6 @@ X_CURVE_REF_FREQUENCY = X_CURVE_TYPES[X_CURVE_DEFAULT_TYPE]["ref_frequency"]
 # Slope of X-Curve in decibels per octave (for backward compatibility)
 X_CURVE_SLOPE_DB_PER_OCTAVE = X_CURVE_TYPES[X_CURVE_DEFAULT_TYPE]["slope"]
 
-# Applies room correction filtering (e.g., smoothing or flattening)
-APPLY_ROOM_CORRECTION = False
-
-# Preserve the room's full impulse response without normalization or truncation
-PRESERVE_ROOM_RESPONSE = True
 
 # Each channel, left and right
 IR_ORDER = []

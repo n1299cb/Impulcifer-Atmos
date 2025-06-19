@@ -11,7 +11,8 @@ import nnresample
 from copy import deepcopy
 from autoeq.frequency_response import FrequencyResponse
 from utils import magnitude_response, get_ylim, running_mean
-from constants import COLORS, PRESERVE_ROOM_RESPONSE
+from constants import COLORS
+from config import settings
 
 
 class ImpulseResponse:
@@ -277,7 +278,7 @@ class ImpulseResponse:
 
     def crop_head(self, head_ms=1):
         """Crops away head."""
-        if PRESERVE_ROOM_RESPONSE:
+        if settings.preserve_room_response:
             return
         self.data = self.data[self.peak_index() - int(self.fs * head_ms / 1000):]
 
@@ -317,7 +318,7 @@ class ImpulseResponse:
         Returns:
             None
         """
-        if PRESERVE_ROOM_RESPONSE:
+        if settings.preserve_room_response:
             return
         peak_index, knee_point_index, _, _ = self.decay_params()
         edt, rt20, rt30, rt60 = self.decay_times()

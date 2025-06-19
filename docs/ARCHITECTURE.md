@@ -23,5 +23,8 @@ The project largely adheres to MVVM. The GUI delegates recording and processing 
 - For simple file or directory checks, use the
   `MeasurementSetupViewModel.file_exists` and `directory_exists` helpers
   from the view layer.
+- Global processing flags are consolidated in `config.py`. Import the
+  `settings` object and adjust its attributes instead of editing scattered
+  constants.
   
 This document acts as a reference for contributors aiming to keep the MVVM separation intact.

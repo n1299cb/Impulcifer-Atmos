@@ -10,7 +10,8 @@ from PIL import Image
 from autoeq.frequency_response import FrequencyResponse
 from impulse_response import ImpulseResponse
 from utils import read_wav, write_wav, magnitude_response, sync_axes
-from constants import SPEAKER_NAMES, SPEAKER_DELAYS, HEXADECAGONAL_TRACK_ORDER, APPLY_HEADPHONE_EQ, PRESERVE_ROOM_RESPONSE
+from constants import SPEAKER_NAMES, SPEAKER_DELAYS, HEXADECAGONAL_TRACK_ORDER
+from config import settings
 
 
 class HRIR:
@@ -249,7 +250,7 @@ class HRIR:
 
     def crop_tails(self):
         """Crops out tails after every impulse response has decayed to noise floor."""
-        if PRESERVE_ROOM_RESPONSE:
+        if settings.preserve_room_response:
             return
         
         if self.fs != self.estimator.fs:
@@ -464,7 +465,7 @@ class HRIR:
             right_fr = ImpulseResponse(np.mean(np.vstack(right), axis=0), self.fs).frequency_response()
 
             # Headphone EQ logic
-            if not APPLY_HEADPHONE_EQ:
+            if not settings.apply_headphone_eq:
                 firs = [signal.unit_impulse(128), signal.unit_impulse(128)]
             else:
                 # Create EQ FIR filters

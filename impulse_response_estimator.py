@@ -9,7 +9,7 @@ from scipy.signal.windows import hann
 import numpy as np
 import matplotlib.pyplot as plt
 from utils import read_wav, write_wav, magnitude_response
-from constants import PRESERVE_ROOM_RESPONSE
+from config import settings
 
 
 class ImpulseResponseEstimator(object):
@@ -148,7 +148,7 @@ class ImpulseResponseEstimator(object):
 
     def estimate(self, recording):
         """Estimates impulse response"""
-        usrmode = 'full' if PRESERVE_ROOM_RESPONSE else 'same'
+        usrmode = 'full' if settings.preserve_room_response else 'same'
         return convolve(recording, self.inverse_filter, mode=usrmode, method='auto')
 
     def sweep_sequence(self, speakers, tracks):

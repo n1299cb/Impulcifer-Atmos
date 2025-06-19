@@ -33,6 +33,14 @@ the `models` package. This separation keeps the GUI free of processing logic and
 makes core functionality testable without a running interface.
 For more details see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## Configuration
+
+Processing options such as headphone EQ or room correction are controlled
+via the `config.py` module. The `settings` object holds the default values
+which can be tweaked programmatically before calling any processing
+functions. Command line tools read these defaults as well, so adjusting
+`settings` allows changing behaviour without editing multiple scripts.
+
 ## Installing
 Impulcifer is used from a command line and requires some prerequisites. These installation instructions will guide you
 through installing everything that is needed to run Impulcifer on you own PC.
