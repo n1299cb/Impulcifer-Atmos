@@ -336,6 +336,11 @@ class ImpulciferGUI(QMainWindow):
         self.hp_recorder_button.clicked.connect(self.launch_headphone_recorder)
         # Removed from Execution tab to move into Headphone EQ tab
 
+        export_btn = QPushButton("Export Hesuvi Preset")
+        export_btn.clicked.connect(self.export_hesuvi_preset)
+        layout.addWidget(export_btn)
+
+
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
         log_controls = QHBoxLayout()
@@ -1034,6 +1039,25 @@ class ImpulciferGUI(QMainWindow):
                 QMessageBox.information(self, "Log Saved", f"Log saved to {file_path}")
         except Exception as e:
             QMessageBox.critical(self, "Save Log Error", str(e))
+
+    def export_hesuvi_preset(self):
+        try:
+            errors = self.setup_vm.validate_paths(measurement_dir=self.measurement_dir_var.text())
+            if "measurement_dir" in errors:
+                QMessageBox.warning(self, "Export Error", "Invalid measurement directory")
+                return
+            src = os.path.join(self.measurement_dir_var.text(), "hesuvi.wav")
+            if not self.setup_vm.file_exists(src):
+                QMessageBox.warning(self, "Export Error", "hesuvi.wav not found. Run processing first.")
+                return
+            dest, _ = QFileDialog.getSaveFileName(self, "Export Hesuvi Preset", "hesuvi.wav", "WAV Files (*.wav);;All Files (*)")
+            if dest:
+                with open(src, 'rb') as fsrc, open(dest, 'wb') as fdst:
+                    fdst.write(fsrc.read())
+                QMessageBox.information(self, "Export Complete", f"Preset exported to {dest}")
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", str(e))
+
 
     def plot_example(self):
         ax = self.figure.add_subplot(111)

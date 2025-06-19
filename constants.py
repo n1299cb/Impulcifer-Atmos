@@ -7,7 +7,8 @@ SPEAKER_NAMES = [
     'SL', 'SR',  # 4–5 (Side surrounds)
     'BL', 'BR',  # 6–7 (Back surrounds)
     'WL', 'WR',  # 8–9 (Wide L/R)
-    'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR'  # 10–15
+    'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR',  # 10–15
+    'W', 'X', 'Y', 'Z'  # 16–19 Ambisonics channels
 ]
 
 # Speaker layout indexes (without LFE channel for reference formats)
@@ -26,6 +27,15 @@ SPEAKER_LAYOUT_INDEXES = {
         (10, 11),  # Top Front Left, Top Front Right
         (12, 13),  # Top Middle Left, Top Middle Right
         (14, 15)   # Top Back Left, Top Back Right
+    ],
+    "5.1.2": [
+        (0, 1),    # Front Left, Front Right
+        (2,),      # Center
+        (6, 7),    # Back Left, Back Right
+        (10, 11)   # Top Front Left, Top Front Right
+    ],
+    "ambisonics": [
+        (16,), (17,), (18,), (19,)
     ]
 }
 # Resolved layout mappings (label groups)
@@ -174,7 +184,9 @@ SMPTE_LAYOUT_INDEXES = {
     "5.1": [(0, 1), (2,), (3,), (6, 7)],
     "7.1": [(0, 1), (2,), (3,), (4, 5), (6, 7)],
     "7.1.4": [(0, 1), (2,), (3,), (4, 5), (6, 7), (10, 11), (14, 15)],
-    "9.1.6": [(0, 1), (2,), (3,), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13), (14, 15)]
+    "9.1.6": [(0, 1), (2,), (3,), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13), (14, 15)],
+    "5.1.2": [(0, 1), (2,), (3,), (6, 7), (10, 11)],
+    "ambisonics": [(16,), (17,), (18,), (19,)]
 }
 # Preset orders using SPEAKER_LAYOUT_INDEXES for SMPTE
 # Flattened versions for GUI use

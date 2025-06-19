@@ -423,7 +423,12 @@ can be a powerful tool for controlling ringing in the room without having to do 
 ### Customizing Speaker Layouts in the GUI
 
 The Setup tab now features a **Speaker Layout** selector. Choose any of the
-presets from `constants.FORMAT_PRESETS` or select **Custom…** to load a
+presets from `constants.FORMAT_PRESETS` &mdash; now including **5.1.2** and a
+four channel **Ambisonics** option &mdash; or select **Custom…** to load a
+comma-separated or JSON list of speaker names. Loaded layouts are used when
+mapping playback channels in the **Map Channels** dialog. Custom layouts can be
+saved as presets in JSON format via the **Save Layout…** button so they appear in
+the selector next time the application starts.
 comma-separated or JSON list of speaker names. Loaded layouts are used when
 mapping playback channels in the **Map Channels** dialog. Custom layouts can be
 saved as presets in JSON format via the **Save Layout…** button so they appear in
@@ -466,6 +471,12 @@ Follow the prompts to position yourself and start each capture.
 You can also launch this helper from the **Execution** tab of the GUI via the
 *Capture Wizard* button. It uses the same prompts but displays them inside a
 dialog window.
+
+After running the processing pipeline the **Export Hesuvi Preset** button on the
+Execution tab copies `hesuvi.wav` to a location of your choice. Use this to
+quickly drop the file into Equalizer APO's `Hesuvi` folder or another virtual
+speaker tool.
+
 
 For a deeper walkthrough of these helpers, see
 [docs/TOOLS.md](docs/TOOLS.md).

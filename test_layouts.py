@@ -20,6 +20,8 @@ EXPECTED_LAYOUTS = {
     "7.1": 7,
     "7.1.4": 11,
     "9.1.6": 15,
+    "5.1.2": 7,
+    "ambisonics": 4,
 }
 
 def test_layout_definitions_exist():
