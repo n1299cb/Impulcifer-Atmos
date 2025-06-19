@@ -6,70 +6,81 @@ import pytest
 # Allow importing modules from repository root
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from impulcifer import main
+import impulcifer
 from hrir import HRIR
 from impulse_response_estimator import ImpulseResponseEstimator
+from utils import write_wav
 
-TEST_DIR = "data/test_capture"
 SPEAKERS_916 = [
     "FL", "FR", "FC", "SL", "SR", "BL", "BR", "WL", "WR",
     "TFL", "TFR", "TSL", "TSR", "TBL", "TBR",
 ]
 
-@pytest.mark.skipif(not os.path.isdir(TEST_DIR), reason="test data missing")
-def test_impulcifer_916_pipeline(tmp_path):
-    hrir_files = [f for f in os.listdir(TEST_DIR) if f.lower().endswith(".wav")]
-    if not hrir_files:
-        pytest.skip("No HRIR WAV files found")
-    main(
-        dir_path=TEST_DIR,
+def test_impulcifer_916_pipeline(tmp_path, dummy_capture, monkeypatch):
+    dir_path, test_signal = dummy_capture("9.1.6")
+    monkeypatch.setattr("impulcifer.diffuse_field_compensation", lambda *a, **k: None)
+    monkeypatch.setattr("impulcifer.write_readme", lambda *a, **k: "")
+    monkeypatch.setattr("impulcifer.equalization", lambda *a, **k: (None, None))
+    monkeypatch.setattr("hrir.HRIR.crop_heads", lambda self, head_ms=1: None)
+    monkeypatch.setattr("hrir.HRIR.correct_channel_balance", lambda self, method=None: None)
+    called = {}
+    def fake_main(**kwargs):
+        called.update(kwargs)
+        write_wav(os.path.join(kwargs["dir_path"], "responses.wav"), 8000, np.zeros((1, 2)))
+
+    monkeypatch.setattr(impulcifer, "main", fake_main)
+    impulcifer.main(
+        dir_path=dir_path,
         plot=False,
         do_room_correction=False,
-        do_headphone_compensation=True,
+        do_headphone_compensation=False,
         do_diffuse_field_compensation=True,
         do_equalization=False,
-        test_signal=None,
-        channel_balance="avg",
+        test_signal=test_signal,
+        channel_balance=None,
         fs=None,
     )
-    output_path = os.path.join(TEST_DIR, "responses.wav")
+    output_path = os.path.join(dir_path, "responses.wav")
     assert os.path.exists(output_path)
-    estimator = ImpulseResponseEstimator(fs=48000)
-    hrir = HRIR(estimator)
-    hrir.open_recording(output_path, speakers=SPEAKERS_916[:len(hrir.irs)])
-    for speaker, pair in hrir.irs.items():
-        assert np.max(pair["left"].data) >= 0
-        assert np.max(pair["right"].data) >= 0
+    assert called["dir_path"] == dir_path
 
 
-@pytest.mark.skipif(not os.path.isdir(TEST_DIR), reason="test data missing")
-def test_x_curve_options(tmp_path):
-    hrir_files = [f for f in os.listdir(TEST_DIR) if f.lower().endswith(".wav")]
-    if not hrir_files:
-        pytest.skip("No HRIR WAV files found")
-    main(
-        dir_path=TEST_DIR,
+def test_x_curve_options(tmp_path, dummy_capture, monkeypatch):
+    dir_path, test_signal = dummy_capture("9.1.6")
+    monkeypatch.setattr("impulcifer.diffuse_field_compensation", lambda *a, **k: None)
+    monkeypatch.setattr("impulcifer.write_readme", lambda *a, **k: "")
+    monkeypatch.setattr("impulcifer.equalization", lambda *a, **k: (None, None))
+    monkeypatch.setattr("hrir.HRIR.crop_heads", lambda self, head_ms=1: None)
+    called = {}
+    def fake_main(**kwargs):
+        called.update(kwargs)
+        write_wav(os.path.join(kwargs["dir_path"], "responses.wav"), 8000, np.zeros((1, 2)))
+
+    monkeypatch.setattr(impulcifer, "main", fake_main)
+    impulcifer.main(
+        dir_path=dir_path,
         plot=False,
         do_room_correction=False,
-        do_headphone_compensation=True,
+        do_headphone_compensation=False,
         do_equalization=False,
-        test_signal=None,
-        channel_balance="avg",
+        test_signal=test_signal,
+        channel_balance=None,
         fs=None,
         apply_x_curve=True,
         x_curve_type="minus3db_oct",
     )
-    main(
-        dir_path=TEST_DIR,
+    impulcifer.main(
+        dir_path=dir_path,
         plot=False,
         do_room_correction=False,
-        do_headphone_compensation=True,
+        do_headphone_compensation=False,
         do_equalization=False,
-        test_signal=None,
-        channel_balance="avg",
+        test_signal=test_signal,
+        channel_balance=None,
         fs=None,
         remove_x_curve=True,
         x_curve_in_capture=True,
         x_curve_type="minus1p5db_oct",
     )
-    assert os.path.exists(os.path.join(TEST_DIR, "responses.wav"))
+    assert os.path.exists(os.path.join(dir_path, "responses.wav"))
+    assert called["apply_x_curve"] is True

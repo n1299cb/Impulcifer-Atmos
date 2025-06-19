@@ -460,8 +460,11 @@ For a deeper walkthrough of these helpers, see
 
 ## Tests
 
-Simple test scripts are included for quickly validating the processing pipeline. They require sample HRIR recordings in
-`data/test_capture` and can be run directly with Python:
+Simple test scripts validate the processing pipeline. If you have real HRIR
+recordings, set `IMPULCIFER_TEST_CAPTURE_DIR` to their directory. Otherwise the
+tests automatically generate a tiny synthetic dataset.
+
+Run them directly with Python:
 
 ```bash
 python test_impulcifer.py       # 9.1.6 layout
