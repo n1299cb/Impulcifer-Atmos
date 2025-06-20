@@ -127,6 +127,10 @@ class ImpulciferGUI(QMainWindow):
         map_btn.clicked.connect(self.map_channels)
         layout.addWidget(map_btn)
 
+        auto_map_btn = QPushButton("Auto Map")
+        auto_map_btn.clicked.connect(self.auto_map_channels)
+        layout.addWidget(auto_map_btn)
+
         wizard_btn = QPushButton("Layout Wizard")
         wizard_btn.clicked.connect(self.open_layout_wizard)
         layout.addWidget(wizard_btn)
@@ -719,6 +723,7 @@ class ImpulciferGUI(QMainWindow):
             return
         self.selected_layout_name = text
         self.selected_layout = [SPEAKER_NAMES[i] for i in FORMAT_PRESETS[text]]
+        self.auto_map_channels(silent=True)
 
     def load_custom_layout(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Layout File", "", "Text or JSON (*.txt *.json);;All Files (*)")
@@ -1160,6 +1165,24 @@ class ImpulciferGUI(QMainWindow):
         }
         QMessageBox.information(self, "Channel Mappings", "Channel mappings saved successfully.")
         dialog.accept()
+
+    def auto_map_channels(self, silent: bool = False):
+        """Automatically assign sequential channels based on device capabilities."""
+        try:
+            playback_idx = int(self.playback_device_var.currentText().split(':')[0])
+            record_idx = int(self.recording_device_var.currentText().split(':')[0])
+            playback_channels = sd.query_devices(playback_idx)['max_output_channels']
+            record_channels = sd.query_devices(record_idx)['max_input_channels']
+            spk_count = len(self.selected_layout)
+            self.channel_mappings = {
+                "output_channels": list(range(min(playback_channels, spk_count))),
+                "input_channels": list(range(min(record_channels, 2)))
+            }
+            if not silent:
+                QMessageBox.information(self, "Auto Map", "Channel mappings assigned automatically.")
+        except Exception as e:
+            if not silent:
+                QMessageBox.critical(self, "Auto Map Error", str(e))
 
     def open_channel_balance_preview(self):
         from PySide6.QtCore import Qt

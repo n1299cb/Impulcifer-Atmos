@@ -423,16 +423,13 @@ can be a powerful tool for controlling ringing in the room without having to do 
 ### Customizing Speaker Layouts in the GUI
 
 The Setup tab now features a **Speaker Layout** selector. Choose any of the
-presets from `constants.FORMAT_PRESETS` &mdash; now including **5.1.2** and a
-four channel **Ambisonics** option &mdash; or select **Custom…** to load a
+presets from `constants.FORMAT_PRESETS` &mdash; now including **5.1.2**, **5.1.4**,
+**7.1.2**, **7.1.6**, **9.1.4** and a four channel **Ambisonics** option &mdash; or select **Custom…** to load a
 comma-separated or JSON list of speaker names. Loaded layouts are used when
 mapping playback channels in the **Map Channels** dialog. Custom layouts can be
 saved as presets in JSON format via the **Save Layout…** button so they appear in
 the selector next time the application starts.
-comma-separated or JSON list of speaker names. Loaded layouts are used when
-mapping playback channels in the **Map Channels** dialog. Custom layouts can be
-saved as presets in JSON format via the **Save Layout…** button so they appear in
-the selector next time the application starts.
+Use **Auto Map** on the Setup tab to assign playback and recording channels automatically.
 
 ### Layout Preparation Tool
 

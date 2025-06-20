@@ -28,6 +28,38 @@ SPEAKER_LAYOUT_INDEXES = {
         (12, 13),  # Top Middle Left, Top Middle Right
         (14, 15)   # Top Back Left, Top Back Right
     ],
+    "5.1.4": [
+        (0, 1),    # Front Left, Front Right
+        (2,),      # Center
+        (6, 7),    # Back Left, Back Right
+        (10, 11),  # Top Front Left, Top Front Right
+        (14, 15)   # Top Back Left, Top Back Right
+    ],
+    "7.1.2": [
+        (0, 1),    # Front Left, Front Right
+        (2,),      # Center
+        (4, 5),    # Side Left, Side Right
+        (6, 7),    # Back Left, Back Right
+        (10, 11)   # Top Front Left, Top Front Right
+    ],
+    "7.1.6": [
+        (0, 1),    # Front Left, Front Right
+        (2,),      # Center
+        (4, 5),    # Side Left, Side Right
+        (6, 7),    # Back Left, Back Right
+        (10, 11),  # Top Front Left, Top Front Right
+        (12, 13),  # Top Middle Left, Top Middle Right
+        (14, 15)   # Top Back Left, Top Back Right
+    ],
+    "9.1.4": [
+        (0, 1),    # Front Left, Front Right
+        (2,),      # Center
+        (4, 5),    # Side Left, Side Right
+        (6, 7),    # Back Left, Back Right
+        (8, 9),    # Wide Left, Wide Right
+        (10, 11),  # Top Front Left, Top Front Right
+        (14, 15)   # Top Back Left, Top Back Right
+    ],
     "5.1.2": [
         (0, 1),    # Front Left, Front Right
         (2,),      # Center
@@ -185,6 +217,10 @@ SMPTE_LAYOUT_INDEXES = {
     "7.1": [(0, 1), (2,), (3,), (4, 5), (6, 7)],
     "7.1.4": [(0, 1), (2,), (3,), (4, 5), (6, 7), (10, 11), (14, 15)],
     "9.1.6": [(0, 1), (2,), (3,), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13), (14, 15)],
+    "5.1.4": [(0, 1), (2,), (3,), (6, 7), (10, 11), (14, 15)],
+    "7.1.2": [(0, 1), (2,), (3,), (4, 5), (6, 7), (10, 11)],
+    "7.1.6": [(0, 1), (2,), (3,), (4, 5), (6, 7), (10, 11), (12, 13), (14, 15)],
+    "9.1.4": [(0, 1), (2,), (3,), (4, 5), (6, 7), (8, 9), (10, 11), (14, 15)],
     "5.1.2": [(0, 1), (2,), (3,), (6, 7), (10, 11)],
     "ambisonics": [(16,), (17,), (18,), (19,)]
 }
