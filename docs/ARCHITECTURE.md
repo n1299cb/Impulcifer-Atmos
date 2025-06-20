@@ -9,12 +9,10 @@ This code base follows a lightweight **Model–View–ViewModel (MVVM)** layout.
 
 ## Current State
 
-The project largely adheres to MVVM. The GUI delegates recording and processing to the `RecordingViewModel` and `ProcessingViewModel`, while path validation is handled by `MeasurementSetupViewModel`. Unit tests exercise these view models to keep the interface layer free from heavy logic.
+The project largely adheres to MVVM. The GUI delegates recording and processing to the `RecordingViewModel` and `ProcessingViewModel`, while path validation is handled by `MeasurementSetupViewModel`. Layout generation helpers from `generate_layout.py` are wrapped by `LayoutViewModel`. Unit tests exercise these view models to keep the interface layer free from heavy logic and verify command construction.
 
 ## Potential Improvements
 
-- Move layout selection helpers (`generate_layout.py`) under a dedicated ViewModel to further decouple the GUI from command line utilities.
-- Provide additional unit tests for `ProcessingViewModel` and `RecordingViewModel` to ensure command arguments are built correctly.
 - Keep GUI modules focused on presentation by placing any new processing steps in a ViewModel or domain script.
 - All processing modules should be properly separated and according to MVVM and isolated from the view/GUI section.
 - When validating measurement or test signal paths, call
