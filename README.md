@@ -1,6 +1,11 @@
-# Impulcifer
+# This file is part of a modified fork of Impulcifer by Jaakko Pasanen.
+# Modifications © 2025 Blaring Sound LLC, licensed under the MIT License.
+
 Built off of jaakkopasanen's Impulcifer project.
 Modified and expanded to include 9.1.6 speaker formats.
+
+This project is a fork of Impulcifer by Jaakko Pasanen.
+Modifications © 2025 Blaring Sound LLC. Licensed under the MIT License.
 
 Impulcifer is a tool for creating binaural room impulse responses (BRIR) for speaker virtualization on headphones.
 
@@ -23,6 +28,15 @@ These demos are trying to make headphones sound as much as possible like the spe
 good [wow](https://www.youtube.com/watch?v=KlLMlJ2tDkg) effect. Impulcifer actually takes this even further because
 Impulcifer can do measurements with only one speaker so you don't need access to surround speaker setup and can do room
 acoustic corrections which are normally not possible in real rooms with DSP.
+
+## License
+
+This project is a fork of [Impulcifer](https://github.com/jaakkopasanen/Impulcifer) by Jaakko Pasanen, originally licensed under the MIT License.
+
+All original code by Jaakko Pasanen remains under the MIT License.  
+Modifications and additions © 2025 Blaring Sound LLC are also licensed under the MIT License.
+
+See the `LICENSE` file for full details.
 
 ## Architecture
 
