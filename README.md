@@ -500,6 +500,20 @@ for each speaker before processing. The helper computes timing offsets using
 `utils.versus_distance()` and temporarily overrides the default zero-delay table
 so non-uniform setups remain in sync.
 
+Alternatively use `--delay-file=delays.json` to load a table of delays without
+interacting. The file can be JSON or CSV with values in milliseconds:
+
+```json
+{ "FL": 0, "FR": 0, "SL": 5 }
+```
+
+```csv
+speaker,delay_ms
+FL,0
+FR,0
+SL,5
+```
+
 
 ## Tests
 
