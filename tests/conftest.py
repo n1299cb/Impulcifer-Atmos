@@ -1,6 +1,11 @@
 import os
+import sys
 import numpy as np
 import pytest
+
+# Ensure repository modules can be imported when running pytest directly
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from impulse_response_estimator import ImpulseResponseEstimator
 from constants import SPEAKER_LAYOUTS
 from utils import write_wav
@@ -34,4 +39,5 @@ def dummy_capture(tmp_path):
         out_dir = tmp_path / "capture"
         out_dir.mkdir(exist_ok=True)
         return _write_dummy_recordings(out_dir, layout)
+
     return factory
