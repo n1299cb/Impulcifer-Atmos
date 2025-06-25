@@ -58,7 +58,8 @@ def main(dir_path=None,
          apply_x_curve=False,
          remove_x_curve=False,
          x_curve_in_capture=False,
-         x_curve_type=X_CURVE_DEFAULT_TYPE):
+         x_curve_type=X_CURVE_DEFAULT_TYPE,
+         interactive_delays=False):
     """"""
     if dir_path is None or not os.path.isdir(dir_path):
         raise NotADirectoryError(f'Given dir path "{dir_path}"" is not a directory.')
@@ -83,6 +84,11 @@ def main(dir_path=None,
     # Impulse response estimator
     print('Creating impulse response estimator...')
     estimator = open_impulse_response_estimator(dir_path, file_path=test_signal)
+
+    if interactive_delays:
+        from speaker_delay import interactive_speaker_delays
+        from constants import SPEAKER_DELAYS
+        SPEAKER_DELAYS.update(interactive_speaker_delays())
 
     # Room correction frequency responses
     room_frs = None
@@ -695,6 +701,8 @@ def create_cli():
     arg_parser.add_argument('--x_curve_type', type=str, default=X_CURVE_DEFAULT_TYPE,
                             choices=list(X_CURVE_TYPES.keys()),
                             help='Which X-Curve profile to use.')
+    arg_parser.add_argument('--interactive_delays', action='store_true',
+                            help='Prompt for speaker angles and distances to compute delays.')
     args = vars(arg_parser.parse_args())
     if 'bass_boost' in args:
         bass_boost = args['bass_boost'].split(',')

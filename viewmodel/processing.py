@@ -53,6 +53,8 @@ class ProcessingViewModel:
             args.extend(["--x_curve_type", settings.x_curve_type])
         if settings.x_curve_in_capture:
             args.append("--x_curve_in_capture")
+        if settings.interactive_delays:
+            args.append("--interactive_delays")
 
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return result

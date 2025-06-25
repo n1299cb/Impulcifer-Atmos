@@ -26,3 +26,4 @@ class ProcessingSettings:
     x_curve_action: str = "None"
     x_curve_type: str = ""
     x_curve_in_capture: bool = False
+    interactive_delays: bool = False

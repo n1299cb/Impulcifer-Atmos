@@ -80,3 +80,23 @@ def test_recording_vm_builds_command(monkeypatch, tmp_path):
     assert 'recorder.py' in captured['args']
     assert '--output_file' in captured['args']
     assert result.stdout == 'ok'
+
+
+def test_processing_vm_interactive_delays(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_run(args, stdout=None, stderr=None, text=None):
+        captured['args'] = args
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout='ok', stderr='')
+
+    monkeypatch.setattr(subprocess, 'run', fake_run)
+
+    settings = ProcessingSettings(
+        measurement_dir=str(tmp_path),
+        test_signal='signal.wav',
+        interactive_delays=True,
+    )
+    vm = ProcessingViewModel()
+    vm.run(settings)
+
+    assert '--interactive_delays' in captured['args']

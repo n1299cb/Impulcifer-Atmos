@@ -493,6 +493,14 @@ For a deeper walkthrough of these helpers, see
 [docs/TOOLS.md](docs/TOOLS.md).
 
 
+### Distance-Based Speaker Delays (Advanced)
+
+Pass `--interactive_delays` to `impulcifer.py` to enter the angle and distance
+for each speaker before processing. The helper computes timing offsets using
+`utils.versus_distance()` and temporarily overrides the default zero-delay table
+so non-uniform setups remain in sync.
+
+
 ## Tests
 
 Simple test scripts validate the processing pipeline. If you have real HRIR
