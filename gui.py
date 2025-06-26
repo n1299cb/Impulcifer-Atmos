@@ -5,6 +5,8 @@
 # This file may include integrated or rewritten components from the original project.
 # For details on changes and authorship, see the project README or CHANGELOG.
 
+"""Graphical user interface for running Impulcifer workflows."""
+
 import sys
 import os
 import sounddevice as sd
@@ -40,7 +42,16 @@ from PySide6.QtWidgets import (
     QGraphicsTextItem,
     QProgressBar,
 )
-from PySide6.QtGui import QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter, QRadialGradient
+from PySide6.QtGui import (
+    QShortcut,
+    QKeySequence,
+    QPixmap,
+    QBrush,
+    QPen,
+    QColor,
+    QPainter,
+    QRadialGradient,
+)
 from PySide6.QtCore import Qt, QPointF, QTimer
 
 from viewmodel.measurement_setup import MeasurementSetupViewModel
@@ -62,6 +73,8 @@ import datetime
 
 
 class ImpulciferGUI(QMainWindow):
+    """Main window providing access to recording and processing tools."""
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Impulcifer GUI")
@@ -117,7 +130,13 @@ class ImpulciferGUI(QMainWindow):
         browse_test.setMaximumWidth(100)
 
         browse_test.clicked.connect(self.browse_test_signal)
-        layout.addLayout(self.labeled_row("Select Test Signal File:", self.test_signal_path_var, browse_test))
+        layout.addLayout(
+            self.labeled_row(
+                "Select Test Signal File:",
+                self.test_signal_path_var,
+                browse_test,
+            )
+        )
 
         self.measurement_dir_var = QLineEdit()
         self.measurement_dir_var.setMaximumWidth(300)
@@ -125,7 +144,13 @@ class ImpulciferGUI(QMainWindow):
         browse_dir = QPushButton("Browse")
         browse_dir.setMaximumWidth(100)
         browse_dir.clicked.connect(self.browse_measurement_dir)
-        layout.addLayout(self.labeled_row("Select Measurement Directory:", self.measurement_dir_var, browse_dir))
+        layout.addLayout(
+            self.labeled_row(
+                "Select Measurement Directory:",
+                self.measurement_dir_var,
+                browse_dir,
+            )
+        )
 
         # Layout selection
         self.layout_var = QComboBox()
@@ -256,7 +281,11 @@ class ImpulciferGUI(QMainWindow):
         browse_hp = QPushButton("Browse")
         browse_hp.clicked.connect(self.browse_headphone_file)
         layout.addLayout(
-            self.labeled_row("Headphone EQ File (headphones.wav):", self.headphone_file_path_var, browse_hp)
+            self.labeled_row(
+                "Headphone EQ File (headphones.wav):",
+                self.headphone_file_path_var,
+                browse_hp,
+            )
         )
 
         self.x_curve_action_var = QComboBox()

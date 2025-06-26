@@ -7,6 +7,8 @@
 
 # -*- coding: utf-8 -*-
 
+"""Audio recording utilities used by the capture workflow."""
+
 import os
 import re
 import sounddevice as sd
@@ -18,7 +20,10 @@ from constants import SPEAKER_NAMES, SMPTE_ORDER
 
 
 class DeviceNotFoundError(Exception):
-    pass
+    """Raised when an audio device cannot be found."""
+
+    def __init__(self, message: str = "Device not found") -> None:
+        super().__init__(message)
 
 
 def record_target(file_path, length, fs, channels=2, append=False, output_file=None, report_file=None):

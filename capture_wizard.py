@@ -1,9 +1,18 @@
 # This file is part of a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
-# Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
+# Modifications © 2025 Blaring Sound LLC — also licensed under the MIT
+# License unless otherwise stated.
 #
 # This file may include integrated or rewritten components from the original project.
 # For details on changes and authorship, see the project README or CHANGELOG.
+
+"""Interactive wizard for capturing impulse responses.
+
+This module provides a console-based workflow for recording a set of
+impulse responses for a given speaker layout. It can also be imported
+and reused in a GUI context by supplying custom prompt and message
+callbacks.
+"""
 
 import os
 import argparse
@@ -44,7 +53,10 @@ def run_capture(
     message_fn(f"\nRecording layout '{layout_name}' into {out_dir}\n")
     os.makedirs(out_dir, exist_ok=True)
 
-    prompt_fn("Insert binaural microphones and wear headphones.\nPress Enter to record headphone response...")
+    prompt_fn(
+        "Insert binaural microphones and wear headphones.\n"
+        "Press Enter to record headphone response..."
+    )
     recorder.play_and_record(
         play=stereo_sweep,
         record=os.path.join(out_dir, "headphones.wav"),
@@ -69,13 +81,27 @@ def run_capture(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Step-by-step HRIR capture wizard")
+    """Entry point for command-line execution."""
+
+    parser = argparse.ArgumentParser(
+        description="Step-by-step HRIR capture wizard"
+    )
     parser.add_argument("--layout", help="Layout name to use")
     parser.add_argument("--dir", default="data/test_capture", help="Target directory")
     parser.add_argument("--stereo_sweep", default=DEFAULT_STEREO_SWEEP, help="Stereo sweep file")
     parser.add_argument("--mono_sweep", default=DEFAULT_MONO_SWEEP, help="Mono sweep file")
-    parser.add_argument("--input_device", type=str, default=None, help="Input device name or number")
-    parser.add_argument("--output_device", type=str, default=None, help="Output device name or number")
+    parser.add_argument(
+        "--input_device",
+        type=str,
+        default=None,
+        help="Input device name or number",
+    )
+    parser.add_argument(
+        "--output_device",
+        type=str,
+        default=None,
+        help="Output device name or number",
+    )
     parser.add_argument("--host_api", type=str, default=None, help="Preferred host API")
     args = parser.parse_args()
 

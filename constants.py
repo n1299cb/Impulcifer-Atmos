@@ -1,11 +1,18 @@
 # This file is part of a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
-# Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
+# Modifications © 2025 Blaring Sound LLC — also licensed under the MIT
+# License unless otherwise stated.
 #
 # This file may include integrated or rewritten components from the original project.
 # For details on changes and authorship, see the project README or CHANGELOG.
 
+"""Common constants used throughout the project."""
+
 # -*- coding: utf-8 -*-
+
+import json
+import os
+from config import settings
 
 SPEAKER_NAMES = [
     'FL',
@@ -35,7 +42,12 @@ SPEAKER_LAYOUT_INDEXES = {
     "1.0": [(0,)],  # Mono (front left)
     "2.0": [(0, 1)],  # Front Left, Front Right
     "5.1": [(0, 1), (2,), (6, 7)],  # 2.0 plus Center, Back Left and Back Right
-    "7.1": [(0, 1), (2,), (4, 5), (6, 7)],  # 5.1 plus Side Left, Side Right, then Back Left Back Right
+    "7.1": [
+        (0, 1),
+        (2,),
+        (4, 5),
+        (6, 7),
+    ],  # 5.1 plus Side Left, Side Right, then Back Left/Back Right
     "7.1.4": [(0, 1), (2,), (4, 5), (6, 7), (10, 11), (14, 15)],
     "9.1.6": [
         (0, 1),  # Front Left, Front Right
@@ -88,8 +100,6 @@ SPEAKER_LAYOUT_INDEXES = {
     "ambisonics": [(16,), (17,), (18,), (19,)],
 }
 # Resolved layout mappings (label groups)
-import json
-import os
 
 USER_LAYOUT_PRESETS_FILE = os.environ.get("IMPULCIFER_LAYOUT_PRESETS", "user_layouts.json")
 
@@ -108,7 +118,9 @@ def load_user_layout_presets(file_path: str = USER_LAYOUT_PRESETS_FILE) -> dict:
         return {}
 
 
-def save_user_layout_preset(name: str, groups: list[list[str]], file_path: str = USER_LAYOUT_PRESETS_FILE) -> None:
+def save_user_layout_preset(
+    name: str, groups: list[list[str]], file_path: str = USER_LAYOUT_PRESETS_FILE
+) -> None:
     """Save layout preset to JSON file."""
     layouts = load_user_layout_presets(file_path)
     layouts[name] = groups
@@ -119,7 +131,11 @@ def save_user_layout_preset(name: str, groups: list[list[str]], file_path: str =
 USER_SPEAKER_LAYOUTS = load_user_layout_presets()
 
 SPEAKER_LAYOUTS = {
-    name: [[SPEAKER_NAMES[i] for i in group] for group in groups] for name, groups in SPEAKER_LAYOUT_INDEXES.items()
+    name: [
+        [SPEAKER_NAMES[i] for i in group]
+        for group in groups
+    ]
+    for name, groups in SPEAKER_LAYOUT_INDEXES.items()
 }
 SPEAKER_LAYOUTS.update(USER_SPEAKER_LAYOUTS)
 
@@ -152,20 +168,14 @@ def load_and_register_user_layouts(file_path: str) -> dict:
 
 # Regex patterns and helpers
 SPEAKER_PATTERN = f'({"|".join(SPEAKER_NAMES + ["X"])})'
-SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(speaker_pattern=SPEAKER_PATTERN)
+SPEAKER_LIST_PATTERN = r'{speaker_pattern}+(,{speaker_pattern})*'.format(
+    speaker_pattern=SPEAKER_PATTERN
+)
 
 SPEAKER_DELAYS = {_speaker: 0 for _speaker in SPEAKER_NAMES}
 
 # Centralised processing configuration
 from config import settings
-
-# Applies diffuse-field compensation to HRIRs
-# (previously ``APPLY_DIFFUSE_FIELD_COMPENSATION``)
-
-# Applies headphone EQ compensation
-# (previously ``APPLY_HEADPHONE_EQ``)
-
-# Applies X-Curve compensation (~-3 dB/oct above 2 kHz)
 
 # Available X-Curve profiles with reference frequency and slope in dB/octave
 X_CURVE_TYPES = {
@@ -271,7 +281,10 @@ CHANNEL_LABELS = {i: name for i, name in enumerate(SPEAKER_NAMES)}
 # Optional reverse lookup for GUI usage
 CHANNEL_LABELS_REVERSE = {name: i for i, name in CHANNEL_LABELS.items()}
 # Map layout name to flat list of speaker indices
-FORMAT_PRESETS = {name: [idx for group in groups for idx in group] for name, groups in SPEAKER_LAYOUT_INDEXES.items()}
+FORMAT_PRESETS = {
+    name: [idx for group in groups for idx in group]
+    for name, groups in SPEAKER_LAYOUT_INDEXES.items()
+}
 # SMPTE layout index definitions per format
 SMPTE_LAYOUT_INDEXES = {
     "1.0": [(0,)],
@@ -289,5 +302,7 @@ SMPTE_LAYOUT_INDEXES = {
 }
 # Preset orders using SPEAKER_LAYOUT_INDEXES for SMPTE
 # Flattened versions for GUI use
-SMPTE_ORDER = {fmt: [i for group in SMPTE_LAYOUT_INDEXES[fmt] for i in group] for fmt in SMPTE_LAYOUT_INDEXES}
-
+SMPTE_ORDER = {
+    fmt: [i for group in SMPTE_LAYOUT_INDEXES[fmt] for i in group]
+    for fmt in SMPTE_LAYOUT_INDEXES
+}
