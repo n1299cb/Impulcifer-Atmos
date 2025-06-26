@@ -102,7 +102,11 @@ python -m pip install -U pip
 ```bash
 pip install -U -r requirements.txt
 ```
-- Verify installation. You should see help printed if everything went well.  
+- Install the package itself so the scripts are available on your PATH.
+```bash
+pip install .
+```
+- Verify installation. You should see help printed if everything went well.
 ```bash
 python impulcifer.py --help
 ```
@@ -171,6 +175,8 @@ Guide for doing the measurements yourself and comments about the gear needed to 
 [measurements](https://github.com/jaakkopasanen/Impulcifer/wiki/Measurements) page of Impulcifer wiki. The whole process
 is really quite simple and doesn't take more than couple of minutes. Reading through the measurement guide is most
 strongly recommended when doing measurements the first time or using a different speaker configuration the first time.
+
+You can automate the setup with the helper scripts. Run `python generate_layout.py --layout=7.1 --dir=data/my_hrir` (or another layout) to create the expected folder structure and then start `python capture_wizard.py --layout=7.1 --dir=data/my_hrir` to record each group interactively.
 
 Following is a quick reference for running the measurements once you're familiar with the process. If you always use
 `my_hrir` as the temporary folder and rename it after the processing has been done, you don't have to change the
@@ -255,8 +261,11 @@ a headphones recording and saved the recording files into `data/my_hrir` folder.
 Impulcifer folder and activate the virtual environment as described in the installation instructions if you don't have
 command prompt open yet. Sine sweep recordings are processed by running `impulcifer.py` with Python as shown below.
 ```bash
-python impulcifer.py --test_signal="data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl" --dir_path="data/my_hrir" --plot
+python impulcifer.py --test_signal="data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl" \
+    --dir_path="data/my_hrir" --delay-file=delays.json --plot
 ```
+
+The optional `--delay-file` argument loads per-speaker timing offsets from a JSON or CSV table.
 
 You should have several WAV files and graphs in the folder. `hesuvi.wav` can now be used with HeSuVi to make your
 headphones sound like speakers.

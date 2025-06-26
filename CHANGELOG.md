@@ -10,6 +10,9 @@ been fixed and old features improved.
 - Added capture wizard for guided HRIR recording.
 - Added diffuse-field compensation and SMPTE X-Curve options.
 
+### Added
+- Support for per-speaker delay tables via `--delay-file`.
+
 ## Unreleased
 ### Removed
 - `APPLY_DIRECTIONAL_GAINS` constant from `constants.py` as it was unused.
