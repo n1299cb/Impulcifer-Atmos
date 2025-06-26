@@ -10,6 +10,7 @@
 import os
 from argparse import ArgumentParser
 import pickle
+from pathlib import Path
 from scipy.fftpack import fft
 from scipy.signal import convolve
 from scipy.signal.windows import hann
@@ -273,8 +274,19 @@ class ImpulseResponseEstimator(object):
 
     @staticmethod
     def from_pickle(file_path):
-        """Creates ImpulseResponseEstimator instance from pickled file."""
-        with open(file_path, 'rb') as f:
+        """Creates ImpulseResponseEstimator instance from pickled file.
+
+        Only pickle files stored in the repository ``data`` directory are
+        considered trusted. Loading pickle files from any other location is
+        refused to mitigate the risk of arbitrary code execution.
+        """
+
+        trusted_dir = Path(__file__).resolve().parent / "data"
+        file_path = Path(file_path).resolve()
+        if trusted_dir not in file_path.parents:
+            raise ValueError(f"Refusing to load pickle outside trusted directory: {file_path}")
+
+        with open(file_path, "rb") as f:
             return pickle.load(f)
 
     def to_pickle(self, file_path):
