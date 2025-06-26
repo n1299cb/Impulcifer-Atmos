@@ -16,6 +16,7 @@ import numpy as np
 import queue
 import threading
 import matplotlib
+import json
 
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
@@ -493,7 +494,7 @@ class ImpulciferGUI(QMainWindow):
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
                 self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
-        except Exception as e:
+        except (FileNotFoundError, OSError) as e:
             self.output_text.append(f"Error: {str(e)}")
 
     def launch_room_response_recorder(self):
@@ -520,7 +521,7 @@ class ImpulciferGUI(QMainWindow):
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
                 self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
-        except Exception as e:
+        except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Room Response Recorder Error", str(e))
 
     def launch_headphone_recorder(self):
@@ -547,7 +548,7 @@ class ImpulciferGUI(QMainWindow):
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
                 self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
-        except Exception as e:
+        except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Headphone Recorder Error", str(e))
 
     def launch_recorder(self):
@@ -574,7 +575,7 @@ class ImpulciferGUI(QMainWindow):
             if result.stderr:
                 self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
 
-        except Exception as e:
+        except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Recorder Error", str(e))
 
     def launch_capture_wizard(self):
@@ -612,7 +613,7 @@ class ImpulciferGUI(QMainWindow):
                 prompt_fn=prompt,
                 message_fn=message,
             )
-        except Exception as e:
+        except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Capture Wizard Error", str(e))
 
     def update_compensation_file_state(self):
@@ -833,7 +834,7 @@ class ImpulciferGUI(QMainWindow):
             if self.layout_var.findText(self.selected_layout_name) == -1:
                 self.layout_var.addItem(self.selected_layout_name)
             self.layout_var.setCurrentText(self.selected_layout_name)
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             QMessageBox.critical(self, "Layout Load Error", str(e))
             self.layout_var.setCurrentText(self.selected_layout_name)
 
@@ -851,7 +852,7 @@ class ImpulciferGUI(QMainWindow):
             QMessageBox.information(self, "Layout Saved", f"Layout saved to {file_path}")
             if self.layout_var.findText(name) == -1:
                 self.layout_var.insertItem(self.layout_var.count() - 1, name)
-        except Exception as e:
+        except (OSError, IOError) as e:
             QMessageBox.critical(self, "Save Layout Error", str(e))
 
     def map_channels(self):
@@ -1067,7 +1068,7 @@ class ImpulciferGUI(QMainWindow):
             try:
                 with redirect_stdout(buffer):
                     func(name, groups, dir_edit.text())
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 QMessageBox.critical(dialog, "Error", str(e))
             output_box.setPlainText(buffer.getvalue())
 
@@ -1132,7 +1133,7 @@ class ImpulciferGUI(QMainWindow):
                 with open(file_path, 'w') as f:
                     f.write(content)
                 QMessageBox.information(self, "Log Saved", f"Log saved to {file_path}")
-        except Exception as e:
+        except OSError as e:
             QMessageBox.critical(self, "Save Log Error", str(e))
 
     def export_hesuvi_preset(self):
@@ -1152,7 +1153,7 @@ class ImpulciferGUI(QMainWindow):
                 with open(src, 'rb') as fsrc, open(dest, 'wb') as fdst:
                     fdst.write(fsrc.read())
                 QMessageBox.information(self, "Export Complete", f"Preset exported to {dest}")
-        except Exception as e:
+        except OSError as e:
             QMessageBox.critical(self, "Export Error", str(e))
 
     def plot_example(self):
@@ -1208,13 +1209,13 @@ class ImpulciferGUI(QMainWindow):
         if checked:
             try:
                 dev_idx = int(self.recording_device_var.currentText().split(':')[0])
-            except Exception:
+            except (ValueError, IndexError):
                 dev_idx = None
             samplerate = None
             if dev_idx is not None:
                 try:
                     samplerate = int(sd.query_devices(dev_idx)['default_samplerate'])
-                except Exception:
+                except (KeyError, ValueError, sd.PortAudioError):
                     samplerate = None
             self.level_monitor = LevelMonitor(device=dev_idx, samplerate=samplerate or 48000)
             self.monitor_thread = threading.Thread(target=self.level_monitor.start, daemon=True)
@@ -1263,7 +1264,7 @@ class ImpulciferGUI(QMainWindow):
             }
             if not silent:
                 QMessageBox.information(self, "Auto Map", "Channel mappings assigned automatically.")
-        except Exception as e:
+        except (ValueError, IndexError, KeyError, sd.PortAudioError) as e:
             if not silent:
                 QMessageBox.critical(self, "Auto Map Error", str(e))
 

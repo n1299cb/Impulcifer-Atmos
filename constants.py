@@ -114,7 +114,7 @@ def load_user_layout_presets(file_path: str = USER_LAYOUT_PRESETS_FILE) -> dict:
         if not isinstance(data, dict):
             return {}
         return {k: v for k, v in data.items() if isinstance(v, list)}
-    except Exception:
+    except (OSError, json.JSONDecodeError):
         return {}
 
 
