@@ -122,7 +122,7 @@ def main() -> None:
         verify_layout(layout_name, groups, args.dir)
     else:
         init_layout(layout_name, groups, args.dir)
-    
+
     if args.save_preset:
         save_user_layout_preset(layout_name, groups, args.save_preset)
 

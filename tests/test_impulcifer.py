@@ -12,9 +12,23 @@ from impulse_response_estimator import ImpulseResponseEstimator
 from utils import write_wav
 
 SPEAKERS_916 = [
-    "FL", "FR", "FC", "SL", "SR", "BL", "BR", "WL", "WR",
-    "TFL", "TFR", "TSL", "TSR", "TBL", "TBR",
+    "FL",
+    "FR",
+    "FC",
+    "SL",
+    "SR",
+    "BL",
+    "BR",
+    "WL",
+    "WR",
+    "TFL",
+    "TFR",
+    "TSL",
+    "TSR",
+    "TBL",
+    "TBR",
 ]
+
 
 def test_impulcifer_916_pipeline(tmp_path, dummy_capture, monkeypatch):
     dir_path, test_signal = dummy_capture("9.1.6")
@@ -24,6 +38,7 @@ def test_impulcifer_916_pipeline(tmp_path, dummy_capture, monkeypatch):
     monkeypatch.setattr("hrir.HRIR.crop_heads", lambda self, head_ms=1: None)
     monkeypatch.setattr("hrir.HRIR.correct_channel_balance", lambda self, method=None: None)
     called = {}
+
     def fake_main(**kwargs):
         called.update(kwargs)
         write_wav(os.path.join(kwargs["dir_path"], "responses.wav"), 8000, np.zeros((1, 2)))
@@ -52,6 +67,7 @@ def test_x_curve_options(tmp_path, dummy_capture, monkeypatch):
     monkeypatch.setattr("impulcifer.equalization", lambda *a, **k: (None, None))
     monkeypatch.setattr("hrir.HRIR.crop_heads", lambda self, head_ms=1: None)
     called = {}
+
     def fake_main(**kwargs):
         called.update(kwargs)
         write_wav(os.path.join(kwargs["dir_path"], "responses.wav"), 8000, np.zeros((1, 2)))

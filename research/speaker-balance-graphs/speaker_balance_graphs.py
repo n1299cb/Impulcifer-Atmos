@@ -3,6 +3,7 @@
 import os
 import sys
 import matplotlib.pyplot as plt
+
 sys.path.insert(1, os.path.realpath(os.path.join(sys.path[0], os.pardir)))
 from utils import read_wav, config_fr_axis, optimize_png_size
 from constants import COLORS
@@ -15,10 +16,7 @@ TEST_SIGNAL = os.path.join(DIR_PATH, 'sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.p
 def main():
     fs, pre = read_wav(os.path.join(DIR_PATH, 'responses.wav'))
     fs, post = read_wav(os.path.join(DIR_PATH, 'hrir.wav'))
-    stages = {
-        'Pre': pre,
-        'Post': post
-    }
+    stages = {'Pre': pre, 'Post': post}
     room_path = os.path.join(DIR_PATH, 'room-responses.wav')
     if os.path.isfile(room_path):
         fs, room = read_wav(room_path)
@@ -28,7 +26,7 @@ def main():
         frs = []
         for i in range(4):
             fr = ImpulseResponse(irs[i], fs).frequency_response()
-            fr.smoothen_fractional_octave(window_size=1/3, treble_window_size=1/3)
+            fr.smoothen_fractional_octave(window_size=1 / 3, treble_window_size=1 / 3)
             frs.append(fr)
 
         fig, ax = plt.subplots(1, 2)

@@ -88,23 +88,23 @@ class ImpulseResponse:
         # to yield a smooth curve without losing short decays.
         data = self.data.copy()
         # From peak to 2 seconds after the peak
-        data = data[peak_index:min(peak_index + 2 * self.fs, len(self))]
+        data = data[peak_index : min(peak_index + 2 * self.fs, len(self))]
         data /= np.max(np.abs(data))  # Normalize
-        squared = data ** 2  # Squared impulse response starting from the peak
+        squared = data**2  # Squared impulse response starting from the peak
         t_squared = np.linspace(0, len(squared) / self.fs, len(squared))  # Time stamps starting from peak
         wd = 0.03  # Window duration, let's start with 30 ms
         n = int(len(squared) / self.fs / wd)  # Number of time windows
         w = int(len(squared) / n)  # Width of a single time window
         t_windows = np.arange(n) * wd + wd / 2  # Timestamps for the window centers
         windows = squared.copy()  # Copy to avoid modifying the original
-        windows = np.reshape(windows[:n * w], (n, w))  # Split into time windows, one window per row
+        windows = np.reshape(windows[: n * w], (n, w))  # Split into time windows, one window per row
         windows = np.mean(windows, axis=1)  # Average each time window
         windows = 10 * np.log10(windows)  # dB
 
         # 2. A first estimate for the background noise level is determined  from a time segment containing the last
         # 10 % of the impulse response. This gives a reasonable statistical selection without a large systematic error,
         # if the decay continues to the end of the response.
-        tail = squared[int(-0.1 * len(squared)):]  # Last 10 %
+        tail = squared[int(-0.1 * len(squared)) :]  # Last 10 %
         noise_floor = 10 * np.log10(np.mean(tail))  # Mean as dBs, not mean of dB values
 
         # 3. The decay slope is estimated using linear regression between the time interval containing the response
@@ -130,7 +130,7 @@ class ImpulseResponse:
 
         # 6. The squared impulse is averaged into the new local time intervals.
         windows = squared.copy()
-        windows = np.reshape(windows[:n * w], (n, w))  # Split into time windows
+        windows = np.reshape(windows[: n * w], (n, w))  # Split into time windows
         windows = np.mean(windows, axis=1)  # Average each time window
         windows = 10 * np.log10(windows)  # dB
 
@@ -159,10 +159,9 @@ class ImpulseResponse:
 
             # Noise floor estimation range ends one full decay time after the start, truncated to the IR length
             noise_floor_end_time = min(noise_floor_start_time + knee_point_time, self.duration())
-            noise_floor = np.mean(squared[np.logical_and(
-                t_squared >= noise_floor_start_time,
-                t_squared <= noise_floor_end_time
-            )])
+            noise_floor = np.mean(
+                squared[np.logical_and(t_squared >= noise_floor_start_time, t_squared <= noise_floor_end_time)]
+            )
             noise_floor = 10 * np.log10(noise_floor)  # dB
             # print(f'      Noise floor '
             #       f'({(noise_floor_start_time + peak_index / self.fs) * 1000:.0f} ms -> '
@@ -177,13 +176,15 @@ class ImpulseResponse:
                 slope_end = np.argwhere(windows <= noise_floor + slope_end_headroom)[0, 0] - 1  # 8 dB above noise level
                 slope_start = np.argwhere(windows <= noise_floor + (slope_end_headroom + slope_dynamic_range))[0, 0] - 1
                 late_slope, late_intercept, _, _, _ = stats.linregress(
-                    t_windows[slope_start:slope_end],
-                    windows[slope_start:slope_end]
+                    t_windows[slope_start:slope_end], windows[slope_start:slope_end]
                 )
             except (IndexError, ValueError):
                 # Problems with already cropped IR tail
                 break
-            # print(f'      Late slope {t_windows[slope_start] * 1000:.0f} ms -> {t_windows[slope_end] * 1000:.0f} ms: {late_slope:.1f}t + {late_intercept:.2f}')
+            # print(
+            #     f"      Late slope {t_windows[slope_start] * 1000:.0f} ms -> "
+            #     f"{t_windows[slope_end] * 1000:.0f} ms: {late_slope:.1f}t + {late_intercept:.2f}"
+            # )
 
             # 9. A new knee_point is found.
             knee_point_time = (noise_floor - late_intercept) / late_slope
@@ -230,9 +231,9 @@ class ImpulseResponse:
 
         t = np.linspace(0, self.duration(), len(self))
 
-        knee_point_ind -= (peak_ind + 0)
+        knee_point_ind -= peak_ind + 0
         data = self.data.copy()
-        data = data[peak_ind - 0 * self.fs // 1000:]
+        data = data[peak_ind - 0 * self.fs // 1000 :]
         data /= np.max(np.abs(data))
         # analytical = np.abs(signal.hilbert(data))  # Hilbert doesn't work will with broadband signa
         analytical = np.abs(data)
@@ -249,9 +250,9 @@ class ImpulseResponse:
         avg_tail = min((window_size // 2), len(avg) - (peak_ind + knee_point_ind))
         # We need an index offset for average curve if the avg_head is not half window
         avg_offset = window_size // 2 - avg_head
-        avg = avg[peak_ind - avg_head:peak_ind + knee_point_ind + avg_tail]  # Truncate
+        avg = avg[peak_ind - avg_head : peak_ind + knee_point_ind + avg_tail]  # Truncate
         avg /= np.max(np.abs(avg))  # Normalize
-        avg = avg ** 2
+        avg = avg**2
         avg = running_mean(avg, window_size)
         avg = 10 * np.log10(avg + 1e-18)
         # Find offset which minimizes difference between Schroeder backward integral and the moving average
@@ -260,8 +261,8 @@ class ImpulseResponse:
         fit_start = max(int(len(schroeder) * 0.1), avg_offset)  # avg could start after 10% of Schroeder
         fit_end = min(int(len(schroeder) * 0.9), avg_offset + (len(avg)))  # avg could end before 90% of Schroeder
         offset = np.mean(
-            schroeder[fit_start:fit_end] -
-            avg[fit_start - avg_offset:fit_end - avg_offset]  # Shift avg indexes by the offset length
+            schroeder[fit_start:fit_end]
+            - avg[fit_start - avg_offset : fit_end - avg_offset]  # Shift avg indexes by the offset length
         )
 
         decay_times = dict()
@@ -287,7 +288,7 @@ class ImpulseResponse:
         """Crops away head."""
         if settings.preserve_room_response:
             return
-        self.data = self.data[self.peak_index() - int(self.fs * head_ms / 1000):]
+        self.data = self.data[self.peak_index() - int(self.fs * head_ms / 1000) :]
 
     def equalize(self, fir):
         """Equalizes this impulse response with give FIR filter.
@@ -346,11 +347,16 @@ class ImpulseResponse:
         window_level = target_level - knee_point_level  # Adjustment level at knee point
         window_start = peak_index + 2 * (self.fs // 1000)
         half_window = knee_point_index - window_start  # Half Hanning window length, from peak to knee
-        window = np.concatenate([  # Adjustment window
-            np.ones(window_start),  # Start with ones until peak
-            signal.windows.hann(half_window * 2)[half_window:],  # Slope down to knee point
-            np.zeros(len(self) - knee_point_index)  # Fill with zeros to full length
-        ]) - 1.0  # Slopes down from 0.0 to -1.0
+        window = (
+            np.concatenate(
+                [  # Adjustment window
+                    np.ones(window_start),  # Start with ones until peak
+                    signal.windows.hann(half_window * 2)[half_window:],  # Slope down to knee point
+                    np.zeros(len(self) - knee_point_index),  # Fill with zeros to full length
+                ]
+            )
+            - 1.0
+        )  # Slopes down from 0.0 to -1.0
         window *= -window_level  # Scale with adjustment level at knee point
         window = 10 ** (window / 20)  # Linear scale
         self.data *= window  # Scale impulse response data wit the window
@@ -368,16 +374,18 @@ class ImpulseResponse:
         fr.interpolate(f_step=1.01, f_min=10, f_max=self.fs / 2)
         return fr
 
-    def plot(self,
-             fig=None,
-             ax=None,
-             plot_file_path=None,
-             plot_recording=True,
-             plot_spectrogram=True,
-             plot_ir=True,
-             plot_fr=True,
-             plot_decay=True,
-             plot_waterfall=True):
+    def plot(
+        self,
+        fig=None,
+        ax=None,
+        plot_file_path=None,
+        plot_recording=True,
+        plot_spectrogram=True,
+        plot_ir=True,
+        plot_fr=True,
+        plot_decay=True,
+        plot_waterfall=True,
+    ):
         """Plots all plots into the same figure
 
         Args:
@@ -522,7 +530,7 @@ class ImpulseResponse:
         """
         if end is None:
             end = len(self.data) / self.fs
-        ir = self.data[int(start * self.fs):int(end * self.fs)]
+        ir = self.data[int(start * self.fs) : int(end * self.fs)]
 
         if fig is None:
             fig, ax = plt.subplots()
@@ -538,26 +546,28 @@ class ImpulseResponse:
 
         return fig, ax
 
-    def plot_fr(self,
-                fr=None,
-                fig=None,
-                ax=None,
-                plot_file_path=None,
-                plot_raw=True,
-                raw_color='#7db4db',
-                plot_smoothed=True,
-                smoothed_color='#1f77b4',
-                plot_error=True,
-                error_color='#dd8081',
-                plot_error_smoothed=True,
-                error_smoothed_color='#d62728',
-                plot_target=True,
-                target_color='#ecdef9',
-                plot_equalization=True,
-                equalization_color='#2ca02c',
-                plot_equalized=True,
-                equalized_color='#680fb9',
-                fix_ylim=False):
+    def plot_fr(
+        self,
+        fr=None,
+        fig=None,
+        ax=None,
+        plot_file_path=None,
+        plot_raw=True,
+        raw_color='#7db4db',
+        plot_smoothed=True,
+        smoothed_color='#1f77b4',
+        plot_error=True,
+        error_color='#dd8081',
+        plot_error_smoothed=True,
+        error_smoothed_color='#d62728',
+        plot_target=True,
+        target_color='#ecdef9',
+        plot_equalization=True,
+        equalization_color='#2ca02c',
+        plot_equalized=True,
+        equalized_color='#680fb9',
+        fix_ylim=False,
+    ):
         """Plots frequency response
 
         Args:
@@ -587,7 +597,7 @@ class ImpulseResponse:
         """
         if fr is None:
             fr = self.frequency_response()
-            fr.smoothen_fractional_octave(window_size=1/3, treble_f_lower=20000, treble_f_upper=23999)
+            fr.smoothen_fractional_octave(window_size=1 / 3, treble_f_lower=20000, treble_f_upper=23999)
         if fig is None:
             fig, ax = plt.subplots()
         ax.set_xlabel('Frequency (Hz)')
@@ -677,15 +687,14 @@ class ImpulseResponse:
 
         ax.plot(t * 1000, squared, color=COLORS['lightblue'], label='Squared impulse response')
         ax.plot(
-            t[window_size // 2:window_size // 2 + len(avg)] * 1000, avg, color=COLORS['blue'],
-            label=f'{window_size / self.fs *1000:.0f} ms moving average'
+            t[window_size // 2 : window_size // 2 + len(avg)] * 1000,
+            avg,
+            color=COLORS['blue'],
+            label=f'{window_size / self.fs *1000:.0f} ms moving average',
         )
 
         ax.set_ylim([np.min(avg) * 1.2, 0])
-        ax.set_xlim([
-            start / self.fs * 1000,
-            end / self.fs * 1000
-        ])
+        ax.set_xlim([start / self.fs * 1000, end / self.fs * 1000])
         ax.set_xlabel('Time (ms)')
         ax.set_ylabel('Amplitude (dBr)')
         ax.grid(True, which='major')
@@ -712,11 +721,7 @@ class ImpulseResponse:
         ascend = int(ascend_ms / 1000 * self.fs)
         plateu = int((nfft - ascend) * 3 / 4)  # 75%
         descend = nfft - ascend - plateu  # 25%
-        window = np.concatenate([
-            signal.hann(ascend * 2)[:ascend],
-            np.ones(plateu),
-            signal.hann(descend * 2)[descend:]
-        ])
+        window = np.concatenate([signal.hann(ascend * 2)[:ascend], np.ones(plateu), signal.hann(descend * 2)[descend:]])
 
         # Crop from 10ms before peak to start of tail
         peak_ind, tail_ind, noise_floor, _ = self.decay_params()
@@ -736,7 +741,7 @@ class ImpulseResponse:
         f_max = self.fs / 2
         f_min = 10
         step = 1.03
-        f = np.array([f_min * step ** i for i in range(int(np.log(f_max / f_min) / np.log(step)))])
+        f = np.array([f_min * step**i for i in range(int(np.log(f_max / f_min) / np.log(step)))])
         log_f_spec = np.ones((len(f), spectrum.shape[1]))
         for i in range(spectrum.shape[1]):
             interpolator = interpolate.InterpolatedUnivariateSpline(np.log10(freqs), spectrum[:, i], k=1)
@@ -746,7 +751,7 @@ class ImpulseResponse:
 
         # Normalize and turn to dB scale
         z /= np.max(z)
-        z = np.clip(z, 10**(z_min/20), np.max(z))
+        z = np.clip(z, 10 ** (z_min / 20), np.max(z))
         z = 20 * np.log10(z)
 
         # Smoothen

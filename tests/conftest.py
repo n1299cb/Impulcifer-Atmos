@@ -24,8 +24,8 @@ def _write_dummy_recordings(out_dir, layout):
         data = np.zeros((samples, 2), dtype=np.float32)
         for i in range(len(group)):
             start = i * len(column)
-            data[start:start + len(column), 0] = column
-            data[start:start + len(column), 1] = column
+            data[start : start + len(column), 0] = column
+            data[start : start + len(column), 1] = column
         write_wav(out_dir / ("%s.wav" % ",".join(group)), fs, data.T)
     return str(out_dir), str(test_signal_path)
 

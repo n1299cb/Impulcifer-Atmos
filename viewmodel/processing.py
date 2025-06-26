@@ -5,6 +5,7 @@ import os
 
 from models import ProcessingSettings
 
+
 class ProcessingViewModel:
     """ViewModel for running the main processing pipeline."""
 

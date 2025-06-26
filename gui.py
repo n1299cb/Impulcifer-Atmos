@@ -14,18 +14,33 @@ import numpy as np
 import queue
 import threading
 import matplotlib
+
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
     QSizePolicy,
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QFileDialog, QComboBox, QLineEdit,
-    QTabWidget, QMessageBox, QTextEdit, QCheckBox, QSlider, QDialog,
-    QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsTextItem,
-    QProgressBar
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QFileDialog,
+    QComboBox,
+    QLineEdit,
+    QTabWidget,
+    QMessageBox,
+    QTextEdit,
+    QCheckBox,
+    QSlider,
+    QDialog,
+    QGraphicsView,
+    QGraphicsScene,
+    QGraphicsEllipseItem,
+    QGraphicsTextItem,
+    QProgressBar,
 )
-from PySide6.QtGui import (
-    QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter, QRadialGradient
-)
+from PySide6.QtGui import QShortcut, QKeySequence, QPixmap, QBrush, QPen, QColor, QPainter, QRadialGradient
 from PySide6.QtCore import Qt, QPointF, QTimer
 
 from viewmodel.measurement_setup import MeasurementSetupViewModel
@@ -45,6 +60,7 @@ from contextlib import redirect_stdout
 import io
 import datetime
 
+
 class ImpulciferGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -58,25 +74,24 @@ class ImpulciferGUI(QMainWindow):
         self.layout_vm = LayoutViewModel()
 
         self.channel_mappings = {}
-        
+
         # Default speaker layout
         self.selected_layout_name = next(iter(FORMAT_PRESETS))
         self.selected_layout = [SPEAKER_NAMES[i] for i in FORMAT_PRESETS[self.selected_layout_name]]
-
 
         self.tabs = QTabWidget()
         self.tab_order = []
         self.setCentralWidget(self.tabs)
 
-                # self.create_headphone_eq_tab() called only once
+        # self.create_headphone_eq_tab() called only once
         # Temporarily defer Setup tab creation
         # self.create_measurement_setup_tab()
         self.create_processing_options_tab()
         self.create_compensation_tab()
         self.create_room_response_tab()
         self.create_headphone_eq_tab()
-        self.create_execution_tab()  
-        self.create_measurement_setup_tab() # Measurement setup defines widgets used in later tabs
+        self.create_execution_tab()
+        self.create_measurement_setup_tab()  # Measurement setup defines widgets used in later tabs
         self.create_visualization_tab()
         self.setup_shortcuts()
 
@@ -85,18 +100,22 @@ class ImpulciferGUI(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        layout.addWidget(QLabel("""
+        layout.addWidget(
+            QLabel(
+                """
         In this tab, configure the test signal, measurement directory, and select
         playback and recording devices used for capturing impulse responses.
-        """))
+        """
+            )
+        )
 
         self.test_signal_path_var = QLineEdit()
         self.test_signal_path_var.setMaximumWidth(300)
-        
+
         self.test_signal_path_var.setPlaceholderText("e.g., /path/to/test_signal.wav")
         browse_test = QPushButton("Browse")
         browse_test.setMaximumWidth(100)
-        
+
         browse_test.clicked.connect(self.browse_test_signal)
         layout.addLayout(self.labeled_row("Select Test Signal File:", self.test_signal_path_var, browse_test))
 
@@ -107,7 +126,7 @@ class ImpulciferGUI(QMainWindow):
         browse_dir.setMaximumWidth(100)
         browse_dir.clicked.connect(self.browse_measurement_dir)
         layout.addLayout(self.labeled_row("Select Measurement Directory:", self.measurement_dir_var, browse_dir))
-        
+
         # Layout selection
         self.layout_var = QComboBox()
         self.layout_var.addItems(FORMAT_PRESETS.keys())
@@ -122,7 +141,7 @@ class ImpulciferGUI(QMainWindow):
 
         self.playback_device_var = QComboBox()
         self.playback_device_var.setMaximumWidth(200)
-        
+
         self.recording_device_var = QComboBox()
         self.recording_device_var.setMaximumWidth(200)
         self.load_device_options()
@@ -194,16 +213,18 @@ class ImpulciferGUI(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        summary = QLabel("""
+        summary = QLabel(
+            """
         This tab allows you to configure compensation settings that correct headphone coloration
         and apply pre-measured or theoretical frequency response adjustments. Useful for ensuring
         consistent playback across different headphone types or compensation targets.
-        """)
+        """
+        )
         summary.setWordWrap(True)
         summary.setSizePolicy(summary.sizePolicy().horizontalPolicy(), QSizePolicy.Minimum)
         layout.addWidget(summary)
         # Compensation Tab: Apply headphone and response compensation
-        
+
         self.enable_compensation_var = QCheckBox("Enable Compensation")
         layout.addWidget(self.enable_compensation_var)
 
@@ -234,7 +255,9 @@ class ImpulciferGUI(QMainWindow):
         self.headphone_file_path_var.setPlaceholderText("e.g., /path/to/headphones.wav")
         browse_hp = QPushButton("Browse")
         browse_hp.clicked.connect(self.browse_headphone_file)
-        layout.addLayout(self.labeled_row("Headphone EQ File (headphones.wav):", self.headphone_file_path_var, browse_hp))
+        layout.addLayout(
+            self.labeled_row("Headphone EQ File (headphones.wav):", self.headphone_file_path_var, browse_hp)
+        )
 
         self.x_curve_action_var = QComboBox()
         self.x_curve_action_var.addItems(["None", "Apply X-Curve", "Remove X-Curve"])
@@ -257,23 +280,32 @@ class ImpulciferGUI(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        layout.addWidget(QLabel("""
-        Record a room response for use with room correction processing. This requires a calibrated microphone and the same test signal used for IR capture.
-        """))
+        layout.addWidget(
+            QLabel(
+                (
+                    "Record a room response for use with room correction processing. "
+                    "This requires a calibrated microphone and the same test signal used for IR capture."
+                )
+            )
+        )
 
-        steps = QLabel("""
+        steps = QLabel(
+            """
         Steps:
         1. Position your calibrated microphone at the Main Listening Position.
         2. Ensure the test signal and measurement directory are set correctly.
         3. Click below to record the room response.
-        """)
+        """
+        )
         steps.setWordWrap(True)
         layout.addWidget(steps)
 
-        note = QLabel("""
+        note = QLabel(
+            """
         Note: If you have a microphone calibration file, it will be applied during the processing step,
         not during this recording. You can specify it in the Processing Options tab.
-        """)
+        """
+        )
         note.setWordWrap(True)
         layout.addWidget(note)
 
@@ -293,18 +325,24 @@ class ImpulciferGUI(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        layout.addWidget(QLabel("""
+        layout.addWidget(
+            QLabel(
+                """
         Headphone EQ allows you to capture the frequency response of your headphones
         using a binaural microphone setup. This is optional but recommended for
         more accurate BRIR processing.
-        """))
-        
-        steps = QLabel("""
+        """
+            )
+        )
+
+        steps = QLabel(
+            """
         Steps:
         1. Insert your binaural microphones.
         2. Wear your headphones.
         3. Play the test signal and record using the button below.
-        """)
+        """
+        )
         steps.setWordWrap(True)
         layout.addWidget(steps)
 
@@ -325,12 +363,16 @@ class ImpulciferGUI(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        layout.addWidget(QLabel("""
+        layout.addWidget(
+            QLabel(
+                """
         Use this tab to launch the recorder or run the processing pipeline.
         Review logs, clear or save output, and troubleshoot from here.
-        """))
+        """
+            )
+        )
         # Execution Tab: Run processing and launch recorders
-        
+
         self.run_button = QPushButton("Run Processing")
         self.run_button.clicked.connect(self.run_processing)
         layout.addWidget(self.run_button)
@@ -351,7 +393,6 @@ class ImpulciferGUI(QMainWindow):
         export_btn.clicked.connect(self.export_hesuvi_preset)
         layout.addWidget(export_btn)
 
-
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
         log_controls = QHBoxLayout()
@@ -370,9 +411,7 @@ class ImpulciferGUI(QMainWindow):
 
     def run_processing(self):
         # Delegate path validation to the ViewModel
-        errors = self.setup_vm.validate_paths(
-            self.test_signal_path_var.text(), self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(self.test_signal_path_var.text(), self.measurement_dir_var.text())
         if errors:
             if "measurement_dir" in errors:
                 QMessageBox.critical(
@@ -407,7 +446,11 @@ class ImpulciferGUI(QMainWindow):
             enable_compensation=self.enable_compensation_var.isChecked(),
             headphone_eq_enabled=self.headphone_eq_toggle.isChecked(),
             headphone_file=self.headphone_file_path_var.text(),
-            compensation_type=(self.compensation_file_path_var.text() if self.compensation_type_var.currentText().lower() == "custom" else self.compensation_type_var.currentText().lower().replace("-field", "")),
+            compensation_type=(
+                self.compensation_file_path_var.text()
+                if self.compensation_type_var.currentText().lower() == "custom"
+                else self.compensation_type_var.currentText().lower().replace("-field", "")
+            ),
             diffuse_field=self.diffuse_field_toggle.isChecked(),
             x_curve_action=self.x_curve_action_var.currentText(),
             x_curve_type=self.x_curve_type_var.currentText(),
@@ -425,9 +468,7 @@ class ImpulciferGUI(QMainWindow):
             self.output_text.append(f"Error: {str(e)}")
 
     def launch_room_response_recorder(self):
-        errors = self.setup_vm.validate_paths(
-            self.test_signal_path_var.text(), self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(self.test_signal_path_var.text(), self.measurement_dir_var.text())
         if errors:
             QMessageBox.critical(
                 self,
@@ -453,11 +494,8 @@ class ImpulciferGUI(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Room Response Recorder Error", str(e))
 
-
     def launch_headphone_recorder(self):
-        errors = self.setup_vm.validate_paths(
-            self.test_signal_path_var.text(), self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(self.test_signal_path_var.text(), self.measurement_dir_var.text())
         if errors:
             QMessageBox.critical(
                 self,
@@ -483,11 +521,8 @@ class ImpulciferGUI(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Headphone Recorder Error", str(e))
 
-
     def launch_recorder(self):
-        errors = self.setup_vm.validate_paths(
-            self.test_signal_path_var.text(), self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(self.test_signal_path_var.text(), self.measurement_dir_var.text())
         if errors:
             QMessageBox.critical(
                 self,
@@ -509,14 +544,12 @@ class ImpulciferGUI(QMainWindow):
                 self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
             if result.stderr:
                 self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
-            
+
         except Exception as e:
             QMessageBox.critical(self, "Recorder Error", str(e))
 
     def launch_capture_wizard(self):
-        errors = self.setup_vm.validate_paths(
-            self.test_signal_path_var.text(), self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(self.test_signal_path_var.text(), self.measurement_dir_var.text())
         if errors:
             QMessageBox.critical(
                 self,
@@ -559,30 +592,35 @@ class ImpulciferGUI(QMainWindow):
         self.compensation_file_path_var.setEnabled(is_custom)
 
     def browse_headphone_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Headphone EQ File", "", "Wave Files (*.wav);;All Files (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Headphone EQ File", "", "Wave Files (*.wav);;All Files (*)"
+        )
         if file_path:
             self.headphone_file_path_var.setText(file_path)
 
     def browse_compensation_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Compensation File", "", "CSV Files (*.csv);;All Files (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Compensation File", "", "CSV Files (*.csv);;All Files (*)"
+        )
         if file_path:
             self.compensation_file_path_var.setText(file_path)
-
 
     def create_processing_options_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        summary = QLabel("""
+        summary = QLabel(
+            """
         This tab lets you control how the impulse responses are interpreted and shaped,
         including decay filtering, loudness matching, balance, and room correction parameters.
-        """)
+        """
+        )
         summary.setWordWrap(True)
         summary.setSizePolicy(summary.sizePolicy().horizontalPolicy(), QSizePolicy.Minimum)
         layout.addWidget(summary)
         # Processing Options Tab: Fine-tune BRIR processing parameters
-        
+
         self.decay_time_var = QLineEdit()
         self.decay_time_var.setPlaceholderText("Recommended: 0.2")
         self.decay_time_toggle = QCheckBox("Enable")
@@ -635,28 +673,28 @@ class ImpulciferGUI(QMainWindow):
         layout.addWidget(self.room_target_path_row)
         browse_room_target = QPushButton("Browse")
         browse_room_target.clicked.connect(self.browse_room_target)
-        
 
         self.specific_limit_var = QLineEdit()
         self.specific_limit_var.setPlaceholderText("e.g., 700")
         self.specific_limit_toggle = QCheckBox("Enable")
         
-
         self.generic_limit_var = QLineEdit()
         self.generic_limit_var.setPlaceholderText("e.g., 500")
         self.generic_limit_toggle = QCheckBox("Enable")
-        
 
         self.fr_combination_var = QComboBox()
         self.fr_combination_var.addItems(["average", "conservative"])
-        self.fr_combination_toggle = QCheckBox("Enable")
-        
+        self.fr_combination_toggle = QCheckBox("Enable")     
 
         self.specific_limit_row_widget = QWidget()
-        self.specific_limit_row = self.labeled_row("Specific Limit (Hz):", self.specific_limit_var, self.specific_limit_toggle)
+        self.specific_limit_row = self.labeled_row(
+            "Specific Limit (Hz):", self.specific_limit_var, self.specific_limit_toggle
+        )
         self.specific_limit_row_widget.setLayout(self.specific_limit_row)
         self.generic_limit_row_widget = QWidget()
-        self.generic_limit_row = self.labeled_row("Generic Limit (Hz):", self.generic_limit_var, self.generic_limit_toggle)
+        self.generic_limit_row = self.labeled_row(
+            "Generic Limit (Hz):", self.generic_limit_var, self.generic_limit_toggle
+        )
         self.generic_limit_row_widget.setLayout(self.generic_limit_row)
         self.fr_combination_row_widget = QWidget()
 
@@ -665,7 +703,9 @@ class ImpulciferGUI(QMainWindow):
         mic_calib_browse = QPushButton("Browse")
         mic_calib_browse.clicked.connect(self.browse_mic_calibration_file)
         layout.addLayout(self.labeled_row("Mic Calibration File:", self.mic_calibration_path_var, mic_calib_browse))
-        self.fr_combination_row = self.labeled_row("FR Combination Method:", self.fr_combination_var, self.fr_combination_toggle)
+        self.fr_combination_row = self.labeled_row(
+            "FR Combination Method:", self.fr_combination_var, self.fr_combination_toggle
+        )
         self.fr_combination_row_widget.setLayout(self.fr_combination_row)
 
         layout.addWidget(self.specific_limit_row_widget)
@@ -683,12 +723,16 @@ class ImpulciferGUI(QMainWindow):
         self.fr_combination_row_widget.setVisible(is_enabled)
 
     def browse_mic_calibration_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Mic Calibration File", "", "Text Files (*.txt *.csv);;All Files (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Mic Calibration File", "", "Text Files (*.txt *.csv);;All Files (*)"
+        )
         if file_path:
             self.mic_calibration_path_var.setText(file_path)
 
     def browse_room_target(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Room Target File", "", "CSV Files (*.csv);;All Files (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Room Target File", "", "CSV Files (*.csv);;All Files (*)"
+        )
         if file_path:
             self.room_target_path_var.setText(file_path)
 
@@ -715,7 +759,9 @@ class ImpulciferGUI(QMainWindow):
                 self.recording_device_var.setCurrentIndex(sd.default.device[0])
 
     def browse_test_signal(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Test Signal File", "", "Wave Files (*.wav);;Pickle Files (*.pkl);;All Files (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Test Signal File", "", "Wave Files (*.wav);;Pickle Files (*.pkl);;All Files (*)"
+        )
         if file_path:
             self.test_signal_path_var.setText(file_path)
 
@@ -733,7 +779,9 @@ class ImpulciferGUI(QMainWindow):
         self.auto_map_channels(silent=True)
 
     def load_custom_layout(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select Layout File", "", "Text or JSON (*.txt *.json);;All Files (*)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Layout File", "", "Text or JSON (*.txt *.json);;All Files (*)"
+        )
         if not file_path:
             # Revert to previous selection
             self.layout_var.setCurrentText(self.selected_layout_name)
@@ -743,6 +791,7 @@ class ImpulciferGUI(QMainWindow):
                 content = f.read().strip()
             try:
                 import json
+
                 names = json.loads(content)
                 if isinstance(names, dict):
                     names = names.get("speakers", [])
@@ -762,14 +811,17 @@ class ImpulciferGUI(QMainWindow):
     def save_layout_preset(self):
         try:
             from constants import save_user_layout_preset
+
             name, groups = self.selected_layout_name, [[sp] for sp in self.selected_layout]
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save Layout", f"{name}.json", "JSON Files (*.json);;All Files (*)")
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Save Layout", f"{name}.json", "JSON Files (*.json);;All Files (*)"
+            )
             if not file_path:
                 return
             save_user_layout_preset(name, groups, file_path)
             QMessageBox.information(self, "Layout Saved", f"Layout saved to {file_path}")
             if self.layout_var.findText(name) == -1:
-                self.layout_var.insertItem(self.layout_var.count()-1, name)
+                self.layout_var.insertItem(self.layout_var.count() - 1, name)
         except Exception as e:
             QMessageBox.critical(self, "Save Layout Error", str(e))
 
@@ -947,8 +999,7 @@ class ImpulciferGUI(QMainWindow):
         dialog.setWindowTitle("Layout Wizard")
 
         main_layout = QVBoxLayout()
-        main_layout.addWidget(QLabel(
-            "Prepare or verify a capture folder for the selected layout."))
+        main_layout.addWidget(QLabel("Prepare or verify a capture folder for the selected layout."))
 
         layout_combo = QComboBox()
         layout_combo.addItems(SPEAKER_LAYOUTS.keys())
@@ -1003,10 +1054,14 @@ class ImpulciferGUI(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
-        layout.addWidget(QLabel("""
+        layout.addWidget(
+            QLabel(
+                """
         View example plots or visualizations of processed frequency responses to
         help verify measurement accuracy and processing behavior.
-        """))
+        """
+            )
+        )
         # Visualization Tab: View frequency response plots
         from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
         from matplotlib.figure import Figure
@@ -1036,15 +1091,14 @@ class ImpulciferGUI(QMainWindow):
         self.load_plot_files()
 
         self.tabs.addTab(tab, "Visualization")
-
-
-
-        
+  
     def save_log(self):
         try:
             content = self.output_text.toPlainText()
             default_name = f"impulcifer_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save Log", default_name, "Text Files (*.txt);;All Files (*)")
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Save Log", default_name, "Text Files (*.txt);;All Files (*)"
+            )
             if file_path:
                 with open(file_path, 'w') as f:
                     f.write(content)
@@ -1062,14 +1116,15 @@ class ImpulciferGUI(QMainWindow):
             if not self.setup_vm.file_exists(src):
                 QMessageBox.warning(self, "Export Error", "hesuvi.wav not found. Run processing first.")
                 return
-            dest, _ = QFileDialog.getSaveFileName(self, "Export Hesuvi Preset", "hesuvi.wav", "WAV Files (*.wav);;All Files (*)")
+            dest, _ = QFileDialog.getSaveFileName(
+                self, "Export Hesuvi Preset", "hesuvi.wav", "WAV Files (*.wav);;All Files (*)"
+            )
             if dest:
                 with open(src, 'rb') as fsrc, open(dest, 'wb') as fdst:
                     fdst.write(fsrc.read())
                 QMessageBox.information(self, "Export Complete", f"Preset exported to {dest}")
         except Exception as e:
             QMessageBox.critical(self, "Export Error", str(e))
-
 
     def plot_example(self):
         ax = self.figure.add_subplot(111)
@@ -1080,9 +1135,7 @@ class ImpulciferGUI(QMainWindow):
 
     def load_plot_files(self):
         self.plot_selector.clear()
-        errors = self.setup_vm.validate_paths(
-            measurement_dir=self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(measurement_dir=self.measurement_dir_var.text())
         if "measurement_dir" in errors:
             self.image_label.setText("No plots found")
             return
@@ -1109,9 +1162,7 @@ class ImpulciferGUI(QMainWindow):
         rel_path = self.plot_selector.currentText()
         if not rel_path:
             return
-        errors = self.setup_vm.validate_paths(
-            measurement_dir=self.measurement_dir_var.text()
-        )
+        errors = self.setup_vm.validate_paths(measurement_dir=self.measurement_dir_var.text())
         if "measurement_dir" in errors:
             self.image_label.setText("Plot not found")
             return
@@ -1162,14 +1213,10 @@ class ImpulciferGUI(QMainWindow):
         value = int(np.clip((db + 60) / 60 * 100, 0, 100)) if db != -np.inf else 0
         self.level_bar.setValue(value)
 
-
     def save_channel_mappings(self, dialog):
         speakers = [int(box.currentText()) - 1 for box in self.speaker_channel_vars]
         mics = [int(box.currentText()) - 1 for box in self.mic_channel_vars]
-        self.channel_mappings = {
-            "output_channels": speakers,
-            "input_channels": mics
-        }
+        self.channel_mappings = {"output_channels": speakers, "input_channels": mics}
         QMessageBox.information(self, "Channel Mappings", "Channel mappings saved successfully.")
         dialog.accept()
 
@@ -1183,7 +1230,7 @@ class ImpulciferGUI(QMainWindow):
             spk_count = len(self.selected_layout)
             self.channel_mappings = {
                 "output_channels": list(range(min(playback_channels, spk_count))),
-                "input_channels": list(range(min(record_channels, 2)))
+                "input_channels": list(range(min(record_channels, 2))),
             }
             if not silent:
                 QMessageBox.information(self, "Auto Map", "Channel mappings assigned automatically.")
@@ -1234,7 +1281,9 @@ class ImpulciferGUI(QMainWindow):
         slider.valueChanged.connect(update_label)
 
         def browse_file():
-            file_path, _ = QFileDialog.getOpenFileName(dialog, "Select Audio File", "", "Wave Files (*.wav);;All Files (*)")
+            file_path, _ = QFileDialog.getOpenFileName(
+                dialog, "Select Audio File", "", "Wave Files (*.wav);;All Files (*)"
+            )
             if file_path:
                 file_var.setText(file_path)
 
@@ -1281,11 +1330,14 @@ class ImpulciferGUI(QMainWindow):
         dialog.setLayout(main_layout)
         dialog.exec()
 
-    
     def setup_shortcuts(self):
-        QShortcut(QKeySequence("Meta+1"), self, activated=lambda: self.tabs.setCurrentIndex(
-            self.tabs.indexOf(self.tabs.widget(0))  # Assumes Execution tab is at index 0
-        ))
+        QShortcut(
+            QKeySequence("Meta+1"),
+            self,
+            activated=lambda: self.tabs.setCurrentIndex(
+                self.tabs.indexOf(self.tabs.widget(0))  # Assumes Execution tab is at index 0
+            ),
+        )
 
 
 if __name__ == '__main__':

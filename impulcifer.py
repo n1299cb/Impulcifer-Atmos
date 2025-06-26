@@ -32,35 +32,37 @@ from compensation import diffuse_field_compensation, apply_x_curve as apply_x_cu
 from constants import X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES
 
 
-def main(dir_path=None,
-         test_signal=None,
-         room_target=None,
-         room_mic_calibration=None,
-         fs=None,
-         plot=False,
-         channel_balance=None,
-         decay=None,
-         target_level=None,
-         fr_combination_method='average',
-         specific_limit=20000,
-         generic_limit=1000,
-         bass_boost_gain=0.0,
-         bass_boost_fc=105,
-         bass_boost_q=0.76,
-         tilt=0.0,
-         do_room_correction=True,
-         do_headphone_compensation=True,
-         do_diffuse_field_compensation=settings.apply_diffuse_field_compensation,
-         head_ms=1,
-         jamesdsp=False,
-         hangloose=False,
-         do_equalization=True,
-         apply_x_curve=False,
-         remove_x_curve=False,
-         x_curve_in_capture=False,
-         x_curve_type=X_CURVE_DEFAULT_TYPE,
-         interactive_delays=False,
-         delay_file=None):
+def main(
+    dir_path=None,
+    test_signal=None,
+    room_target=None,
+    room_mic_calibration=None,
+    fs=None,
+    plot=False,
+    channel_balance=None,
+    decay=None,
+    target_level=None,
+    fr_combination_method='average',
+    specific_limit=20000,
+    generic_limit=1000,
+    bass_boost_gain=0.0,
+    bass_boost_fc=105,
+    bass_boost_q=0.76,
+    tilt=0.0,
+    do_room_correction=True,
+    do_headphone_compensation=True,
+    do_diffuse_field_compensation=settings.apply_diffuse_field_compensation,
+    head_ms=1,
+    jamesdsp=False,
+    hangloose=False,
+    do_equalization=True,
+    apply_x_curve=False,
+    remove_x_curve=False,
+    x_curve_in_capture=False,
+    x_curve_type=X_CURVE_DEFAULT_TYPE,
+    interactive_delays=False,
+    delay_file=None,
+):
     """"""
     if dir_path is None or not os.path.isdir(dir_path):
         raise NotADirectoryError(f'Given dir path "{dir_path}"" is not a directory.')
@@ -74,13 +76,13 @@ def main(dir_path=None,
         for file in os.listdir(dir_path):
             if file.lower().endswith('.wav'):
                 from utils import read_wav
+
                 detected_fs, _ = read_wav(os.path.join(dir_path, file))
                 fs = detected_fs
                 print(f"[Auto FS] Using sample rate {fs} Hz from {file}")
                 break
         if fs is None:
             raise ValueError("No WAV files found to auto-detect sample rate.")
-
 
     # Impulse response estimator
     print('Creating impulse response estimator...')
@@ -89,10 +91,12 @@ def main(dir_path=None,
     if delay_file:
         from speaker_delay import load_delays
         from constants import SPEAKER_DELAYS
+
         SPEAKER_DELAYS.update(load_delays(delay_file))
     elif interactive_delays:
         from speaker_delay import interactive_speaker_delays
         from constants import SPEAKER_DELAYS
+
         SPEAKER_DELAYS.update(interactive_speaker_delays())
 
     # Room correction frequency responses
@@ -100,13 +104,14 @@ def main(dir_path=None,
     if do_room_correction:
         print('Running room correction...')
         _, room_frs = room_correction(
-            estimator, dir_path,
+            estimator,
+            dir_path,
             target=room_target,
             mic_calibration=room_mic_calibration,
             fr_combination_method=fr_combination_method,
             specific_limit=specific_limit,
             generic_limit=generic_limit,
-            plot=plot
+            plot=plot,
         )
 
     # Headphone compensation frequency responses
@@ -148,10 +153,17 @@ def main(dir_path=None,
     print('Cropping impulse responses...')
     hrir.crop_heads(head_ms=head_ms)
     hrir.align_ipsilateral_all(
-        speaker_pairs=[('FL','FR'), ('SL','SR'), ('BL','BR'),
-                        ('TFL','TFR'), ('TSL','TSR'), ('TBL','TBR'),
-                        ('FC','FC'), ('WL','WR')],
-        segment_ms=30
+        speaker_pairs=[
+            ('FL', 'FR'),
+            ('SL', 'SR'),
+            ('BL', 'BR'),
+            ('TFL', 'TFR'),
+            ('TSL', 'TSR'),
+            ('TBL', 'TBR'),
+            ('FC', 'FC'),
+            ('WL', 'WR'),
+        ],
+        segment_ms=30,
     )
     hrir.crop_tails()
 
@@ -166,7 +178,8 @@ def main(dir_path=None,
                 fr = FrequencyResponse(
                     name=f'{speaker}-{side} eq',
                     frequency=FrequencyResponse.generate_frequencies(f_step=1.01, f_min=10, f_max=estimator.fs / 2),
-                    raw=0, error=0
+                    raw=0,
+                    error=0,
                 )
 
                 if room_frs is not None and speaker in room_frs and side in room_frs[speaker]:
@@ -239,10 +252,10 @@ def main(dir_path=None,
 
     print(readme)
 
-
     if jamesdsp:
         print('Generating jamesdsp.wav (FL/FR only, normalized to FL/FR)...')
-        import contextlib, io
+        import contextlib
+        import io
 
         # Copy the entire HRIR and remove all channels except FL/FR
         dsp_hrir = copy.deepcopy(hrir)
@@ -251,10 +264,7 @@ def main(dir_path=None,
                 del dsp_hrir.irs[sp]
 
         with contextlib.redirect_stdout(io.StringIO()):
-            dsp_hrir.normalize(
-                peak_target=None if target_level is not None else -0.1,
-                avg_target=target_level
-            )
+            dsp_hrir.normalize(peak_target=None if target_level is not None else -0.1, avg_target=target_level)
 
         # Save channels in the order FL-L, FL-R, FR-L, FR-R
         jd_order = ['FL-left', 'FL-right', 'FR-left', 'FR-right']
@@ -270,8 +280,22 @@ def main(dir_path=None,
 
         # Maximum channel order based on hrir.wav
         full_order = [
-            'FL','FR','FC','LFE','SL','SR','BL','BR',
-            'WL','WR','TFL','TFR','TSL','TSR','TBL','TBR'
+            'FL',
+            'FR',
+            'FC',
+            'LFE',
+            'SL',
+            'SR',
+            'BL',
+            'BR',
+            'WL',
+            'WR',
+            'TFL',
+            'TFR',
+            'TSL',
+            'TSR',
+            'TBL',
+            'TBR',
         ]
         processed = [sp for sp in full_order if sp in hrir.irs]
 
@@ -283,7 +307,7 @@ def main(dir_path=None,
                     del single.irs[other]
 
             track_order = [f'{sp}-left', f'{sp}-right']
-            out_path     = os.path.join(output_dir, f'{sp}.wav')
+            out_path = os.path.join(output_dir, f'{sp}.wav')
             single.write_wav(out_path, track_order=track_order)
             print(f'[Hangloose] Created: {out_path}')
 
@@ -297,8 +321,8 @@ def main(dir_path=None,
             fs_read, data = wavfile.read(src_path)  # data.shape == (N, 2)
 
             # 2.2) 120 Hz 로우패스 필터 설계
-            b, a = butter(4, 120/(fs_read/2), btype='low', analog=False)
-            gain_lin = 10**(10/20)  # +10 dB
+            b, a = butter(4, 120 / (fs_read / 2), btype='low', analog=False)
+            gain_lin = 10 ** (10 / 20)  # +10 dB
 
             # 2.3) Filter left and right channels and apply gain
             filtered_l = lfilter(b, a, data[:, 0]) * gain_lin
@@ -309,9 +333,6 @@ def main(dir_path=None,
             lfe_data = np.vstack((filtered_l, filtered_r)).T.astype(data.dtype)
             wavfile.write(out_path, fs_read, lfe_data)
             print(f'[LFE conversion] Created: {out_path}')
-
-
-
 
 
 def open_impulse_response_estimator(dir_path, file_path=None, fs=48000):
@@ -332,11 +353,11 @@ def open_impulse_response_estimator(dir_path, file_path=None, fs=48000):
         elif os.path.isfile(os.path.join(dir_path, 'test.wav')):
             file_path = os.path.join(dir_path, 'test.wav')
     if isinstance(file_path, str) and re.match(r'^.+\.wav$', file_path, flags=re.IGNORECASE):
-        #if re.match(r'^.+\.wav$', file_path, flags=re.IGNORECASE):
+        # if re.match(r'^.+\.wav$', file_path, flags=re.IGNORECASE):
         # Test signal is WAV file
         estimator = ImpulseResponseEstimator.from_wav(file_path)
     elif isinstance(file_path, str) and re.match(r'^.+\.pkl$', file_path, flags=re.IGNORECASE):
-        #elif re.match(r'^.+\.pkl$', file_path, flags=re.IGNORECASE):
+        # elif re.match(r'^.+\.pkl$', file_path, flags=re.IGNORECASE):
         # Test signal is Pickle file
         estimator = ImpulseResponseEstimator.from_pickle(file_path)
     elif file_path is None:
@@ -487,18 +508,13 @@ def create_target(estimator, bass_boost_gain, bass_boost_fc, bass_boost_q, tilt)
     """Creates target frequency response with bass boost, tilt and high pass at 20 Hz"""
     target = FrequencyResponse(
         name='bass_and_tilt',
-        frequency=FrequencyResponse.generate_frequencies(f_min=10, f_max=estimator.fs / 2, f_step=1.01)
+        frequency=FrequencyResponse.generate_frequencies(f_min=10, f_max=estimator.fs / 2, f_step=1.01),
     )
     target.raw = target.create_target(
-        bass_boost_gain=bass_boost_gain,
-        bass_boost_fc=bass_boost_fc,
-        bass_boost_q=bass_boost_q,
-        tilt=tilt
+        bass_boost_gain=bass_boost_gain, bass_boost_fc=bass_boost_fc, bass_boost_q=bass_boost_q, tilt=tilt
     )
     high_pass = FrequencyResponse(
-        name='high_pass',
-        frequency=[10, 18, 19, 20, 21, 22, 20000],
-        raw=[-80, -5, -1.6, -0.6, -0.2, 0, 0]
+        name='high_pass', frequency=[10, 18, 19, 20, 21, 22, 20000], raw=[-80, -5, -1.6, -0.6, -0.2, 0, 0]
     )
     high_pass.interpolate(f_min=10, f_max=estimator.fs / 2, f_step=1.01)
     # target.raw += high_pass.raw
@@ -570,32 +586,33 @@ def write_readme(file_path, hrir, fs):
             elif edt is not None:
                 rt_name = 'EDT'
                 rt = edt
-            table.append([
-                speaker,
-                side,
-                f'{noise_floor:.1f} dB',
-                f'{_itd:.1f} us',
-                f'{(knee_point_ind - peak_ind) / ir.fs * 1000:.1f} ms',
-                f'{rt * 1000:.1f} ms' if rt is not None else '-'
-            ])
-    table_str = tabulate(
-        table,
-        headers=['Speaker', 'Side', 'PNR', 'ITD', 'Length', rt_name],
-        tablefmt='github'
-    )
+            table.append(
+                [
+                    speaker,
+                    side,
+                    f'{noise_floor:.1f} dB',
+                    f'{_itd:.1f} us',
+                    f'{(knee_point_ind - peak_ind) / ir.fs * 1000:.1f} ms',
+                    f'{rt * 1000:.1f} ms' if rt is not None else '-',
+                ]
+            )
+    table_str = tabulate(table, headers=['Speaker', 'Side', 'PNR', 'ITD', 'Length', rt_name], tablefmt='github')
 
-        # --- Calculating reflected sound energy (20–50 ms, 50–150 ms) per main ear channel ---
-    frame    = lambda ms: int(ms * 1e-3 * fs)
-    to_db    = lambda E, E0: 10 * np.log10(E / (E0 + 1e-20))
+    # --- Calculating reflected sound energy (20–50 ms, 50–150 ms) per main ear channel ---
+    def frame(ms: float) -> int:
+        return int(ms * 1e-3 * fs)
+
+    def to_db(E: float, E0: float) -> float:
+        return 10 * np.log10(E / (E0 + 1e-20))
     energy_lines = ["\n**Reflected Sound Energy Compared to Direct Sound (per Channel, dB):**"]
     for speaker, channels in hrir.irs.items():
         # If the speaker name ends with L, only the left channel is used, otherwise only the right channel is used.
         main_side = 'left' if speaker.endswith('L') else 'right'
-        data      = channels[main_side].data
-        peak      = np.argmax(np.abs(data))
-        E0        = np.sum(data[peak : peak + frame(5)]**2)
-        E_early   = np.sum(data[peak + frame(20) : peak + frame(50)]**2)
-        E_mid     = np.sum(data[peak + frame(50) : peak + frame(150)]**2)
+        data = channels[main_side].data
+        peak = np.argmax(np.abs(data))
+        E0 = np.sum(data[peak : peak + frame(5)] ** 2)
+        E_early = np.sum(data[peak + frame(20) : peak + frame(50)] ** 2)
+        E_mid = np.sum(data[peak + frame(50) : peak + frame(150)] ** 2)
         energy_lines.append(
             f"- {speaker} ({main_side}): "
             f"Early (20–50 ms) {to_db(E_early, E0):.2f} dB, "
@@ -622,94 +639,151 @@ def write_readme(file_path, hrir, fs):
 
 def create_cli():
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--c', type=float, default=1,
-                            help='Retain headroom in milliseconds before the impulse peak. Default is 1 ms.')
-    arg_parser.add_argument('--jamesdsp', action='store_true',
-                            help='Generate an additional jamesdsp.wav containing only FL/FR IRs.')
-    arg_parser.add_argument('--hangloose', action='store_true',
-                   help='Create Hangloose files per channel (left/right WAV per speaker)')    
+    arg_parser.add_argument(
+        '--c', type=float, default=1, help='Retain headroom in milliseconds before the impulse peak. Default is 1 ms.'
+    )
+    arg_parser.add_argument(
+        '--jamesdsp', action='store_true', help='Generate an additional jamesdsp.wav containing only FL/FR IRs.'
+    )
+    arg_parser.add_argument(
+        '--hangloose', action='store_true', help='Create Hangloose files per channel (left/right WAV per speaker)'
+    )
     arg_parser.add_argument('--dir_path', type=str, required=True, help='Path to directory for recordings and outputs.')
-    arg_parser.add_argument('--test_signal', type=str, default=argparse.SUPPRESS,
-                            help='Path to sine sweep test signal or pickled impulse response estimator.')
-    arg_parser.add_argument('--room_target', type=str, default=argparse.SUPPRESS,
-                            help='Path to room target response AutoEQ style CSV file.')
-    arg_parser.add_argument('--room_mic_calibration', type=str, default=argparse.SUPPRESS,
-                            help='Path to room measurement microphone calibration file.')
-    arg_parser.add_argument('--no_room_correction', action='store_false', dest='do_room_correction',
-                            help='Skip room correction.')
-    arg_parser.add_argument('--no_headphone_compensation', action='store_false', dest='do_headphone_compensation',
-                            help='Skip headphone compensation.')
-    arg_parser.add_argument('--diffuse_field_compensation', action='store_true',
-                            dest='do_diffuse_field_compensation', default=settings.apply_diffuse_field_compensation,
-                            help='Apply diffuse-field compensation to the HRIR.')
-    arg_parser.add_argument('--no_equalization', action='store_false', dest='do_equalization',
-                            help='Skip equalization.')
+    arg_parser.add_argument(
+        '--test_signal',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Path to sine sweep test signal or pickled impulse response estimator.',
+    )
+    arg_parser.add_argument(
+        '--room_target', type=str, default=argparse.SUPPRESS, help='Path to room target response AutoEQ style CSV file.'
+    )
+    arg_parser.add_argument(
+        '--room_mic_calibration',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Path to room measurement microphone calibration file.',
+    )
+    arg_parser.add_argument(
+        '--no_room_correction', action='store_false', dest='do_room_correction', help='Skip room correction.'
+    )
+    arg_parser.add_argument(
+        '--no_headphone_compensation',
+        action='store_false',
+        dest='do_headphone_compensation',
+        help='Skip headphone compensation.',
+    )
+    arg_parser.add_argument(
+        '--diffuse_field_compensation',
+        action='store_true',
+        dest='do_diffuse_field_compensation',
+        default=settings.apply_diffuse_field_compensation,
+        help='Apply diffuse-field compensation to the HRIR.',
+    )
+    arg_parser.add_argument(
+        '--no_equalization', action='store_false', dest='do_equalization', help='Skip equalization.'
+    )
     arg_parser.add_argument('--fs', type=int, default=argparse.SUPPRESS, help='Output sampling rate in Hertz.')
     arg_parser.add_argument('--plot', action='store_true', help='Plot graphs for debugging.')
-    arg_parser.add_argument('--channel_balance', type=str, default=argparse.SUPPRESS,
-                            help='Channel balance correction by equalizing left and right ear results to the same '
-                                 'level or frequency response. "trend" equalizes right side by the difference trend '
-                                 'of right and left side. "left" equalizes right side to left side fr, "right" '
-                                 'equalizes left side to right side fr, "avg" equalizes both to the average fr, "min" '
-                                 'equalizes both to the minimum of left and right side frs. Number values will boost '
-                                 'or attenuate right side relative to left side by the number of dBs. "mids" is the '
-                                 'same as the numerical values but guesses the value automatically from mid frequency '
-                                 'levels.')
-    arg_parser.add_argument('--decay', type=str, default=argparse.SUPPRESS,
-                            help='Target decay time in milliseconds to reach -60 dB. When the natural decay time is '
-                                 'longer than the target decay time, a downward slope will be applied to decay tail. '
-                                 'Decay cannot be increased with this. By default no decay time adjustment is done. '
-                                 'A comma separated list of channel name and  reverberation time pairs, separated by '
-                                 'a colon. If only a single numeric value is given, it is used for all channels. When '
-                                 'some channel names are give but not all, the missing channels are not affected. For '
-                                 'example "--decay=300" or "--decay=FL:500,FC:100,FR:500,SR:700,BR:700,BL:700,SL:700" '
-                                 'or "--decay=FC:100".')
-    arg_parser.add_argument('--target_level', type=float, default=argparse.SUPPRESS,
-                            help='Target average gain level for left and right channels. This will sum together all '
-                                 'left side impulse responses and right side impulse responses respectively and take '
-                                 'the average gain from mid frequencies. The averaged level is then normalized to the '
-                                 'given target level. This makes it possible to compare HRIRs with somewhat similar '
-                                 'loudness levels. This should be negative in most cases to avoid clipping.')
-    arg_parser.add_argument('--fr_combination_method', type=str, default='average',
-                            help='Method for combining frequency responses of generic room measurements if there are '
-                                 'more than one tracks in the file. "average" will simply average the frequency'
-                                 'responses. "conservative" will take the minimum absolute value for each frequency '
-                                 'but only if the values in all the measurements are positive or negative at the same '
-                                 'time.')
-    arg_parser.add_argument('--specific_limit', type=float, default=400,
-                            help='Upper limit for room equalization with speaker-ear specific room measurements. '
-                                 'Equalization will drop down to 0 dB at this frequency in the leading octave. 0 '
-                                 'disables limit.')
-    arg_parser.add_argument('--generic_limit', type=float, default=300,
-                            help='Upper limit for room equalization with generic room measurements. '
-                                 'Equalization will drop down to 0 dB at this frequency in the leading octave. 0 '
-                                 'disables limit.')
-    arg_parser.add_argument('--bass_boost', type=str, default=argparse.SUPPRESS,
-                            help='Bass boost shelf. Sub-bass frequencies will be boosted by this amount. Can be '
-                                 'either a single value for a gain in dB or a comma separated list of three values for '
-                                 'parameters of a low shelf filter, where the first is gain in dB, second is center '
-                                 'frequency (Fc) in Hz and the last is quality (Q). When only a single value (gain) is '
-                                 'given, default values for Fc and Q are used which are 105 Hz and 0.76, respectively. '
-                                 'For example "--bass_boost=6" or "--bass_boost=6,150,0.69".')
-    arg_parser.add_argument('--tilt', type=float, default=argparse.SUPPRESS,
-                            help='Target tilt in dB/octave. Positive value (upwards slope) will result in brighter '
-                                 'frequency response and negative value (downwards slope) will result in darker '
-                                 'frequency response. 1 dB/octave will produce nearly 10 dB difference in '
-                                 'desired value between 20 Hz and 20 kHz. Tilt is applied with bass boost and both '
-                                 'will affect the bass gain.')
-    arg_parser.add_argument('--apply_x_curve', action='store_true',
-                            help='Apply SMPTE X-Curve to the output HRIR.')
-    arg_parser.add_argument('--remove_x_curve', action='store_true',
-                            help='Remove SMPTE X-Curve from the output HRIR.')
-    arg_parser.add_argument('--x_curve_in_capture', action='store_true',
-                            help='Capture already includes X-Curve.')
-    arg_parser.add_argument('--x_curve_type', type=str, default=X_CURVE_DEFAULT_TYPE,
-                            choices=list(X_CURVE_TYPES.keys()),
-                            help='Which X-Curve profile to use.')
-    arg_parser.add_argument('--delay-file', dest='delay_file', type=str,
-                            help='JSON or CSV file with speaker delays in milliseconds.')
-    arg_parser.add_argument('--interactive_delays', action='store_true',
-                            help='Prompt for speaker angles and distances to compute delays.')
+    arg_parser.add_argument(
+        '--channel_balance',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Channel balance correction by equalizing left and right ear results to the same '
+        'level or frequency response. "trend" equalizes right side by the difference trend '
+        'of right and left side. "left" equalizes right side to left side fr, "right" '
+        'equalizes left side to right side fr, "avg" equalizes both to the average fr, "min" '
+        'equalizes both to the minimum of left and right side frs. Number values will boost '
+        'or attenuate right side relative to left side by the number of dBs. "mids" is the '
+        'same as the numerical values but guesses the value automatically from mid frequency '
+        'levels.',
+    )
+    arg_parser.add_argument(
+        '--decay',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Target decay time in milliseconds to reach -60 dB. When the natural decay time is '
+        'longer than the target decay time, a downward slope will be applied to decay tail. '
+        'Decay cannot be increased with this. By default no decay time adjustment is done. '
+        'A comma separated list of channel name and  reverberation time pairs, separated by '
+        'a colon. If only a single numeric value is given, it is used for all channels. When '
+        'some channel names are give but not all, the missing channels are not affected. For '
+        'example "--decay=300" or "--decay=FL:500,FC:100,FR:500,SR:700,BR:700,BL:700,SL:700" '
+        'or "--decay=FC:100".',
+    )
+    arg_parser.add_argument(
+        '--target_level',
+        type=float,
+        default=argparse.SUPPRESS,
+        help='Target average gain level for left and right channels. This will sum together all '
+        'left side impulse responses and right side impulse responses respectively and take '
+        'the average gain from mid frequencies. The averaged level is then normalized to the '
+        'given target level. This makes it possible to compare HRIRs with somewhat similar '
+        'loudness levels. This should be negative in most cases to avoid clipping.',
+    )
+    arg_parser.add_argument(
+        '--fr_combination_method',
+        type=str,
+        default='average',
+        help='Method for combining frequency responses of generic room measurements if there are '
+        'more than one tracks in the file. "average" will simply average the frequency'
+        'responses. "conservative" will take the minimum absolute value for each frequency '
+        'but only if the values in all the measurements are positive or negative at the same '
+        'time.',
+    )
+    arg_parser.add_argument(
+        '--specific_limit',
+        type=float,
+        default=400,
+        help='Upper limit for room equalization with speaker-ear specific room measurements. '
+        'Equalization will drop down to 0 dB at this frequency in the leading octave. 0 '
+        'disables limit.',
+    )
+    arg_parser.add_argument(
+        '--generic_limit',
+        type=float,
+        default=300,
+        help='Upper limit for room equalization with generic room measurements. '
+        'Equalization will drop down to 0 dB at this frequency in the leading octave. 0 '
+        'disables limit.',
+    )
+    arg_parser.add_argument(
+        '--bass_boost',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Bass boost shelf. Sub-bass frequencies will be boosted by this amount. Can be '
+        'either a single value for a gain in dB or a comma separated list of three values for '
+        'parameters of a low shelf filter, where the first is gain in dB, second is center '
+        'frequency (Fc) in Hz and the last is quality (Q). When only a single value (gain) is '
+        'given, default values for Fc and Q are used which are 105 Hz and 0.76, respectively. '
+        'For example "--bass_boost=6" or "--bass_boost=6,150,0.69".',
+    )
+    arg_parser.add_argument(
+        '--tilt',
+        type=float,
+        default=argparse.SUPPRESS,
+        help='Target tilt in dB/octave. Positive value (upwards slope) will result in brighter '
+        'frequency response and negative value (downwards slope) will result in darker '
+        'frequency response. 1 dB/octave will produce nearly 10 dB difference in '
+        'desired value between 20 Hz and 20 kHz. Tilt is applied with bass boost and both '
+        'will affect the bass gain.',
+    )
+    arg_parser.add_argument('--apply_x_curve', action='store_true', help='Apply SMPTE X-Curve to the output HRIR.')
+    arg_parser.add_argument('--remove_x_curve', action='store_true', help='Remove SMPTE X-Curve from the output HRIR.')
+    arg_parser.add_argument('--x_curve_in_capture', action='store_true', help='Capture already includes X-Curve.')
+    arg_parser.add_argument(
+        '--x_curve_type',
+        type=str,
+        default=X_CURVE_DEFAULT_TYPE,
+        choices=list(X_CURVE_TYPES.keys()),
+        help='Which X-Curve profile to use.',
+    )
+    arg_parser.add_argument(
+        '--delay-file', dest='delay_file', type=str, help='JSON or CSV file with speaker delays in milliseconds.'
+    )
+    arg_parser.add_argument(
+        '--interactive_delays', action='store_true', help='Prompt for speaker angles and distances to compute delays.'
+    )
     args = vars(arg_parser.parse_args())
     if 'bass_boost' in args:
         bass_boost = args['bass_boost'].split(',')
@@ -734,7 +808,7 @@ def create_cli():
             for ch_t in args['decay'].split(','):
                 decay[ch_t.split(':')[0].upper()] = float(ch_t.split(':')[1]) / 1000
         args['decay'] = decay
-    if  'c' in args:
+    if 'c' in args:
         args['head_ms'] = args['c']
         del args['c']
     return args

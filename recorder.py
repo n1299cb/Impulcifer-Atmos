@@ -46,7 +46,7 @@ def record_target(file_path, length, fs, channels=2, append=False, output_file=N
     # Estimate noise floor from the last 10 %% of the recording
     tail_start = int(recording.shape[1] * 0.9)
     tail = recording[:, tail_start:]
-    noise_rms = np.sqrt(np.mean(tail ** 2))
+    noise_rms = np.sqrt(np.mean(tail**2))
     noise_floor = 20 * np.log10(noise_rms) if noise_rms > 0 else -np.inf
     if append and os.path.isfile(file_path):
         # Adding to existing file, read the file
@@ -61,7 +61,7 @@ def record_target(file_path, length, fs, channels=2, append=False, output_file=N
         recording = np.vstack([data, recording])
     if output_file:
         file_path = output_file
-    
+
     write_wav(file_path, fs, recording)
     print(f'Headroom: {headroom:.1f} dB')
 
@@ -119,8 +119,10 @@ def get_device(device_name, kind, host_api=None, min_channels=1):
         device = sd.query_devices(device_name, kind=kind)
         if device[f'max_{kind}_channels'] < min_channels:
             # Channel count not satisfied
-            raise DeviceNotFoundError(f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}"" '
-                                      f'but minimum number of channels is not satisfied. 1')
+            raise DeviceNotFoundError(
+                f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}"" '
+                f'but minimum number of channels is not satisfied. 1'
+            )
     elif not re.search(host_api_pattern, device_name) and host_api is not None:
         # Host API not specified in the name but host API is given as parameter
         try:
@@ -131,8 +133,10 @@ def get_device(device_name, kind, host_api=None, min_channels=1):
             raise DeviceNotFoundError(f'No device found with name "{device_name}" and host API "{host_api}". ')
         if device[f'max_{kind}_channels'] < min_channels:
             # Channel count not satisfied
-            raise DeviceNotFoundError(f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}" '
-                                      f'but minimum number of channels is not satisfied.')
+            raise DeviceNotFoundError(
+                f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}" '
+                f'but minimum number of channels is not satisfied.'
+            )
     else:
         # Host API not in the name and host API is not given as parameter
         host_api_preference = [x for x in ['DirectSound', 'MME', 'WASAPI'] if x in host_api_names]
@@ -202,15 +206,16 @@ def set_default_devices(input_device, output_device):
 
 
 def play_and_record(
-        play=None,
-        record=None,
-        input_device=None,
-        output_device=None,
-        host_api=None,
-        channels=2,
-        append=False,
-        output_file=None,
-        report_file=None):
+    play=None,
+    record=None,
+    input_device=None,
+    output_device=None,
+    host_api=None,
+    channels=2,
+    append=False,
+    output_file=None,
+    report_file=None,
+):
     """Plays one file and records another at the same time
 
     Args:
@@ -250,17 +255,14 @@ def play_and_record(
             print(f"Expected SMPTE layout {layout_name} order:\n  {expected_order}")
         else:
             print("No matching SMPTE layout for the given channel count.")
-    
+
     # Read playback file
     fs, data = read_wav(play)
     n_channels = data.shape[0]
 
     # Find and set devices as default
     input_device, output_device = get_devices(
-        input_device=input_device,
-        output_device=output_device,
-        host_api=host_api,
-        min_channels=n_channels
+        input_device=input_device, output_device=output_device, host_api=host_api, min_channels=n_channels
     )
     input_device_str, output_device_str = set_default_devices(input_device, output_device)
 
@@ -275,7 +277,7 @@ def play_and_record(
             'append': append,
             'output_file': output_file,
             'report_file': report_file,
-        }
+        },
     )
     recorder.start()
     sd.play(np.transpose(data), samplerate=fs, blocking=True)
@@ -289,35 +291,59 @@ def create_cli():
     """
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--play', type=str, required=True, help='File path to WAV file to play.')
-    arg_parser.add_argument('--record', type=str, required=True,
-                            help='File path to write the recording. This must have ".wav" extension and be either'
-                                 '"headphones.wav" or any combination of supported speaker names separated by commas '
-                                 'eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It\'s '
-                                 'convenient to point the file path directly to the recording directory such as '
-                                 '"data\\my_hrir\\FL,FR.wav".')
-    arg_parser.add_argument('--input_device', type=str, default=argparse.SUPPRESS,
-                            help='Name or number of the input device. Use "python -m sounddevice to '
-                                 'find out which devices are available. It\'s possible to add host API at the end of '
-                                 'the input device name separated by space to specify which host API to use. For '
-                                 'example: "Zoom H1n DirectSound".')
-    arg_parser.add_argument('--output_device', type=str, default=argparse.SUPPRESS,
-                            help='Name or number of the output device. Use "python -m sounddevice to '
-                                 'find out which devices are available. It\'s possible to add host API at the end of '
-                                 'the output device name separated by space to specify which host API to use. For '
-                                 'example: "Zoom H1n WASAPI"')
-    arg_parser.add_argument('--output_file', type=str, default=None,
-                            help='Optional custom output filename (e.g., headphones.wav). Overrides automatic naming.')
-    arg_parser.add_argument('--report_file', type=str, default=None,
-                            help='Optional path for recording quality report file.')
-    arg_parser.add_argument('--host_api', type=str, default=argparse.SUPPRESS,
-                            help='Host API name to prefer for input and output devices. Supported options on Windows '
-                                 'are: "MME", "DirectSound" and "WASAPI". This is used when input and '
-                                 'output devices have not been specified (using system defaults) or if they have no '
-                                 'host API specified.')
+    arg_parser.add_argument(
+        '--record',
+        type=str,
+        required=True,
+        help='File path to write the recording. This must have ".wav" extension and be either'
+        '"headphones.wav" or any combination of supported speaker names separated by commas '
+        'eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It\'s '
+        'convenient to point the file path directly to the recording directory such as '
+        '"data\\my_hrir\\FL,FR.wav".',
+    )
+    arg_parser.add_argument(
+        '--input_device',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Name or number of the input device. Use "python -m sounddevice to '
+        'find out which devices are available. It\'s possible to add host API at the end of '
+        'the input device name separated by space to specify which host API to use. For '
+        'example: "Zoom H1n DirectSound".',
+    )
+    arg_parser.add_argument(
+        '--output_device',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Name or number of the output device. Use "python -m sounddevice to '
+        'find out which devices are available. It\'s possible to add host API at the end of '
+        'the output device name separated by space to specify which host API to use. For '
+        'example: "Zoom H1n WASAPI"',
+    )
+    arg_parser.add_argument(
+        '--output_file',
+        type=str,
+        default=None,
+        help='Optional custom output filename (e.g., headphones.wav). Overrides automatic naming.',
+    )
+    arg_parser.add_argument(
+        '--report_file', type=str, default=None, help='Optional path for recording quality report file.'
+    )
+    arg_parser.add_argument(
+        '--host_api',
+        type=str,
+        default=argparse.SUPPRESS,
+        help='Host API name to prefer for input and output devices. Supported options on Windows '
+        'are: "MME", "DirectSound" and "WASAPI". This is used when input and '
+        'output devices have not been specified (using system defaults) or if they have no '
+        'host API specified.',
+    )
     arg_parser.add_argument('--channels', type=int, default=16, help='Number of output channels.')
-    arg_parser.add_argument('--append', action='store_true',
-                            help='Add track(s) to existing file? Silence will be added to the end of all tracks to '
-                                 'make the equal in length.')
+    arg_parser.add_argument(
+        '--append',
+        action='store_true',
+        help='Add track(s) to existing file? Silence will be added to the end of all tracks to '
+        'make the equal in length.',
+    )
     args = vars(arg_parser.parse_args())
     return args
 

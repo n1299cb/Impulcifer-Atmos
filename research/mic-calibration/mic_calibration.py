@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from autoeq.frequency_response import FrequencyResponse
+
 sys.path.insert(1, os.path.realpath(os.path.join(sys.path[0], os.pardir)))
 from impulse_response_estimator import ImpulseResponseEstimator
 from hrir import HRIR
@@ -69,10 +70,10 @@ def main(test_signal):
     room = FrequencyResponse(
         name='Room measurement mic',
         frequency=rooms[0].frequency,
-        raw=np.mean(np.vstack([x.raw for x in rooms]), axis=0)
+        raw=np.mean(np.vstack([x.raw for x in rooms]), axis=0),
     )
     room.interpolate(f_step=1.01, f_min=10, f_max=20e3)
-    room.smoothen_fractional_octave(window_size=1/6, treble_window_size=1/6)
+    room.smoothen_fractional_octave(window_size=1 / 6, treble_window_size=1 /6)
     room.raw = room.smoothed.copy()
     room.smoothed = []
     room.center([60, 10000])
@@ -80,12 +81,10 @@ def main(test_signal):
 
     # Left binaural mic
     left = FrequencyResponse(
-        name='Left binaural mic',
-        frequency=lefts[0].frequency,
-        raw=np.mean(np.vstack([x.raw for x in lefts]), axis=0)
+        name='Left binaural mic', frequency=lefts[0].frequency, raw=np.mean(np.vstack([x.raw for x in lefts]), axis=0)
     )
     left.interpolate(f_step=1.01, f_min=10, f_max=20e3)
-    left.smoothen_fractional_octave(window_size=1/6, treble_window_size=1/6)
+    left.smoothen_fractional_octave(window_size=1 / 6, treble_window_size=1 / 6)
     left.raw = left.smoothed.copy()
     left.smoothed = []
     gain = left.center([60, 10000])
@@ -97,10 +96,10 @@ def main(test_signal):
     right = FrequencyResponse(
         name='Right binaural mic',
         frequency=rights[0].frequency,
-        raw=np.mean(np.vstack([x.raw for x in rights]), axis=0)
+        raw=np.mean(np.vstack([x.raw for x in rights]), axis=0),
     )
     right.interpolate(f_step=1.01, f_min=10, f_max=20e3)
-    right.smoothen_fractional_octave(window_size=1/6, treble_window_size=1/6)
+    right.smoothen_fractional_octave(window_size=1 / 6, treble_window_size=1 / 6)
     right.raw = right.smoothed.copy()
     right.smoothed = []
     right.raw += gain
@@ -120,8 +119,12 @@ def main(test_signal):
 
 def create_cli():
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--test_signal', type=str, required=True,
-                            help='Path to sine sweep test signal or pickled impulse response estimator.')
+    arg_parser.add_argument(
+        '--test_signal',
+        type=str,
+        required=True,
+        help='Path to sine sweep test signal or pickled impulse response estimator.',
+    )
     cli_args = arg_parser.parse_args()
     return vars(cli_args)
 

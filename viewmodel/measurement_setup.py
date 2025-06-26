@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from models.measurement_setup import MeasurementSetup
 
+
 @dataclass
 class MeasurementSetupViewModel:
     """ViewModel for managing measurement setup state and validation."""

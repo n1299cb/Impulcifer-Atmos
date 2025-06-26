@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from autoeq.frequency_response import FrequencyResponse
+
 sys.path.insert(1, os.path.realpath(os.path.join(sys.path[0], os.pardir)))
 from impulse_response_estimator import ImpulseResponseEstimator
 from hrir import HRIR
@@ -59,7 +60,7 @@ def main():
             # HRIR is the target
             target = hrir.irs[speaker][side].frequency_response()
             target.raw += gain
-            target.smoothen_fractional_octave(window_size=1/3, treble_window_size=1/3)
+            target.smoothen_fractional_octave(window_size=1 / 3, treble_window_size=1 / 3)
 
             # Frequency response of the headphone feedback measurement
             fr = ir.frequency_response()
@@ -82,9 +83,7 @@ def main():
 
     for i, side in enumerate(['left', 'right']):
         feedback_errors[side] = FrequencyResponse(
-            name=side,
-            frequency=fllfr.frequency.copy(),
-            error=feedback_errors[side] / 2
+            name=side, frequency=fllfr.frequency.copy(), error=feedback_errors[side] / 2
         )
         feedback_errors[side].plot_graph(fig=fig, ax=ax[2, i], show=False)
 

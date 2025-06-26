@@ -78,16 +78,16 @@ class ImpulseResponseEstimator(object):
         """
         P = self.n_octaves
         N = len(self.test_signal)
-        inverse_filter = np.flip(self.test_signal) * (2**(P / N))**(np.arange(N)*-1) * P * np.log(2) / (1 - 2**-P)
+        inverse_filter = np.flip(self.test_signal) * (2 ** (P / N)) ** (np.arange(N) * -1) * P * np.log(2) / (1 - 2**-P)
 
         # Now we have to normalize energy of result of dot product.
         # This is "naive" method but it just works.
         frp = fft(convolve(inverse_filter, self.test_signal, method='auto'))
-        inverse_filter /= np.abs(frp[round(frp.shape[0]/4)])
+        inverse_filter /= np.abs(frp[round(frp.shape[0] / 4)])
 
         return inverse_filter
 
-    def generate_test_signal(self, min_duration, fade_in=1/2, fade_out=None):
+    def generate_test_signal(self, min_duration, fade_in=1 / 2, fade_out=None):
         """Generates test signal.
 
         Simultaneous Measurement of Impulse Response and Distortion with a Swept-Sine Technique.
@@ -132,7 +132,7 @@ class ImpulseResponseEstimator(object):
             fade_in = 2 * int(self.fs * seconds_per_octave * fade_in)
             if fade_in % 2:
                 fade_in += 1
-            fade_in_window = hann(fade_in)[:fade_in // 2]
+            fade_in_window = hann(fade_in)[: fade_in // 2]
 
         # Fade-out window
         if fade_out is None:
@@ -141,14 +141,12 @@ class ImpulseResponseEstimator(object):
             fade_out = 2 * int(self.fs * seconds_per_octave * fade_out)
             if fade_out % 2:
                 fade_out += 1
-            fade_out_window = hann(fade_out)[fade_out // 2:]
+            fade_out_window = hann(fade_out)[fade_out // 2 :]
 
         # Create window from fade-in window and fade-out window with ones in the middle
-        win = np.concatenate([
-            fade_in_window,
-            np.ones(len(test_signal) - len(fade_in_window) - len(fade_out_window)),
-            fade_out_window
-        ])
+        win = np.concatenate(
+            [fade_in_window, np.ones(len(test_signal) - len(fade_in_window) - len(fade_out_window)), fade_out_window]
+        )
         test_signal *= win
 
         return test_signal
@@ -202,15 +200,26 @@ class ImpulseResponseEstimator(object):
         # Remap channels according to SMPTE order
         if tracks == '9.1.6':
             standard_order = [
-                'FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR',
-                'WL', 'WR', 'TFL', 'TFR', 'TSL', 'TSR', 'TBL', 'TBR'
+                'FL',
+                'FR',
+                'FC',
+                'LFE',
+                'SL',
+                'SR',
+                'BL',
+                'BR',
+                'WL',
+                'WR',
+                'TFL',
+                'TFR',
+                'TSL',
+                'TSR',
+                'TBL',
+                'TBR',
             ]
             n_tracks = 16
         elif tracks == '7.1.4':
-            standard_order = [
-                'FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR',
-                'TFL', 'TFR', 'TBL', 'TBR'
-            ]
+            standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR', 'TFL', 'TFR', 'TBL', 'TBR']
             n_tracks = 12
         elif tracks == '7.1':
             standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR']
@@ -230,26 +239,21 @@ class ImpulseResponseEstimator(object):
 
         for speaker in speakers:
             if speaker not in standard_order:
-                raise ValueError('Speaker name "{speaker}" not supported with track configuration "{tracks}"'.format(
-                    speaker=speaker,
-                    tracks=tracks
-                ))
+                raise ValueError(
+                    'Speaker name "{speaker}" not supported with track configuration "{tracks}"'.format(
+                        speaker=speaker, tracks=tracks
+                    )
+                )
         speaker_indices = [standard_order.index(ch) for ch in speakers]
         if speaker_indices != sorted(speaker_indices):
-            raise ValueError(
-                'Speakers must follow SMPTE order: {}'.format(','.join(standard_order))
-            )
+            raise ValueError('Speakers must follow SMPTE order: {}'.format(','.join(standard_order)))
 
         # Create test signal sequence
         data = np.zeros((n_tracks, int((self.fs * 2.0 + len(self)) * len(speakers) + self.fs * 2.0)))
         for i, speaker in enumerate(speakers):
             start_zeros = int((self.fs * 2.0 + len(self)) * i + self.fs * 2.0)
             end_zeros = int((self.fs * 2.0 + len(self)) * (len(speakers) - i - 1) + self.fs * 2.0)
-            sweep_padded = np.concatenate([
-                np.zeros((start_zeros,)),
-                self.test_signal,
-                np.zeros((end_zeros,))
-            ])
+            sweep_padded = np.concatenate([np.zeros((start_zeros,)), self.test_signal, np.zeros((end_zeros,))])
             data[speaker_indices[i], :] = sweep_padded
         data = np.vstack(data)
 
@@ -261,8 +265,10 @@ class ImpulseResponseEstimator(object):
         fs, data = read_wav(file_path)
         ire = cls(min_duration=(len(data) - 1) / fs, fs=fs)
         if np.max(ire.test_signal - data) > 1e-9:
-            raise ValueError('Data read from WAV file does not match generated test signal. WAV file must be generated '
-                             'with the current version of ImpulseResponseEstimator.')
+            raise ValueError(
+                'Data read from WAV file does not match generated test signal. WAV file must be generated '
+                'with the current version of ImpulseResponseEstimator.'
+            )
         return ire
 
     @staticmethod
@@ -290,28 +296,47 @@ class ImpulseResponseEstimator(object):
 
 def create_cli():
     arg_parser = ArgumentParser()
-    arg_parser.add_argument('--dir_path', type=str, required=True,
-                            help='Path to directory where generated test signal is saved. Default file name is used.')
-    arg_parser.add_argument('--fs', type=int, required=True,
-                            help='Sampling rate in Hertz.')
-    arg_parser.add_argument('--duration', type=float, required=False, default=5.0,
-                            help='Test signal duration in seconds. Defaults to 5.0 seconds.')
-    arg_parser.add_argument('--bit_depth', type=int, required=False, default=32,
-                            help='Test signal WAV file bit depth. Defaults to 32 bits.')
-    arg_parser.add_argument('--speakers', type=str, required=False, default='FL',
-                            help='Speaker channel order in test signal sequence as comma separated values. Mono test '
-                                 'signal sequence is created by default but if speakers are specified a second sequence'
-                                 ' file will be generated which contains multiple sweeps separated by silences in the '
-                                 'order of given speaker channels. Stereo sequence can be generated by supplying value '
-                                 '"FL,FR". Supported channel names are "FL", "FR", "FC", "SL", "SR", "BL" and "BR".')
-    arg_parser.add_argument('--tracks', type=str, required=False, default='mono',
-                            help='WAV file track configuration. Supported values are "mono", "stereo", "5.1", '
-                                 '"7.1", "7.1.4" and "9.1.6". This should be set according to sound card. '
-                                 'Supported speaker names for "stereo" are "FL" and "FR". Supported speaker '
-                                 'names for "5.1" are "FL", "FR", "FC", "LFE", "BL" and "BR". Supported speaker '
-                                 'names for "7.1" are the same as 5.1 with "BL" and "BR" added. Formats '
-                                 '"7.1.4" and "9.1.6" extend 7.1 with top speaker pairs. "mono" will force '
-                                 'speakers to "FL".')
+    arg_parser.add_argument(
+        '--dir_path',
+        type=str,
+        required=True,
+        help='Path to directory where generated test signal is saved. Default file name is used.',
+    )
+    arg_parser.add_argument('--fs', type=int, required=True, help='Sampling rate in Hertz.')
+    arg_parser.add_argument(
+        '--duration',
+        type=float,
+        required=False,
+        default=5.0,
+        help='Test signal duration in seconds. Defaults to 5.0 seconds.',
+    )
+    arg_parser.add_argument(
+        '--bit_depth', type=int, required=False, default=32, help='Test signal WAV file bit depth. Defaults to 32 bits.'
+    )
+    arg_parser.add_argument(
+        '--speakers',
+        type=str,
+        required=False,
+        default='FL',
+        help='Speaker channel order in test signal sequence as comma separated values. Mono test '
+        'signal sequence is created by default but if speakers are specified a second sequence'
+        ' file will be generated which contains multiple sweeps separated by silences in the '
+        'order of given speaker channels. Stereo sequence can be generated by supplying value '
+        '"FL,FR". Supported channel names are "FL", "FR", "FC", "SL", "SR", "BL" and "BR".',
+    )
+    arg_parser.add_argument(
+        '--tracks',
+        type=str,
+        required=False,
+        default='mono',
+        help='WAV file track configuration. Supported values are "mono", "stereo", "5.1", '
+        '"7.1", "7.1.4" and "9.1.6". This should be set according to sound card. '
+        'Supported speaker names for "stereo" are "FL" and "FR". Supported speaker '
+        'names for "5.1" are "FL", "FR", "FC", "LFE", "BL" and "BR". Supported speaker '
+        'names for "7.1" are the same as 5.1 with "BL" and "BR" added. Formats '
+        '"7.1.4" and "9.1.6" extend 7.1 with top speaker pairs. "mono" will force '
+        'speakers to "FL".',
+    )
     cli_args = arg_parser.parse_args()
     if not os.path.isdir(cli_args.dir_path):
         # File path is required

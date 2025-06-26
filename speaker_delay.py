@@ -7,8 +7,7 @@ from constants import SPEAKER_NAMES
 from utils import versus_distance
 
 
-def interactive_speaker_delays(default_distance: float = 3.0,
-                                default_angle: float = 0.0) -> Dict[str, float]:
+def interactive_speaker_delays(default_distance: float = 3.0, default_angle: float = 0.0) -> Dict[str, float]:
     """Prompt for angle and distance per speaker and return delay table.
 
     The delay for the nearest speaker is normalised to zero.

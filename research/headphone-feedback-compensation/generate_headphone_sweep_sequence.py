@@ -4,6 +4,7 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+
 sys.path.insert(1, os.path.realpath(os.path.join(sys.path[0], os.pardir)))
 from utils import write_wav
 from impulse_response_estimator import ImpulseResponseEstimator
@@ -37,7 +38,7 @@ def main():
     hrir.open_recording(os.path.join(DIR_PATH, 'FL,FR.wav'), speakers=['FL', 'FR'])
     hrir.crop_heads()
     hrir.crop_tails()
-    
+
     # Create test signal sequence
     speakers = ['FL', 'FR']
     seq_data = estimator.sweep_sequence(speakers, 'stereo')
@@ -45,14 +46,8 @@ def main():
     fig, ax = plot_stereo_track(seq_data, estimator.fs)
     fig.suptitle('Sweep sequence')
 
-    left = np.vstack([
-        hrir.irs['FL']['left'].convolve(seq_data[0]),
-        hrir.irs['FL']['right'].convolve(seq_data[0])
-    ])
-    right = np.vstack([
-        hrir.irs['FR']['left'].convolve(seq_data[1]),
-        hrir.irs['FR']['right'].convolve(seq_data[1])
-    ])
+    left = np.vstack([hrir.irs['FL']['left'].convolve(seq_data[0]), hrir.irs['FL']['right'].convolve(seq_data[0])])
+    right = np.vstack([hrir.irs['FR']['left'].convolve(seq_data[1]), hrir.irs['FR']['right'].convolve(seq_data[1])])
     virtualized = left + right
 
     fig, ax = plot_stereo_track(virtualized, estimator.fs)
@@ -74,7 +69,9 @@ def main():
     virtualized /= np.max(np.abs(virtualized))
 
     # Write virtualized sequence to disk
-    file_path = os.path.join(DIR_PATH, f'headphones-sweep-seq-{",".join(speakers)}-stereo-{estimator.file_name(32)}.wav')
+    file_path = os.path.join(
+        DIR_PATH, f'headphones-sweep-seq-{",".join(speakers)}-stereo-{estimator.file_name(32)}.wav'
+    )
     write_wav(file_path, estimator.fs, virtualized, bit_depth=32)
 
 

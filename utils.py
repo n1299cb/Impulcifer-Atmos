@@ -70,7 +70,7 @@ def magnitude_response(x, fs):
     f = np.arange(0, fs - df, df)
     X = fft(_x)
     X_mag = 20 * np.log10(np.abs(X))
-    return f[0:int(np.ceil(nfft/2))], X_mag[0:int(np.ceil(nfft/2))]
+    return f[0 : int(np.ceil(nfft / 2))], X_mag[0 : int(np.ceil(nfft / 2))]
 
 
 def sync_axes(axes, sync_x=True, sync_y=True):
@@ -146,7 +146,7 @@ def versus_distance(angle=30, distance=3, breadth=0.148, ear='primary', sound_fi
         aa = (90 + angle) / 180 * np.pi
     else:
         raise ValueError('Ear must be "primary" or "secondary".')
-    b = np.sqrt(distance ** 2 + (breadth / 2) ** 2 - 2 * distance * (breadth / 2) * np.cos(aa))
+    b = np.sqrt(distance**2 + (breadth / 2) ** 2 - 2 * distance * (breadth / 2) * np.cos(aa))
     d = b - distance
     delay = d / sound_velocity
     spl = np.log(b / distance) / np.log(2)

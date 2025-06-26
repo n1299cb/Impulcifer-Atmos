@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from generate_layout import select_layout, init_layout, verify_layout
 
+
 class LayoutViewModel:
     """ViewModel wrapping layout generation utilities."""
 

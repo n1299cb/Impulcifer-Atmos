@@ -5,6 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from autoeq.frequency_response import FrequencyResponse
+
 sys.path.insert(1, os.path.realpath(os.path.join(sys.path[0], os.pardir)))
 from utils import optimize_png_size
 
@@ -22,7 +23,7 @@ def main():
     plt.show()
 
     for fr in [loudspeaker, headphone]:
-    #for fr in [loudspeaker]:
+        # for fr in [loudspeaker]:
         fr.interpolate(f_step=1.01, f_min=10, f_max=20000)
         fr.center()
         smooth = fr.copy()
@@ -35,11 +36,11 @@ def main():
         fr.smoothen_fractional_octave(window_size=1, treble_window_size=1)
         fr.raw = fr.smoothed.copy()
         fr.smoothed = np.array([])
-        #fr.raw += fr.create_target(bass_boost_gain=6.8, bass_boost_fc=105, bass_boost_q=0.76)
+        # fr.raw += fr.create_target(bass_boost_gain=6.8, bass_boost_fc=105, bass_boost_q=0.76)
         fr.write_to_csv(os.path.join(DIR_PATH, os.pardir, os.pardir, 'data', f'{fr.name}-wo-bass.csv'))
         fig, ax = fr.plot_graph(show=False)
-        #smooth.plot_graph(fig=fig, ax=ax, show=False, color='blue')
-        #ax.legend(['Shelf', 'Original'])
+        # smooth.plot_graph(fig=fig, ax=ax, show=False, color='blue')
+        # ax.legend(['Shelf', 'Original'])
         plt.show()
 
 

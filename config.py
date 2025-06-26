@@ -7,9 +7,11 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class ProcessingConfig:
     """Feature flags controlling processing behaviour."""
+
     apply_diffuse_field_compensation: bool = False
     apply_headphone_eq: bool = True
     apply_x_curve_compensation: bool = False

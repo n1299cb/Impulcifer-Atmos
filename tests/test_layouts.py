@@ -28,6 +28,7 @@ EXPECTED_LAYOUTS = {
     "ambisonics": 4,
 }
 
+
 def test_layout_definitions_exist():
     for fmt, count in EXPECTED_LAYOUTS.items():
         assert fmt in SPEAKER_LAYOUTS, f"Missing layout {fmt}"
@@ -38,6 +39,7 @@ def test_layout_definitions_exist():
         assert fmt in SMPTE_LAYOUT_INDEXES
         # SMPTE layouts may include LFE which is not part of SPEAKER_LAYOUTS
         assert len(SMPTE_ORDER[fmt]) >= count
+
 
 def test_channel_labels_consistency():
     for i, name in enumerate(SPEAKER_NAMES):

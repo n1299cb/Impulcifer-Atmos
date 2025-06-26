@@ -4,6 +4,7 @@ import sys
 
 from models import RecorderSettings
 
+
 class RecordingViewModel:
     """ViewModel handling recording commands."""
 
@@ -28,8 +29,16 @@ class RecordingViewModel:
             args.extend(["--output_file", settings.output_file])
         return subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    def run_capture_wizard(self, layout_name: str, layout_groups: List[List[str]], settings: RecorderSettings, prompt_fn=None, message_fn=None) -> None:
+    def run_capture_wizard(
+        self,
+        layout_name: str,
+        layout_groups: List[List[str]],
+        settings: RecorderSettings,
+        prompt_fn=None,
+        message_fn=None,
+    ) -> None:
         from capture_wizard import run_capture
+
         run_capture(
             layout_name,
             layout_groups,

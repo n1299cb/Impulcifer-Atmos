@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import impulcifer
 from utils import write_wav
 
+
 def test_impulcifer_714_pipeline(tmp_path, dummy_capture, monkeypatch):
     dir_path, test_signal = dummy_capture("7.1.4")
     monkeypatch.setattr("impulcifer.diffuse_field_compensation", lambda *a, **k: None)
@@ -17,6 +18,7 @@ def test_impulcifer_714_pipeline(tmp_path, dummy_capture, monkeypatch):
     monkeypatch.setattr("hrir.HRIR.crop_heads", lambda self, head_ms=1: None)
     monkeypatch.setattr("hrir.HRIR.correct_channel_balance", lambda self, method=None: None)
     called = {}
+
     def fake_main(**kwargs):
         called.update(kwargs)
         write_wav(os.path.join(kwargs["dir_path"], "responses.wav"), 8000, np.zeros((1, 2)))

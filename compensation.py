@@ -14,11 +14,12 @@ from constants import (
 )
 from config import settings
 
+
 def diffuse_field_compensation(hrir, enabled=settings.apply_diffuse_field_compensation):
     """Apply diffuse-field compensation to HRIR in-place."""
     if not enabled:
         return
-    
+ 
     for pair in hrir.irs.values():
         for ir in pair.values():
             fr = ir.frequency_response()

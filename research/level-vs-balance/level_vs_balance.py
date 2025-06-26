@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from autoeq.frequency_response import FrequencyResponse
+
 sys.path.insert(1, os.path.realpath(os.path.join(sys.path[0], os.pardir)))
 from impulse_response_estimator import ImpulseResponseEstimator
 from hrir import HRIR
@@ -29,7 +30,7 @@ def main():
 
         files = sorted(
             list(glob(os.path.join(DIR_PATH, group, 'headphones*.wav'))),
-            key=lambda x: float(re.search(r'\d+', os.path.split(x)[1])[0])
+            key=lambda x: float(re.search(r'\d+', os.path.split(x)[1])[0]),
         )
         for file_path in files:
             hp = HRIR(estimator)
@@ -40,7 +41,7 @@ def main():
                 left.frequency,
                 right.raw - left.raw,
                 label=os.path.split(file_path)[1].replace('.wav', ''),
-                linewidth=0.5
+                linewidth=0.5,
             )
         ax.legend()
         ax.set_ylim([-5, 5])
