@@ -714,7 +714,7 @@ class ImpulciferGUI(QMainWindow):
 
         self.fr_combination_var = QComboBox()
         self.fr_combination_var.addItems(["average", "conservative"])
-        self.fr_combination_toggle = QCheckBox("Enable")     
+        self.fr_combination_toggle = QCheckBox("Enable")
 
         self.specific_limit_row_widget = QWidget()
         self.specific_limit_row = self.labeled_row(
@@ -820,7 +820,6 @@ class ImpulciferGUI(QMainWindow):
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read().strip()
             try:
-                import json
 
                 names = json.loads(content)
                 if isinstance(names, dict):
