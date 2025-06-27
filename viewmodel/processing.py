@@ -56,6 +56,17 @@ class ProcessingViewModel:
             args.append("--x_curve_in_capture")
         if settings.interactive_delays:
             args.append("--interactive_delays")
+        else:
+            pos_file = os.path.join(settings.measurement_dir, "speaker_positions.json")
+            if os.path.isfile(pos_file):
+                from viewmodel.layout import LayoutViewModel
+
+                delay_file = os.path.join(settings.measurement_dir, "speaker_delays.json")
+                try:
+                    LayoutViewModel().delays_from_positions(pos_file, delay_file)
+                    args.extend(["--delay-file", delay_file])
+                except OSError:
+                    pass
 
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return result

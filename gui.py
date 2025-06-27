@@ -1008,6 +1008,16 @@ class ImpulciferGUI(QMainWindow):
 
         def save_positions():
             self.layout_positions = {item.data(0): item.pos() for item in items}
+            measurement_dir = self.measurement_dir_var.text().strip()
+            if measurement_dir:
+                pos_file = os.path.join(measurement_dir, "speaker_positions.json")
+                delay_file = os.path.join(measurement_dir, "speaker_delays.json")
+                positions = {k: (p.x(), p.y()) for k, p in self.layout_positions.items()}
+                try:
+                    data = self.layout_vm.save_positions(positions, pos_file)
+                    self.layout_vm.delays_from_positions(pos_file, delay_file)
+                except OSError as e:
+                    QMessageBox.warning(dialog, "Save Error", str(e))
             dialog.accept()
 
         def reset_positions():
