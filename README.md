@@ -536,3 +536,16 @@ Run them directly with Python:
 python test_impulcifer.py       # 9.1.6 layout
 python test_impulcifer_714.py   # 7.1.4 layout
 ```
+
+## Real-Time Convolution Engine
+
+The `realtime_convolution.py` module offers low-latency binaural rendering.
+It loads the BRIRs produced by Impulcifer and processes any multichannel
+signal using efficient FFT overlap-add convolution. The engine can stream
+audio in real time with `sounddevice` or process files offline.
+
+Example converting a multichannel WAV file:
+
+```bash
+python -m realtime_convolution input_multichannel.wav output_stereo.wav
+```
