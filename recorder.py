@@ -20,9 +20,36 @@ from constants import SPEAKER_NAMES, SMPTE_ORDER
 
 
 class DeviceNotFoundError(Exception):
-    """Raised when an audio device cannot be found."""
+    """Raised when an audio device cannot be found or doesn't meet requirements."""
 
-    def __init__(self, message: str = "Device not found") -> None:
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        device_name: str | None = None,
+        kind: str | None = None,
+        host_api: str | None = None,
+        min_channels: int | None = None,
+    ) -> None:
+        self.device_name = device_name
+        self.kind = kind
+        self.host_api = host_api
+        self.min_channels = min_channels
+
+        if message is None:
+            parts = []
+            if kind:
+                parts.append(f"{kind} device")
+            else:
+                parts.append("Device")
+            if device_name:
+                parts.append(f'"{device_name}"')
+            if host_api:
+                parts.append(f'with host API "{host_api}"')
+            if min_channels is not None:
+                parts.append(f"with at least {min_channels} channels")
+            message = " ".join(parts) + " not found."
+
         super().__init__(message)
 
 
@@ -68,25 +95,25 @@ def record_target(file_path, length, fs, channels=2, append=False, output_file=N
         file_path = output_file
 
     write_wav(file_path, fs, recording)
-    print(f'Headroom: {headroom:.1f} dB')
+    print(f"Headroom: {headroom:.1f} dB")
 
     if peak >= 1.0:
-        print('Warning: clipping detected!')
+        print("Warning: clipping detected!")
     if noise_floor > -50:
-        print(f'Warning: high noise floor ({noise_floor:.1f} dBFS)')
+        print(f"Warning: high noise floor ({noise_floor:.1f} dBFS)")
 
     if report_file:
         with open(report_file, 'w') as f:
-            f.write(f'Peak level: {max_gain:.1f} dBFS\n')
-            f.write(f'Headroom: {headroom:.1f} dB\n')
-            f.write(f'Noise floor: {noise_floor:.1f} dBFS\n')
+            f.write(f"Peak level: {max_gain:.1f} dBFS\n")
+            f.write(f"Headroom: {headroom:.1f} dB\n")
+            f.write(f"Noise floor: {noise_floor:.1f} dBFS\n")
             f.write(f'Clipping: {"yes" if peak >= 1.0 else "no"}\n')
             f.write(f'Excess noise: {"yes" if noise_floor > -50 else "no"}\n')
 
 
 def get_host_api_names():
     """Gets names of available host APIs in a list"""
-    return [hostapi['name'] for hostapi in sd.query_hostapis()]
+    return [hostapi["name"] for hostapi in sd.query_hostapis()]
 
 
 def get_device(device_name, kind, host_api=None, min_channels=1):
@@ -102,17 +129,17 @@ def get_device(device_name, kind, host_api=None, min_channels=1):
         Device, None if no device was found which satisfies the parameters
     """
     if device_name is None:
-        raise TypeError('Device name is required and cannot be None')
+        raise TypeError("Device name is required and cannot be None")
     if kind is None:
-        raise TypeError('Kind is required and cannot be None')
+        raise TypeError("Kind is required and cannot be None")
     # Available host APIs
     host_api_names = get_host_api_names()
 
     for i in range(len(host_api_names)):
-        host_api_names[i] = host_api_names[i].replace('Windows ', '')
+        host_api_names[i] = host_api_names[i].replace("Windows ", "")
 
     if host_api is not None:
-        host_api = host_api.replace('Windows ', '')
+        host_api = host_api.replace("Windows ", "")
 
     # Host API check pattern
     host_api_pattern = f'({"|".join([re.escape(name) for name in host_api_names])})$'
@@ -122,41 +149,60 @@ def get_device(device_name, kind, host_api=None, min_channels=1):
     if re.search(host_api_pattern, device_name):
         # Host API in the name, this should return only one device
         device = sd.query_devices(device_name, kind=kind)
-        if device[f'max_{kind}_channels'] < min_channels:
+        if device[f"max_{kind}_channels"] < min_channels:
             # Channel count not satisfied
             raise DeviceNotFoundError(
-                f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}"" '
-                f'but minimum number of channels is not satisfied. 1'
+                f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}" '
+                f"but minimum number of channels is not satisfied.",
+                device_name=device["name"],
+                kind=kind,
+                host_api=host_api_names[device["hostapi"]],
+                min_channels=min_channels,
             )
     elif not re.search(host_api_pattern, device_name) and host_api is not None:
         # Host API not specified in the name but host API is given as parameter
         try:
             # This should give one or zero devices
-            device = sd.query_devices(f'{device_name} {host_api}', kind=kind)
+            device = sd.query_devices(f"{device_name} {host_api}", kind=kind)
         except ValueError:
             # Zero devices
-            raise DeviceNotFoundError(f'No device found with name "{device_name}" and host API "{host_api}". ')
-        if device[f'max_{kind}_channels'] < min_channels:
+            raise DeviceNotFoundError(
+                f'No device found with name "{device_name}" and host API "{host_api}".',
+                device_name=device_name,
+                kind=kind,
+                host_api=host_api,
+                min_channels=min_channels,
+            )
+        if device[f"max_{kind}_channels"] < min_channels:
             # Channel count not satisfied
             raise DeviceNotFoundError(
                 f'Found {kind} device "{device["name"]} {host_api_names[device["hostapi"]]}" '
-                f'but minimum number of channels is not satisfied.'
+                f"but minimum number of channels is not satisfied.",
+                device_name=device["name"],
+                kind=kind,
+                host_api=host_api_names[device["hostapi"]],
+                min_channels=min_channels,
             )
     else:
         # Host API not in the name and host API is not given as parameter
-        host_api_preference = [x for x in ['DirectSound', 'MME', 'WASAPI'] if x in host_api_names]
+        host_api_preference = [x for x in ["DirectSound", "MME", "WASAPI"] if x in host_api_names]
         for host_api_name in host_api_preference:
             # Looping in the order of preference
             try:
-                device = sd.query_devices(f'{device_name} {host_api_name}', kind=kind)
-                if device[f'max_{kind}_channels'] >= min_channels:
+                device = sd.query_devices(f"{device_name} {host_api_name}", kind=kind)
+                if device[f"max_{kind}_channels"] >= min_channels:
                     break
                 else:
                     device = None
             except ValueError:
                 pass
         if device is None:
-            raise DeviceNotFoundError('Could not find any device which satisfies minimum channel count.')
+            raise DeviceNotFoundError(
+                "Could not find any device which satisfies minimum channel count.",
+                device_name=device_name,
+                kind=kind,
+                min_channels=min_channels,
+            )
 
     return device
 
@@ -180,14 +226,14 @@ def get_devices(input_device=None, output_device=None, host_api=None, min_channe
     # Select input device
     if input_device is None:
         # Not given, use default
-        input_device = devices[sd.default.device[0]]['name']
-    input_device = get_device(input_device, 'input', host_api=host_api)
+        input_device = devices[sd.default.device[0]]["name"]
+    input_device = get_device(input_device, "input", host_api=host_api)
 
     # Select output device
     if output_device is None:
         # Not given, use default
-        output_device = devices[sd.default.device[1]]['name']
-    output_device = get_device(output_device, 'output', host_api=host_api, min_channels=min_channels)
+        output_device = devices[sd.default.device[1]]["name"]
+    output_device = get_device(output_device, "output", host_api=host_api, min_channels=min_channels)
 
     return input_device, output_device
 
@@ -246,7 +292,7 @@ def play_and_record(
         report_file = os.path.join(out_dir, f"{base}_report.txt")
 
     # Validate speaker layout from filename
-    speaker_names = os.path.splitext(out_file)[0].split(',')
+    speaker_names = os.path.splitext(out_file)[0].split(",")
     if len(speaker_names) != channels:
         print(f"Warning: {len(speaker_names)} speaker labels in filename, but {channels} output channels specified.")
         layout_name = None
@@ -254,7 +300,7 @@ def play_and_record(
         for name, order in SMPTE_ORDER.items():
             if len(order) == channels:
                 layout_name = name
-                expected_order = ','.join(SPEAKER_NAMES[i] for i in order)
+                expected_order = ",".join(SPEAKER_NAMES[i] for i in order)
                 break
         if layout_name:
             print(f"Expected SMPTE layout {layout_name} order:\n  {expected_order}")
@@ -278,10 +324,10 @@ def play_and_record(
         target=record_target,
         args=(record, data.shape[1], fs),
         kwargs={
-            'channels': channels,
-            'append': append,
-            'output_file': output_file,
-            'report_file': report_file,
+            "channels": channels,
+            "append": append,
+            "output_file": output_file,
+            "report_file": report_file,
         },
     )
     recorder.start()
@@ -295,63 +341,63 @@ def create_cli():
         Parsed CLI arguments
     """
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--play', type=str, required=True, help='File path to WAV file to play.')
+    arg_parser.add_argument("--play", type=str, required=True, help="File path to WAV file to play.")
     arg_parser.add_argument(
-        '--record',
+        "--record",
         type=str,
         required=True,
         help='File path to write the recording. This must have ".wav" extension and be either'
         '"headphones.wav" or any combination of supported speaker names separated by commas '
-        'eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It\'s '
-        'convenient to point the file path directly to the recording directory such as '
+        "eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It\'s "
+        "convenient to point the file path directly to the recording directory such as "
         '"data\\my_hrir\\FL,FR.wav".',
     )
     arg_parser.add_argument(
-        '--input_device',
+        "--input_device",
         type=str,
         default=argparse.SUPPRESS,
         help='Name or number of the input device. Use "python -m sounddevice to '
-        'find out which devices are available. It\'s possible to add host API at the end of '
-        'the input device name separated by space to specify which host API to use. For '
+        "find out which devices are available. It\'s possible to add host API at the end of "
+        "the input device name separated by space to specify which host API to use. For "
         'example: "Zoom H1n DirectSound".',
     )
     arg_parser.add_argument(
-        '--output_device',
+        "--output_device",
         type=str,
         default=argparse.SUPPRESS,
         help='Name or number of the output device. Use "python -m sounddevice to '
-        'find out which devices are available. It\'s possible to add host API at the end of '
-        'the output device name separated by space to specify which host API to use. For '
+        "find out which devices are available. It\'s possible to add host API at the end of "
+        "the output device name separated by space to specify which host API to use. For "
         'example: "Zoom H1n WASAPI"',
     )
     arg_parser.add_argument(
-        '--output_file',
+        "--output_file",
         type=str,
         default=None,
-        help='Optional custom output filename (e.g., headphones.wav). Overrides automatic naming.',
+        help="Optional custom output filename (e.g., headphones.wav). Overrides automatic naming.",
     )
     arg_parser.add_argument(
-        '--report_file', type=str, default=None, help='Optional path for recording quality report file.'
+        "--report_file", type=str, default=None, help="Optional path for recording quality report file."
     )
     arg_parser.add_argument(
-        '--host_api',
+        "--host_api",
         type=str,
         default=argparse.SUPPRESS,
-        help='Host API name to prefer for input and output devices. Supported options on Windows '
+        help="Host API name to prefer for input and output devices. Supported options on Windows "
         'are: "MME", "DirectSound" and "WASAPI". This is used when input and '
-        'output devices have not been specified (using system defaults) or if they have no '
-        'host API specified.',
+        "output devices have not been specified (using system defaults) or if they have no "
+        "host API specified.",
     )
-    arg_parser.add_argument('--channels', type=int, default=16, help='Number of output channels.')
+    arg_parser.add_argument("--channels", type=int, default=16, help="Number of output channels.")
     arg_parser.add_argument(
-        '--append',
-        action='store_true',
-        help='Add track(s) to existing file? Silence will be added to the end of all tracks to '
-        'make the equal in length.',
+        "--append",
+        action="store_true",
+        help="Add track(s) to existing file? Silence will be added to the end of all tracks to "
+        "make the equal in length.",
     )
     args = vars(arg_parser.parse_args())
     return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     play_and_record(**create_cli())

@@ -12,6 +12,7 @@ been fixed and old features improved.
 
 ### Added
 - Support for per-speaker delay tables via `--delay-file`.
+- Additional context attributes for `DeviceNotFoundError` to help with debugging.
 
 ## Unreleased
 ### Removed
