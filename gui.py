@@ -431,6 +431,14 @@ class ImpulciferGUI(QMainWindow):
         export_btn = QPushButton("Export Hesuvi Preset")
         export_btn.clicked.connect(self.export_hesuvi_preset)
         layout.addWidget(export_btn)
+       
+        # Recording progress bar and remaining time
+        self.record_progress = QProgressBar()
+        self.record_progress.setRange(0, 100)
+        self.record_progress.hide()
+        self.remaining_label = QLabel("")
+        layout.addWidget(self.record_progress)
+        layout.addWidget(self.remaining_label)
 
         self.output_text = QTextEdit()
         self.output_text.setReadOnly(True)
@@ -439,8 +447,16 @@ class ImpulciferGUI(QMainWindow):
         save_log_btn = QPushButton("Save Log")
         clear_log_btn.clicked.connect(lambda: self.output_text.clear())
         save_log_btn.clicked.connect(self.save_log)
+        self.log_file_check = QCheckBox("Auto Log to File")
+        self.log_file_path = QLineEdit()
+        self.log_file_path.setPlaceholderText("/path/to/log.txt")
+        browse_log = QPushButton("Browse")
+        browse_log.clicked.connect(self.browse_log_file)
         log_controls.addWidget(clear_log_btn)
         log_controls.addWidget(save_log_btn)
+        log_controls.addWidget(self.log_file_check)
+        log_controls.addWidget(self.log_file_path)
+        log_controls.addWidget(browse_log)
         layout.addLayout(log_controls)
         layout.addWidget(self.output_text)
 
@@ -469,14 +485,14 @@ class ImpulciferGUI(QMainWindow):
         settings = self.gather_processing_settings()
         try:
             result = self.processing_vm.run(settings)
-            cmd = ' '.join(result.args)
-            self.output_text.append(f"Running: {cmd}")
+            cmd = " ".join(result.args)
+            self.append_output(f"Running: {cmd}")
             if result.stdout:
-                self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
+                self.append_output(result.stdout, color="green")
             if result.stderr:
-                self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
+                self.append_output(result.stderr, color="red")
         except (FileNotFoundError, OSError) as e:
-            self.output_text.append(f"Error: {str(e)}")
+            self.append_output(f"Error: {str(e)}")
 
     def launch_room_response_recorder(self):
         errors = self.setup_vm.validate_paths(self.test_signal_path_var.text(), self.measurement_dir_var.text())
@@ -491,17 +507,17 @@ class ImpulciferGUI(QMainWindow):
             settings = RecorderSettings(
                 measurement_dir=self.measurement_dir_var.text(),
                 test_signal=self.test_signal_path_var.text(),
-                playback_device=self.playback_device_var.currentText().split(':')[0],
-                recording_device=self.recording_device_var.currentText().split(':')[0],
+                playback_device=self.playback_device_var.currentText().split(":")[0],
+                recording_device=self.recording_device_var.currentText().split(":")[0],
                 output_channels=self.channel_mappings.get("output_channels", []),
                 input_channels=self.channel_mappings.get("input_channels", []),
                 output_file=os.path.join(self.measurement_dir_var.text(), "room.wav"),
             )
-            result = self.recorder_vm.run_recorder(settings)
+            result = self.recorder_vm.run_recorder(settings, progress_callback=self.update_record_progress)
             if result.stdout:
-                self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
+                self.append_output(result.stdout, color="green")
             if result.stderr:
-                self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
+                self.append_output(result.stderr, color="red")
         except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Room Response Recorder Error", str(e))
 
@@ -518,17 +534,17 @@ class ImpulciferGUI(QMainWindow):
             settings = RecorderSettings(
                 measurement_dir=self.measurement_dir_var.text(),
                 test_signal=self.test_signal_path_var.text(),
-                playback_device=self.playback_device_var.currentText().split(':')[0],
-                recording_device=self.recording_device_var.currentText().split(':')[0],
+                playback_device=self.playback_device_var.currentText().split(":")[0],
+                recording_device=self.recording_device_var.currentText().split(":")[0],
                 output_channels=self.channel_mappings.get("output_channels", []),
                 input_channels=self.channel_mappings.get("input_channels", []),
                 output_file=os.path.join(self.measurement_dir_var.text(), "headphones.wav"),
             )
-            result = self.recorder_vm.run_recorder(settings)
+            result = self.recorder_vm.run_recorder(settings, progress_callback=self.update_record_progress)
             if result.stdout:
-                self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
+                self.append_output(result.stdout, color="green")
             if result.stderr:
-                self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
+                self.append_output(result.stderr, color="red")
         except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Headphone Recorder Error", str(e))
 
@@ -545,16 +561,16 @@ class ImpulciferGUI(QMainWindow):
             settings = RecorderSettings(
                 measurement_dir=self.measurement_dir_var.text(),
                 test_signal=self.test_signal_path_var.text(),
-                playback_device=self.playback_device_var.currentText().split(':')[0],
-                recording_device=self.recording_device_var.currentText().split(':')[0],
+                playback_device=self.playback_device_var.currentText().split(":")[0],
+                recording_device=self.recording_device_var.currentText().split(":")[0],
                 output_channels=self.channel_mappings.get("output_channels", []),
                 input_channels=self.channel_mappings.get("input_channels", []),
             )
-            result = self.recorder_vm.run_recorder(settings)
+            result = self.recorder_vm.run_recorder(settings, progress_callback=self.update_record_progress)
             if result.stdout:
-                self.output_text.append("<span style='color: green;'>" + result.stdout + "</span>")
+                self.append_output(result.stdout, color="green")
             if result.stderr:
-                self.output_text.append("<span style='color: red;'>" + result.stderr + "</span>")
+                self.append_output(result.stderr, color="red")
 
         except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Recorder Error", str(e))
@@ -575,8 +591,8 @@ class ImpulciferGUI(QMainWindow):
             settings = RecorderSettings(
                 measurement_dir=self.measurement_dir_var.text(),
                 test_signal=self.test_signal_path_var.text(),
-                playback_device=self.playback_device_var.currentText().split(':')[0],
-                recording_device=self.recording_device_var.currentText().split(':')[0],
+                playback_device=self.playback_device_var.currentText().split(":")[0],
+                recording_device=self.recording_device_var.currentText().split(":")[0],
                 output_channels=self.channel_mappings.get("output_channels", []),
                 input_channels=self.channel_mappings.get("input_channels", []),
             )
@@ -585,7 +601,7 @@ class ImpulciferGUI(QMainWindow):
                 QMessageBox.information(self, "Capture Wizard", msg)
 
             def message(msg: str) -> None:
-                self.output_text.append(msg)
+                self.append_output(msg)
 
             self.recorder_vm.run_capture_wizard(
                 name,
@@ -593,6 +609,7 @@ class ImpulciferGUI(QMainWindow):
                 settings,
                 prompt_fn=prompt,
                 message_fn=message,
+                progress_callback=self.update_record_progress,
             )
         except (FileNotFoundError, OSError) as e:
             QMessageBox.critical(self, "Capture Wizard Error", str(e))
@@ -757,8 +774,8 @@ class ImpulciferGUI(QMainWindow):
 
     def load_device_options(self):
         devices = sd.query_devices()
-        self.playback_devices = [f"{i}: {d['name']}" for i, d in enumerate(devices) if d['max_output_channels'] > 0]
-        self.recording_devices = [f"{i}: {d['name']}" for i, d in enumerate(devices) if d['max_input_channels'] > 0]
+        self.playback_devices = [f"{i}: {d['name']}" for i, d in enumerate(devices) if d["max_output_channels"] > 0]
+        self.recording_devices = [f"{i}: {d['name']}" for i, d in enumerate(devices) if d["max_input_channels"] > 0]
 
         self.playback_device_var.addItems(self.playback_devices)
         self.recording_device_var.addItems(self.recording_devices)
@@ -798,7 +815,7 @@ class ImpulciferGUI(QMainWindow):
             self.layout_var.setCurrentText(self.selected_layout_name)
             return
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read().strip()
             try:
 
@@ -806,7 +823,7 @@ class ImpulciferGUI(QMainWindow):
                 if isinstance(names, dict):
                     names = names.get("speakers", [])
             except json.JSONDecodeError:
-                names = [n.strip() for n in content.split(',') if n.strip()]
+                names = [n.strip() for n in content.split(",") if n.strip()]
             if not names:
                 raise ValueError("No speakers defined in layout file")
             self.selected_layout_name = os.path.basename(file_path)
@@ -864,11 +881,11 @@ class ImpulciferGUI(QMainWindow):
 
         main_layout = QHBoxLayout()
 
-        playback_idx = int(self.playback_device_var.currentText().split(':')[0])
-        record_idx = int(self.recording_device_var.currentText().split(':')[0])
+        playback_idx = int(self.playback_device_var.currentText().split(":")[0])
+        record_idx = int(self.recording_device_var.currentText().split(":")[0])
 
-        playback_channels = sd.query_devices(playback_idx)['max_output_channels']
-        record_channels = sd.query_devices(record_idx)['max_input_channels']
+        playback_channels = sd.query_devices(playback_idx)["max_output_channels"]
+        record_channels = sd.query_devices(record_idx)["max_input_channels"]
 
         speaker_labels = self.selected_layout
         mic_labels = ["Mic Left", "Mic Right"]
@@ -1275,11 +1292,40 @@ class ImpulciferGUI(QMainWindow):
                 self, "Save Log", default_name, "Text Files (*.txt);;All Files (*)"
             )
             if file_path:
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     f.write(content)
                 QMessageBox.information(self, "Log Saved", f"Log saved to {file_path}")
         except OSError as e:
             QMessageBox.critical(self, "Save Log Error", str(e))
+
+    def browse_log_file(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Select Log File", "impulcifer.log", "Text Files (*.txt);;All Files (*)"
+        )
+        if file_path:
+            self.log_file_path.setText(file_path)
+
+    def append_output(self, text: str, color: str | None = None) -> None:
+        if color:
+            self.output_text.append(f"<span style='color: {color};'>" + text + "</span>")
+        else:
+            self.output_text.append(text)
+        if self.log_file_check.isChecked() and self.log_file_path.text():
+            try:
+                with open(self.log_file_path.text(), "a") as f:
+                    f.write(text + "\n")
+            except OSError:
+                pass
+
+    def update_record_progress(self, progress: float, remaining: float) -> None:
+        self.record_progress.show()
+        self.record_progress.setValue(int(progress * 100))
+        if progress >= 1.0:
+            self.remaining_label.setText("")
+            self.record_progress.hide()
+        else:
+            self.remaining_label.setText(f"{remaining:.1f}s remaining")
+        QApplication.processEvents()
 
     def export_hesuvi_preset(self):
         try:
@@ -1295,7 +1341,7 @@ class ImpulciferGUI(QMainWindow):
                 self, "Export Hesuvi Preset", "hesuvi.wav", "WAV Files (*.wav);;All Files (*)"
             )
             if dest:
-                with open(src, 'rb') as fsrc, open(dest, 'wb') as fdst:
+                with open(src, "rb") as fsrc, open(dest, "wb") as fdst:
                     fdst.write(fsrc.read())
                 QMessageBox.information(self, "Export Complete", f"Preset exported to {dest}")
         except OSError as e:
@@ -1353,13 +1399,13 @@ class ImpulciferGUI(QMainWindow):
     def toggle_monitor(self, checked):
         if checked:
             try:
-                dev_idx = int(self.recording_device_var.currentText().split(':')[0])
+                dev_idx = int(self.recording_device_var.currentText().split(":")[0])
             except (ValueError, IndexError):
                 dev_idx = None
             samplerate = None
             if dev_idx is not None:
                 try:
-                    samplerate = int(sd.query_devices(dev_idx)['default_samplerate'])
+                    samplerate = int(sd.query_devices(dev_idx)["default_samplerate"])
                 except (KeyError, ValueError, sd.PortAudioError):
                     samplerate = None
             self.level_monitor = LevelMonitor(device=dev_idx, samplerate=samplerate or 48000)
@@ -1398,10 +1444,10 @@ class ImpulciferGUI(QMainWindow):
     def auto_map_channels(self, silent: bool = False):
         """Automatically assign sequential channels based on device capabilities."""
         try:
-            playback_idx = int(self.playback_device_var.currentText().split(':')[0])
-            record_idx = int(self.recording_device_var.currentText().split(':')[0])
-            playback_channels = sd.query_devices(playback_idx)['max_output_channels']
-            record_channels = sd.query_devices(record_idx)['max_input_channels']
+            playback_idx = int(self.playback_device_var.currentText().split(":")[0])
+            record_idx = int(self.recording_device_var.currentText().split(":")[0])
+            playback_channels = sd.query_devices(playback_idx)["max_output_channels"]
+            record_channels = sd.query_devices(record_idx)["max_input_channels"]
             spk_count = len(self.selected_layout)
             self.channel_mappings = {
                 "output_channels": list(range(min(playback_channels, spk_count))),
@@ -1515,7 +1561,7 @@ class ImpulciferGUI(QMainWindow):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ImpulciferGUI()
     window.show()

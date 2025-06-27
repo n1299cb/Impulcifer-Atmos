@@ -40,27 +40,26 @@ def run_capture(
     mono_sweep: str = DEFAULT_MONO_SWEEP,
     prompt_fn=input,
     message_fn=print,
+    progress_fn=None,
     **rec_kwargs,
 ) -> None:
     """Run interactive capture for each speaker group.
 
     ``prompt_fn`` is used to pause between recordings, while ``message_fn`` is
-    used to display progress messages. Both default to the standard console
-    implementations so the function can be reused in a GUI context by supplying
-    custom callbacks.
+    used to display progress messages. ``progress_fn`` receives progress updates
+    for GUI display. All callbacks default to console implementations so the
+    function can be reused in a GUI context by supplying custom callbacks.
     """
 
     message_fn(f"\nRecording layout '{layout_name}' into {out_dir}\n")
     os.makedirs(out_dir, exist_ok=True)
 
-    prompt_fn(
-        "Insert binaural microphones and wear headphones.\n"
-        "Press Enter to record headphone response..."
-    )
+    prompt_fn("Insert binaural microphones and wear headphones.\n" "Press Enter to record headphone response...")
     recorder.play_and_record(
         play=stereo_sweep,
         record=os.path.join(out_dir, "headphones.wav"),
         channels=2,
+        progress_callback=progress_fn,
         **rec_kwargs,
     )
 
@@ -74,6 +73,7 @@ def run_capture(
             play=sweep,
             record=os.path.join(out_dir, filename),
             channels=channels,
+            progress_callback=progress_fn,
             **rec_kwargs,
         )
 
@@ -83,9 +83,7 @@ def run_capture(
 def main() -> None:
     """Entry point for command-line execution."""
 
-    parser = argparse.ArgumentParser(
-        description="Step-by-step HRIR capture wizard"
-    )
+    parser = argparse.ArgumentParser(description="Step-by-step HRIR capture wizard")
     parser.add_argument("--layout", help="Layout name to use")
     parser.add_argument("--dir", default="data/test_capture", help="Target directory")
     parser.add_argument("--stereo_sweep", default=DEFAULT_STEREO_SWEEP, help="Stereo sweep file")

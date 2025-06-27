@@ -16,6 +16,7 @@ from utils import read_wav, write_wav
 import numpy as np
 from threading import Thread
 import argparse
+import time
 from typing import Optional
 from constants import SPEAKER_NAMES, SMPTE_ORDER
 
@@ -104,7 +105,7 @@ def record_target(file_path, length, fs, channels=2, append=False, output_file=N
         print(f"Warning: high noise floor ({noise_floor:.1f} dBFS)")
 
     if report_file:
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             f.write(f"Peak level: {max_gain:.1f} dBFS\n")
             f.write(f"Headroom: {headroom:.1f} dB\n")
             f.write(f"Noise floor: {noise_floor:.1f} dBFS\n")
@@ -267,6 +268,7 @@ def play_and_record(
     append=False,
     output_file=None,
     report_file=None,
+    progress_callback=None,
 ):
     """Plays one file and records another at the same time
 
@@ -332,7 +334,23 @@ def play_and_record(
         },
     )
     recorder.start()
-    sd.play(np.transpose(data), samplerate=fs, blocking=True)
+    duration = data.shape[1] / fs
+    sd.play(np.transpose(data), samplerate=fs, blocking=False)
+    start = time.time()
+    if progress_callback:
+        progress_callback(0.0, duration)
+    while True:
+        elapsed = time.time() - start
+        if progress_callback:
+            progress = min(elapsed / duration, 1.0)
+            progress_callback(progress, max(duration - elapsed, 0.0))
+        if elapsed >= duration:
+            break
+        time.sleep(0.1)
+    sd.wait()
+    recorder.join()
+    if progress_callback:
+        progress_callback(1.0, 0.0)
 
 
 def create_cli():
@@ -349,7 +367,7 @@ def create_cli():
         required=True,
         help='File path to write the recording. This must have ".wav" extension and be either'
         '"headphones.wav" or any combination of supported speaker names separated by commas '
-        "eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It\'s "
+        "eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It's "
         "convenient to point the file path directly to the recording directory such as "
         '"data\\my_hrir\\FL,FR.wav".',
     )
@@ -358,7 +376,7 @@ def create_cli():
         type=str,
         default=argparse.SUPPRESS,
         help='Name or number of the input device. Use "python -m sounddevice to '
-        "find out which devices are available. It\'s possible to add host API at the end of "
+        "find out which devices are available. It's possible to add host API at the end of "
         "the input device name separated by space to specify which host API to use. For "
         'example: "Zoom H1n DirectSound".',
     )
@@ -367,7 +385,7 @@ def create_cli():
         type=str,
         default=argparse.SUPPRESS,
         help='Name or number of the output device. Use "python -m sounddevice to '
-        "find out which devices are available. It\'s possible to add host API at the end of "
+        "find out which devices are available. It's possible to add host API at the end of "
         "the output device name separated by space to specify which host API to use. For "
         'example: "Zoom H1n WASAPI"',
     )

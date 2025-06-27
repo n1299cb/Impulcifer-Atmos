@@ -5,18 +5,20 @@ changes there are only new features available and nothing old has broken and whe
 been fixed and old features improved.
 
 ## 1.1.0 - 2025-06-17
-- Added 7.1.4 and 9.1.6 speaker layouts.
-- Added layout preparation tools and layout wizard.
-- Added capture wizard for guided HRIR recording.
-- Added diffuse-field compensation and SMPTE X-Curve options.
+This release represents the first public version of the Atmos fork. It was
+forked from [Jaakko Pasanen's Impulcifer](https://github.com/jaakkopasanen/Impulcifer)
+at tag `1.0.0` (`6817f62`). Major changes include:
 
 ### Added
-- Support for per-speaker delay tables via `--delay-file`.
-- Additional context attributes for `DeviceNotFoundError` to help with debugging.
+- 7.1.4 and 9.1.6 speaker layouts.
+- Layout preparation tools and an interactive layout wizard.
+- Capture wizard for guided HRIR recording.
+- Diffuse-field compensation and SMPTE X-Curve options.
+- Support for per‑speaker delay tables via `--delay-file`.
+- Additional context attributes for `DeviceNotFoundError` to aid debugging.
+- Replacement of the original Tkinter GUI with a PySide6 interface built around
+  a lightweight MVVM architecture.
 
 ## Unreleased
 ### Removed
 - `APPLY_DIRECTIONAL_GAINS` constant from `constants.py` as it was unused.
-
-## 1.0.0 - 2020-07-20
-Performance improvements. Main features are supported and Impulcifer is relatively stable.
