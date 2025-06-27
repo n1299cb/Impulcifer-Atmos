@@ -17,6 +17,7 @@ import queue
 import threading
 import matplotlib
 import json
+from dataclasses import asdict
 
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
@@ -42,6 +43,8 @@ from PySide6.QtWidgets import (
     QGraphicsEllipseItem,
     QGraphicsTextItem,
     QProgressBar,
+    QListWidget,
+    QInputDialog,
 )
 from PySide6.QtGui import (
     QShortcut,
@@ -68,6 +71,7 @@ from constants import (
 )
 from viewmodel.layout import LayoutViewModel
 from level_meter import LevelMonitor
+import preset_manager
 from contextlib import redirect_stdout
 import io
 import datetime
@@ -106,6 +110,7 @@ class ImpulciferGUI(QMainWindow):
         self.create_headphone_eq_tab()
         self.create_execution_tab()
         self.create_measurement_setup_tab()  # Measurement setup defines widgets used in later tabs
+        self.create_preset_tab()
         self.create_visualization_tab()
         self.setup_shortcuts()
 
@@ -164,6 +169,10 @@ class ImpulciferGUI(QMainWindow):
         save_layout_btn = QPushButton("Save Layout…")
         save_layout_btn.clicked.connect(self.save_layout_preset)
         layout.addWidget(save_layout_btn)
+
+        import_layout_btn = QPushButton("Import Layout…")
+        import_layout_btn.clicked.connect(self.import_layout_preset)
+        layout.addWidget(import_layout_btn)
 
         self.playback_device_var = QComboBox()
         self.playback_device_var.setMaximumWidth(200)
@@ -457,35 +466,7 @@ class ImpulciferGUI(QMainWindow):
                 )
             return
 
-        settings = ProcessingSettings(
-            measurement_dir=self.measurement_dir_var.text(),
-            test_signal=self.test_signal_path_var.text(),
-            decay_time=self.decay_time_var.text(),
-            target_level=self.target_level_var.text(),
-            channel_balance_enabled=self.channel_balance_toggle.isChecked(),
-            channel_balance=self.channel_balance_var.currentData(),
-            specific_limit_enabled=self.specific_limit_toggle.isChecked(),
-            specific_limit=self.specific_limit_var.text(),
-            generic_limit_enabled=self.generic_limit_toggle.isChecked(),
-            generic_limit=self.generic_limit_var.text(),
-            fr_combination_enabled=self.fr_combination_toggle.isChecked(),
-            fr_combination_method=self.fr_combination_var.currentText(),
-            room_correction=self.room_correction_var.isChecked(),
-            room_target=self.room_target_path_var.text(),
-            mic_calibration=self.mic_calibration_path_var.text(),
-            enable_compensation=self.enable_compensation_var.isChecked(),
-            headphone_eq_enabled=self.headphone_eq_toggle.isChecked(),
-            headphone_file=self.headphone_file_path_var.text(),
-            compensation_type=(
-                self.compensation_file_path_var.text()
-                if self.compensation_type_var.currentText().lower() == "custom"
-                else self.compensation_type_var.currentText().lower().replace("-field", "")
-            ),
-            diffuse_field=self.diffuse_field_toggle.isChecked(),
-            x_curve_action=self.x_curve_action_var.currentText(),
-            x_curve_type=self.x_curve_type_var.currentText(),
-            x_curve_in_capture=self.x_curve_in_capture_var.isChecked(),
-        )
+        settings = self.gather_processing_settings()
         try:
             result = self.processing_vm.run(settings)
             cmd = ' '.join(result.args)
@@ -854,6 +835,27 @@ class ImpulciferGUI(QMainWindow):
         except (OSError, IOError) as e:
             QMessageBox.critical(self, "Save Layout Error", str(e))
 
+    def import_layout_preset(self):
+        try:
+            from constants import load_and_register_user_layouts, save_user_layout_preset
+
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Import Layout Preset",
+                "",
+                "JSON Files (*.json);;All Files (*)",
+            )
+            if not file_path:
+                return
+            layouts = load_and_register_user_layouts(file_path)
+            for name, groups in layouts.items():
+                save_user_layout_preset(name, groups)
+                if self.layout_var.findText(name) == -1:
+                    self.layout_var.insertItem(self.layout_var.count() - 1, name)
+            QMessageBox.information(self, "Layouts Imported", f"Imported {len(layouts)} layout(s)")
+        except (OSError, IOError, json.JSONDecodeError) as e:
+            QMessageBox.critical(self, "Import Layout Error", str(e))
+
     def map_channels(self):
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QFormLayout
 
@@ -1087,6 +1089,140 @@ class ImpulciferGUI(QMainWindow):
 
         dialog.setLayout(main_layout)
         dialog.exec()
+
+    def gather_processing_settings(self) -> ProcessingSettings:
+        return ProcessingSettings(
+            measurement_dir=self.measurement_dir_var.text(),
+            test_signal=self.test_signal_path_var.text(),
+            decay_time=self.decay_time_var.text(),
+            target_level=self.target_level_var.text(),
+            channel_balance_enabled=self.channel_balance_toggle.isChecked(),
+            channel_balance=self.channel_balance_var.currentData(),
+            specific_limit_enabled=self.specific_limit_toggle.isChecked(),
+            specific_limit=self.specific_limit_var.text(),
+            generic_limit_enabled=self.generic_limit_toggle.isChecked(),
+            generic_limit=self.generic_limit_var.text(),
+            fr_combination_enabled=self.fr_combination_toggle.isChecked(),
+            fr_combination_method=self.fr_combination_var.currentText(),
+            room_correction=self.room_correction_var.isChecked(),
+            room_target=self.room_target_path_var.text(),
+            mic_calibration=self.mic_calibration_path_var.text(),
+            enable_compensation=self.enable_compensation_var.isChecked(),
+            headphone_eq_enabled=self.headphone_eq_toggle.isChecked(),
+            headphone_file=self.headphone_file_path_var.text(),
+            compensation_type=(
+                self.compensation_file_path_var.text()
+                if self.compensation_type_var.currentText().lower() == "custom"
+                else self.compensation_type_var.currentText().lower().replace("-field", "")
+            ),
+            diffuse_field=self.diffuse_field_toggle.isChecked(),
+            x_curve_action=self.x_curve_action_var.currentText(),
+            x_curve_type=self.x_curve_type_var.currentText(),
+            x_curve_in_capture=self.x_curve_in_capture_var.isChecked(),
+        )
+
+    def gather_preset_data(self) -> dict:
+        data = asdict(self.gather_processing_settings())
+        data["layout"] = self.selected_layout_name
+        return data
+
+    def refresh_presets(self):
+        self.preset_list.clear()
+        for name in preset_manager.load_presets().keys():
+            self.preset_list.addItem(name)
+
+    def save_current_preset(self):
+        name, ok = QInputDialog.getText(self, "Save Preset", "Preset name:")
+        if not ok or not name:
+            return
+        preset_manager.save_preset(name, self.gather_preset_data())
+        self.refresh_presets()
+
+    def load_selected_preset(self):
+        item = self.preset_list.currentItem()
+        if not item:
+            return
+        name = item.text()
+        data = preset_manager.load_presets().get(name)
+        if not data:
+            return
+        self.apply_preset(data)
+
+    def delete_selected_preset(self):
+        item = self.preset_list.currentItem()
+        if not item:
+            return
+        preset_manager.delete_preset(item.text())
+        self.refresh_presets()
+
+    def apply_preset(self, data: dict):
+        self.measurement_dir_var.setText(data.get("measurement_dir", ""))
+        self.test_signal_path_var.setText(data.get("test_signal", ""))
+        self.decay_time_var.setText(data.get("decay_time", ""))
+        self.target_level_var.setText(data.get("target_level", ""))
+        self.channel_balance_toggle.setChecked(data.get("channel_balance_enabled", False))
+        idx = self.channel_balance_var.findData(data.get("channel_balance"))
+        if idx >= 0:
+            self.channel_balance_var.setCurrentIndex(idx)
+        self.specific_limit_toggle.setChecked(data.get("specific_limit_enabled", False))
+        self.specific_limit_var.setText(data.get("specific_limit", ""))
+        self.generic_limit_toggle.setChecked(data.get("generic_limit_enabled", False))
+        self.generic_limit_var.setText(data.get("generic_limit", ""))
+        self.fr_combination_toggle.setChecked(data.get("fr_combination_enabled", False))
+        idx = self.fr_combination_var.findText(data.get("fr_combination_method", ""))
+        if idx >= 0:
+            self.fr_combination_var.setCurrentIndex(idx)
+        self.room_correction_var.setChecked(data.get("room_correction", False))
+        self.update_room_correction_fields()
+        self.room_target_path_var.setText(data.get("room_target", ""))
+        self.mic_calibration_path_var.setText(data.get("mic_calibration", ""))
+        self.enable_compensation_var.setChecked(data.get("enable_compensation", False))
+        self.headphone_eq_toggle.setChecked(data.get("headphone_eq_enabled", False))
+        self.headphone_file_path_var.setText(data.get("headphone_file", ""))
+        comp = data.get("compensation_type", "")
+        idx = self.compensation_type_var.findText(comp.capitalize() if comp else "Diffuse-field")
+        if idx >= 0:
+            self.compensation_type_var.setCurrentIndex(idx)
+        if self.compensation_type_var.currentText().lower() == "custom":
+            self.compensation_file_path_var.setText(comp)
+        self.diffuse_field_toggle.setChecked(data.get("diffuse_field", False))
+        idx = self.x_curve_action_var.findText(data.get("x_curve_action", "None"))
+        if idx >= 0:
+            self.x_curve_action_var.setCurrentIndex(idx)
+        idx = self.x_curve_type_var.findText(data.get("x_curve_type", X_CURVE_DEFAULT_TYPE))
+        if idx >= 0:
+            self.x_curve_type_var.setCurrentIndex(idx)
+        self.x_curve_in_capture_var.setChecked(data.get("x_curve_in_capture", False))
+        layout_name = data.get("layout", self.selected_layout_name)
+        if self.layout_var.findText(layout_name) == -1:
+            self.layout_var.insertItem(self.layout_var.count() - 1, layout_name)
+        self.layout_var.setCurrentText(layout_name)
+        self.selected_layout_name = layout_name
+
+    def create_preset_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
+
+        self.preset_list = QListWidget()
+        layout.addWidget(self.preset_list)
+
+        btn_row = QHBoxLayout()
+        load_btn = QPushButton("Load")
+        save_btn = QPushButton("Save Current…")
+        delete_btn = QPushButton("Delete")
+        btn_row.addWidget(load_btn)
+        btn_row.addWidget(save_btn)
+        btn_row.addWidget(delete_btn)
+        layout.addLayout(btn_row)
+
+        load_btn.clicked.connect(self.load_selected_preset)
+        save_btn.clicked.connect(self.save_current_preset)
+        delete_btn.clicked.connect(self.delete_selected_preset)
+
+        self.tabs.addTab(tab, "Presets")
+        self.refresh_presets()
 
     def create_visualization_tab(self):
         tab = QWidget()
