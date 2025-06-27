@@ -16,6 +16,7 @@ from utils import read_wav, write_wav
 import numpy as np
 from threading import Thread
 import argparse
+from typing import Optional
 from constants import SPEAKER_NAMES, SMPTE_ORDER
 
 
@@ -24,12 +25,12 @@ class DeviceNotFoundError(Exception):
 
     def __init__(
         self,
-        message: str | None = None,
+        message: Optional[str] = None,
         *,
-        device_name: str | None = None,
-        kind: str | None = None,
-        host_api: str | None = None,
-        min_channels: int | None = None,
+        device_name: Optional[str] = None,
+        kind: Optional[str] = None,
+        host_api: Optional[str] = None,
+        min_channels: Optional[int] = None,
     ) -> None:
         self.device_name = device_name
         self.kind = kind

@@ -1,7 +1,7 @@
 import os
 import json
 from dataclasses import asdict, is_dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 from models import ProcessingSettings
 
@@ -23,7 +23,9 @@ def load_presets(file_path: str = PRESETS_FILE) -> Dict[str, Dict[str, Any]]:
 
 
 def save_preset(
-    name: str, settings: ProcessingSettings | Dict[str, Any], file_path: str = PRESETS_FILE
+    name: str,
+    settings: Union[ProcessingSettings, Dict[str, Any]],
+    file_path: str = PRESETS_FILE,
 ) -> None:
     """Save ``settings`` under ``name``."""
     presets = load_presets(file_path)
