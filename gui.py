@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QSlider,
     QDialog,
+    QToolButton,
     QGraphicsView,
     QGraphicsScene,
     QGraphicsEllipseItem,
@@ -68,6 +69,8 @@ from constants import (
     X_CURVE_TYPES,
     X_CURVE_DEFAULT_TYPE,
     SPEAKER_LAYOUTS,
+    DEFAULT_TEST_SIGNAL,
+    DEFAULT_MEASUREMENT_DIR,
 )
 from viewmodel.layout import LayoutViewModel
 from level_meter import LevelMonitor
@@ -130,22 +133,37 @@ class ImpulciferGUI(QMainWindow):
 
         self.test_signal_path_var = QLineEdit()
         self.test_signal_path_var.setMaximumWidth(300)
-
+        self.test_signal_path_var.setText(DEFAULT_TEST_SIGNAL)
         self.test_signal_path_var.setPlaceholderText("e.g., /path/to/test_signal.wav")
         browse_test = QPushButton("Browse")
         browse_test.setMaximumWidth(100)
-
         browse_test.clicked.connect(self.browse_test_signal)
-        layout.addLayout(
+
+        self.advanced_toggle = QToolButton()
+        self.advanced_toggle.setText("Advanced")
+        self.advanced_toggle.setCheckable(True)
+        self.advanced_toggle.setArrowType(Qt.RightArrow)
+        self.advanced_toggle.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.advanced_toggle.toggled.connect(self.toggle_advanced)
+
+        self.advanced_frame = QWidget()
+        adv_layout = QVBoxLayout(self.advanced_frame)
+        adv_layout.setContentsMargins(0, 0, 0, 0)
+        adv_layout.addLayout(
             self.labeled_row(
                 "Select Test Signal File:",
                 self.test_signal_path_var,
                 browse_test,
             )
         )
+        self.advanced_frame.setVisible(False)
+
+        layout.addWidget(self.advanced_toggle)
+        layout.addWidget(self.advanced_frame)
 
         self.measurement_dir_var = QLineEdit()
         self.measurement_dir_var.setMaximumWidth(300)
+        self.measurement_dir_var.setText(DEFAULT_MEASUREMENT_DIR)
         self.measurement_dir_var.setPlaceholderText("e.g., /path/to/measurements/")
         browse_dir = QPushButton("Browse")
         browse_dir.setMaximumWidth(100)
@@ -787,16 +805,27 @@ class ImpulciferGUI(QMainWindow):
                 self.recording_device_var.setCurrentIndex(sd.default.device[0])
 
     def browse_test_signal(self):
+        start_dir = os.path.dirname(self.test_signal_path_var.text() or "")
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Select Test Signal File", "", "Wave Files (*.wav);;Pickle Files (*.pkl);;All Files (*)"
+            self,
+            "Select Test Signal File",
+            start_dir,
+            "Wave Files (*.wav);;Pickle Files (*.pkl);;All Files (*)",
         )
         if file_path:
             self.test_signal_path_var.setText(file_path)
 
     def browse_measurement_dir(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Select Measurement Directory")
+        start_dir = self.measurement_dir_var.text() or ""
+        dir_path = QFileDialog.getExistingDirectory(
+            self, "Select Measurement Directory", start_dir
+        )
         if dir_path:
             self.measurement_dir_var.setText(dir_path)
+
+    def toggle_advanced(self, checked):
+        self.advanced_frame.setVisible(checked)
+        self.advanced_toggle.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
 
     def handle_layout_change(self, text):
         if text == "Custom...":

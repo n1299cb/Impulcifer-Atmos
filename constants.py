@@ -14,6 +14,14 @@ import json
 import os
 from config import settings
 
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+DEFAULT_TEST_SIGNAL = os.path.join(
+    PROJECT_ROOT,
+    "data",
+    "sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl",
+)
+DEFAULT_MEASUREMENT_DIR = os.path.join(PROJECT_ROOT, "data", "demo")
+
 SPEAKER_NAMES = [
     'FL',
     'FR',  # 0–1
