@@ -39,7 +39,7 @@ class PlaybackViewModel:
             block_size=settings.blocksize,
         )
         self.tracker.start()
-        self.convolver.start()
+        self.convolver.start(latency=settings.latency)
         self._running = True
 
         def _loop() -> None:

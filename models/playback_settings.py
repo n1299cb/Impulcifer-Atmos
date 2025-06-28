@@ -9,3 +9,4 @@ class PlaybackSettings:
     osc_port: int = 9000
     samplerate: int = 48000
     blocksize: int = 1024
+    latency: float = 0.0

@@ -75,6 +75,7 @@ from constants import (
 from viewmodel.layout import LayoutViewModel
 from level_meter import LevelMonitor
 import preset_manager
+import user_profiles
 from contextlib import redirect_stdout
 import io
 import datetime
@@ -114,6 +115,7 @@ class ImpulciferGUI(QMainWindow):
         self.create_execution_tab()
         self.create_measurement_setup_tab()  # Measurement setup defines widgets used in later tabs
         self.create_preset_tab()
+        self.create_profile_tab()
         self.create_visualization_tab()
         self.setup_shortcuts()
 
@@ -221,15 +223,20 @@ class ImpulciferGUI(QMainWindow):
         # Real-time input level monitor
         self.level_bar = QProgressBar()
         self.level_bar.setRange(0, 100)
+        self.output_level_bar = QProgressBar()
+        self.output_level_bar.setRange(0, 100)
         self.monitor_btn = QPushButton("Start Monitor")
         self.monitor_btn.setCheckable(True)
         self.monitor_btn.toggled.connect(self.toggle_monitor)
         layout.addLayout(self.labeled_row("Input Level:", self.level_bar, self.monitor_btn))
+        layout.addLayout(self.labeled_row("Output Level:", self.output_level_bar))
 
         self.monitor_timer = QTimer()
         self.monitor_timer.timeout.connect(self.read_monitor_level)
         self.level_monitor = None
         self.monitor_thread = None
+        self.output_monitor = None
+        self.output_thread = None
 
         # Validation button
         self.test_signal_path_var.textChanged.connect(self.validate_measurement_setup)
@@ -817,9 +824,7 @@ class ImpulciferGUI(QMainWindow):
 
     def browse_measurement_dir(self):
         start_dir = self.measurement_dir_var.text() or ""
-        dir_path = QFileDialog.getExistingDirectory(
-            self, "Select Measurement Directory", start_dir
-        )
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Measurement Directory", start_dir)
         if dir_path:
             self.measurement_dir_var.setText(dir_path)
 
@@ -1201,6 +1206,47 @@ class ImpulciferGUI(QMainWindow):
         preset_manager.delete_preset(item.text())
         self.refresh_presets()
 
+    def refresh_profiles(self):
+        self.profile_list.clear()
+        for name in user_profiles.load_profiles().keys():
+            self.profile_list.addItem(name)
+
+    def save_current_profile(self):
+        name, ok = QInputDialog.getText(self, "Save Profile", "Profile name:")
+        if not ok or not name:
+            return
+        routing = [int(x) for x in self.profile_routing_var.text().split(",") if x.strip().isdigit()]
+        from models import UserProfile
+
+        profile = UserProfile(
+            brir_dir=self.profile_brir_var.text(),
+            tracking_calibration=self.profile_cal_var.text(),
+            output_routing=routing,
+            latency=int(self.profile_latency_var.text() or 0),
+        )
+        user_profiles.save_profile(name, profile)
+        self.refresh_profiles()
+
+    def load_selected_profile(self):
+        item = self.profile_list.currentItem()
+        if not item:
+            return
+        name = item.text()
+        data = user_profiles.load_profiles().get(name)
+        if not data:
+            return
+        self.profile_brir_var.setText(data.get("brir_dir", ""))
+        self.profile_cal_var.setText(data.get("tracking_calibration", ""))
+        self.profile_routing_var.setText(",".join(str(x) for x in data.get("output_routing", [])))
+        self.profile_latency_var.setText(str(data.get("latency", 0)))
+
+    def delete_selected_profile(self):
+        item = self.profile_list.currentItem()
+        if not item:
+            return
+        user_profiles.delete_profile(item.text())
+        self.refresh_profiles()
+
     def apply_preset(self, data: dict):
         self.measurement_dir_var.setText(data.get("measurement_dir", ""))
         self.test_signal_path_var.setText(data.get("test_signal", ""))
@@ -1269,6 +1315,41 @@ class ImpulciferGUI(QMainWindow):
 
         self.tabs.addTab(tab, "Presets")
         self.refresh_presets()
+
+    def create_profile_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
+
+        self.profile_list = QListWidget()
+        layout.addWidget(self.profile_list)
+
+        self.profile_brir_var = QLineEdit()
+        self.profile_cal_var = QLineEdit()
+        self.profile_routing_var = QLineEdit()
+        self.profile_latency_var = QLineEdit()
+
+        layout.addLayout(self.labeled_row("BRIR Dir:", self.profile_brir_var))
+        layout.addLayout(self.labeled_row("Tracking Cal:", self.profile_cal_var))
+        layout.addLayout(self.labeled_row("Output Routing:", self.profile_routing_var))
+        layout.addLayout(self.labeled_row("Latency:", self.profile_latency_var))
+
+        btn_row = QHBoxLayout()
+        load_btn = QPushButton("Load")
+        save_btn = QPushButton("Save")
+        delete_btn = QPushButton("Delete")
+        btn_row.addWidget(load_btn)
+        btn_row.addWidget(save_btn)
+        btn_row.addWidget(delete_btn)
+        layout.addLayout(btn_row)
+
+        load_btn.clicked.connect(self.load_selected_profile)
+        save_btn.clicked.connect(self.save_current_profile)
+        delete_btn.clicked.connect(self.delete_selected_profile)
+
+        self.tabs.addTab(tab, "Profiles")
+        self.refresh_profiles()
 
     def create_visualization_tab(self):
         tab = QWidget()
@@ -1431,6 +1512,10 @@ class ImpulciferGUI(QMainWindow):
                 dev_idx = int(self.recording_device_var.currentText().split(":")[0])
             except (ValueError, IndexError):
                 dev_idx = None
+            try:
+                out_idx = int(self.playback_device_var.currentText().split(":")[0])
+            except (ValueError, IndexError):
+                out_idx = None
             samplerate = None
             if dev_idx is not None:
                 try:
@@ -1440,28 +1525,44 @@ class ImpulciferGUI(QMainWindow):
             self.level_monitor = LevelMonitor(device=dev_idx, samplerate=samplerate or 48000)
             self.monitor_thread = threading.Thread(target=self.level_monitor.start, daemon=True)
             self.monitor_thread.start()
+            self.output_monitor = LevelMonitor(device=out_idx, samplerate=samplerate or 48000, loopback=True)
+            self.output_thread = threading.Thread(target=self.output_monitor.start, daemon=True)
+            self.output_thread.start()
             self.monitor_timer.start(100)
             self.monitor_btn.setText("Stop Monitor")
         else:
             self.monitor_timer.stop()
             if self.level_monitor:
                 self.level_monitor.stop()
+            if self.output_monitor:
+                self.output_monitor.stop()
             if self.monitor_thread and self.monitor_thread.is_alive():
                 self.monitor_thread.join(timeout=1.0)
+            if self.output_thread and self.output_thread.is_alive():
+                self.output_thread.join(timeout=1.0)
             self.level_monitor = None
             self.monitor_thread = None
+            self.output_monitor = None
+            self.output_thread = None
             self.level_bar.setValue(0)
+            self.output_level_bar.setValue(0)
             self.monitor_btn.setText("Start Monitor")
 
     def read_monitor_level(self):
-        if not self.level_monitor:
-            return
-        try:
-            db = self.level_monitor.queue.get_nowait()
-        except queue.Empty:
-            return
-        value = int(np.clip((db + 60) / 60 * 100, 0, 100)) if db != -np.inf else 0
-        self.level_bar.setValue(value)
+        if self.level_monitor:
+            try:
+                db = self.level_monitor.queue.get_nowait()
+                value = int(np.clip((db + 60) / 60 * 100, 0, 100)) if db != -np.inf else 0
+                self.level_bar.setValue(value)
+            except queue.Empty:
+                pass
+        if self.output_monitor:
+            try:
+                db = self.output_monitor.queue.get_nowait()
+                value = int(np.clip((db + 60) / 60 * 100, 0, 100)) if db != -np.inf else 0
+                self.output_level_bar.setValue(value)
+            except queue.Empty:
+                pass
 
     def save_channel_mappings(self, dialog):
         speakers = [int(box.currentText()) - 1 for box in self.speaker_channel_vars]

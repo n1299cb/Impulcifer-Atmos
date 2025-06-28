@@ -16,11 +16,22 @@ import time
 class LevelMonitor:
     """Simple real-time level monitor."""
 
-    def __init__(self, device=None, samplerate=48000, channels=1, blocksize=1024):
+    def __init__(
+        self,
+        device=None,
+        samplerate=48000,
+        channels=1,
+        blocksize=1024,
+        *,
+        latency=None,
+        loopback=False,
+    ):
         self.device = device
         self.samplerate = samplerate
         self.channels = channels
         self.blocksize = blocksize
+        self.latency = latency
+        self.loopback = loopback
         self.queue = queue.Queue()
         self.running = False
 
@@ -40,6 +51,8 @@ class LevelMonitor:
             samplerate=self.samplerate,
             blocksize=self.blocksize,
             callback=self._callback,
+            latency=self.latency,
+            loopback=self.loopback,
         ):
             start_time = time.time()
             while self.running:

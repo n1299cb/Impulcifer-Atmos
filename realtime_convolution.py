@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 try:
     import sounddevice as sd
 except Exception:  # pragma: no cover - optional dependency may be missing
@@ -133,6 +134,7 @@ class RealTimeConvolver:
         duration: float | None = None,
         input_device: int | str | None = None,
         output_device: int | str | None = None,
+        latency: float | None = None,
     ) -> None:
         """Start real-time convolution in a background thread."""
         if self._thread is not None:
@@ -144,6 +146,7 @@ class RealTimeConvolver:
                 "duration": duration,
                 "input_device": input_device,
                 "output_device": output_device,
+                "latency": latency,
             },
             daemon=True,
         )
@@ -164,6 +167,7 @@ class RealTimeConvolver:
         duration: float | None = None,
         input_device: int | str | None = None,
         output_device: int | str | None = None,
+        latency: float | None = None,
     ) -> None:
         """Run real-time convolution using ``sounddevice`` streams."""
 
@@ -184,6 +188,7 @@ class RealTimeConvolver:
             channels=(self.n_speakers, 2),
             callback=callback,
             device=(input_device, output_device),
+            latency=latency,
         ):
             if duration is None:
                 while not self._stop.is_set():
