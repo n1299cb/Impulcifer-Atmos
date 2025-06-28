@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
-
+from typing import Dict, Optional, Tuple, Union
 try:
     import sounddevice as sd
 except Exception:  # pragma: no cover - optional dependency may be missing
@@ -23,12 +23,12 @@ class RealTimeConvolver:
 
     def __init__(
         self,
-        irs: HRIR | dict[float, tuple[np.ndarray, np.ndarray]],
-        samplerate: int | None = None,
+        irs: Union[HRIR, Dict[float, Tuple[np.ndarray, np.ndarray]]],
+        samplerate: Optional[int] = None,
         block_size: int = 1024,
     ) -> None:
         self.block_size = block_size
-        self._thread: threading.Thread | None = None
+        self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
         self._yaw = 0.0
 
@@ -36,7 +36,7 @@ class RealTimeConvolver:
             if samplerate is None:
                 raise ValueError("samplerate must be given for BRIR dictionaries")
             self.fs = samplerate
-            self.brirs: dict[float, tuple[np.ndarray, np.ndarray]] = {
+            self.brirs: Dict[float, Tuple[np.ndarray, np.ndarray]] = {
                 float(a): (np.asarray(l), np.asarray(r)) for a, (l, r) in irs.items()
             }
             self.angles = sorted(self.brirs.keys())
@@ -131,9 +131,9 @@ class RealTimeConvolver:
 
     def start(
         self,
-        duration: float | None = None,
-        input_device: int | str | None = None,
-        output_device: int | str | None = None,
+        duration: Optional[float] = None,
+        input_device: Optional[Union[int, str]] = None,
+        output_device: Optional[Union[int, str]] = None,
         latency: float | None = None,
     ) -> None:
         """Start real-time convolution in a background thread."""
@@ -164,9 +164,9 @@ class RealTimeConvolver:
 
     def run(
         self,
-        duration: float | None = None,
-        input_device: int | str | None = None,
-        output_device: int | str | None = None,
+        duration: Optional[float] = None,
+        input_device: Optional[Union[int, str]] = None,
+        output_device: Optional[Union[int, str]] = None,
         latency: float | None = None,
     ) -> None:
         """Run real-time convolution using ``sounddevice`` streams."""

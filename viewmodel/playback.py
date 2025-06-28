@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import time
 from threading import Thread
+from typing import Optional
 
 import numpy as np
 
@@ -15,9 +16,9 @@ class PlaybackViewModel:
     """ViewModel controlling real-time playback with head tracking."""
 
     def __init__(self) -> None:
-        self.tracker: HeadTracker | None = None
-        self.convolver: RealTimeConvolver | None = None
-        self._thread: Thread | None = None
+        self.tracker: Optional[HeadTracker] = None
+        self.convolver: Optional[RealTimeConvolver] = None
+        self._thread: Optional[Thread] = None
         self._running = False
 
     def _load_brirs(self, path: str) -> dict[float, tuple[list[float], list[float]]]:

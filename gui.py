@@ -18,6 +18,7 @@ import threading
 import matplotlib
 import json
 from dataclasses import asdict
+from typing import Optional
 
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (
@@ -1415,7 +1416,7 @@ class ImpulciferGUI(QMainWindow):
         if file_path:
             self.log_file_path.setText(file_path)
 
-    def append_output(self, text: str, color: str | None = None) -> None:
+    def append_output(self, text: str, color: Optional[str] = None) -> None:
         if color:
             self.output_text.append(f"<span style='color: {color};'>" + text + "</span>")
         else:

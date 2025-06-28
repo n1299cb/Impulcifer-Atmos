@@ -3,7 +3,7 @@ from __future__ import annotations
 """Simple OSC-based head tracking utilities."""
 
 import threading
-from typing import Callable
+from typing import Callable, Optional
 
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
@@ -19,7 +19,7 @@ class HeadTracker:
         self._dispatcher = Dispatcher()
         self._dispatcher.map("/yaw", self._on_yaw)
         self._server = ThreadingOSCUDPServer((host, port), self._dispatcher)
-        self._thread: threading.Thread | None = None
+        self._thread: Optional[threading.Thread] = None
 
     def _on_yaw(self, address: str, *args: float) -> None:
         if args:
