@@ -1,11 +1,11 @@
-# This file is part of a modified version of Impulcifer.
+# This file is part of Earprint, a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
 # Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
 #
 # This file may include integrated or rewritten components from the original project.
 # For details on changes and authorship, see the project README or CHANGELOG.
 
-"""Graphical user interface for running Impulcifer workflows."""
+"""Graphical user interface for running Earprint workflows."""
 
 import sys
 import os
@@ -82,12 +82,12 @@ import io
 import datetime
 
 
-class ImpulciferGUI(QMainWindow):
+class EarprintGUI(QMainWindow):
     """Main window providing access to recording and processing tools."""
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Impulcifer GUI")
+        self.setWindowTitle("Earprint GUI")
         self.resize(700, 700)
 
         # ViewModels
@@ -1398,7 +1398,7 @@ class ImpulciferGUI(QMainWindow):
     def save_log(self):
         try:
             content = self.output_text.toPlainText()
-            default_name = f"impulcifer_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            default_name = f"earprint_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             file_path, _ = QFileDialog.getSaveFileName(
                 self, "Save Log", default_name, "Text Files (*.txt);;All Files (*)"
             )
@@ -1411,7 +1411,7 @@ class ImpulciferGUI(QMainWindow):
 
     def browse_log_file(self):
         file_path, _ = QFileDialog.getSaveFileName(
-            self, "Select Log File", "impulcifer.log", "Text Files (*.txt);;All Files (*)"
+            self, "Select Log File", "earprint.log", "Text Files (*.txt);;All Files (*)"
         )
         if file_path:
             self.log_file_path.setText(file_path)
@@ -1694,6 +1694,6 @@ class ImpulciferGUI(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = ImpulciferGUI()
+    window = EarprintGUI()
     window.show()
     sys.exit(app.exec())

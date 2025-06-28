@@ -5,7 +5,7 @@ import pytest
 
 def test_save_and_load_profile(tmp_path, monkeypatch):
     profiles_file = tmp_path / "profiles.json"
-    monkeypatch.setenv("IMPULCIFER_PROFILES", str(profiles_file))
+    monkeypatch.setenv("EARPRINT_PROFILES", str(profiles_file))
     import user_profiles
 
     importlib.reload(user_profiles)

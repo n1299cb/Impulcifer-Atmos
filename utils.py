@@ -1,4 +1,4 @@
-# This file is part of a modified version of Impulcifer.
+# This file is part of Earprint, a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
 # Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
 #
@@ -27,7 +27,7 @@ def read_wav(file_path, expand=False):
         - wav data as numpy array with one row per track, samples in range -1..1
     """
     if not os.path.isfile(file_path):
-        raise FileNotFoundError(f'File in path "{os.path.abspath(file_path)}" does not exist.')
+        raise FileNotFoundError(f"File in path "{os.path.abspath(file_path)}" does not exist.")
     data, fs = sf.read(file_path)
     if len(data.shape) > 1:
         # Soundfile has tracks on columns, we want them on rows
@@ -46,9 +46,9 @@ def write_wav(file_path, fs, data, bit_depth=32):
     elif bit_depth == 32:
         subtype = "PCM_32"
     else:
-        raise ValueError('Invalid bit depth. Accepted values are 16, 24 and 32.')
+        raise ValueError("Invalid bit depth. Accepted values are 16, 24 and 32.")
     if len(data.shape) > 1 and data.shape[1] > data.shape[0]:
-        # We have tracks on rows, soundfile want's them on columns
+        # We have tracks on rows, soundfile want"s them on columns
         data = np.transpose(data)
     sf.write(file_path, data, samplerate=fs, subtype=subtype)
 
@@ -111,7 +111,7 @@ def get_ylim(x, padding=0.1):
     return lower, upper
 
 
-def versus_distance(angle=30, distance=3, breadth=0.148, ear='primary', sound_field='diffuse', sound_velocity=343):
+def versus_distance(angle=30, distance=3, breadth=0.148, ear="primary", sound_field="diffuse", sound_velocity=343):
     """Calculates speaker-ear distance delta, dealy delta and SPL delta
 
     Speaker-ear distance delta is the difference between distance from speaker to middle of the head and distance from
@@ -140,24 +140,24 @@ def versus_distance(angle=30, distance=3, breadth=0.148, ear='primary', sound_fi
         - Delay delta in seconds
         - SPL delta in dB
     """
-    if ear == 'primary':
+    if ear == "primary":
         aa = (90 - angle) / 180 * np.pi
-    elif ear == 'secondary':
+    elif ear == "secondary":
         aa = (90 + angle) / 180 * np.pi
     else:
-        raise ValueError('Ear must be "primary" or "secondary".')
+        raise ValueError("Ear must be "primary" or "secondary".")
     b = np.sqrt(distance**2 + (breadth / 2) ** 2 - 2 * distance * (breadth / 2) * np.cos(aa))
     d = b - distance
     delay = d / sound_velocity
     spl = np.log(b / distance) / np.log(2)
-    if sound_field == 'reverberant':
+    if sound_field == "reverberant":
         spl *= -3
-    elif sound_field == 'free':
+    elif sound_field == "free":
         spl *= -6
-    elif sound_field == 'diffuse':
+    elif sound_field == "diffuse":
         spl *= -0
     else:
-        raise ValueError('Sound field must be "reverberant", "free" or "diffuse".')
+        raise ValueError("Sound field must be "reverberant", "free" or "diffuse".")
     return d, delay, spl
 
 
@@ -172,25 +172,25 @@ def optimize_png_size(file_path, n_colors=60):
         None
     """
     im = Image.open(file_path)
-    im = im.convert('P', palette=Image.ADAPTIVE, colors=n_colors)
+    im = im.convert("P", palette=Image.ADAPTIVE, colors=n_colors)
     im.save(file_path, optimize=True)
 
 
 def save_fig_as_png(file_path, fig, n_colors=60):
     """Saves figure and optimizes file size."""
-    fig.savefig(file_path, bbox_inches='tight')
+    fig.savefig(file_path, bbox_inches="tight")
     optimize_png_size(file_path, n_colors=n_colors)
 
 
 def config_fr_axis(ax):
     """Configures given axis instance for frequency response plots."""
-    ax.set_xlabel('Frequency (Hz)')
+    ax.set_xlabel("Frequency (Hz)")
     ax.semilogx()
     ax.set_xlim([20, 20e3])
-    ax.set_ylabel('Amplitude (dB)')
-    ax.grid(True, which='major')
-    ax.grid(True, which='minor')
-    ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.0f}'))
+    ax.set_ylabel("Amplitude (dB)")
+    ax.grid(True, which="major")
+    ax.grid(True, which="minor")
+    ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.0f}"))
 
 
 def running_mean(x, N):

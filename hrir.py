@@ -1,4 +1,4 @@
-# This file is part of a modified version of Impulcifer.
+# This file is part of Earprint, a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
 # Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
 #
@@ -31,7 +31,7 @@ class HRIR:
         hrir = HRIR(self.estimator)
         hrir.irs = dict()
         for speaker, pair in self.irs.items():
-            hrir.irs[speaker] = {'left': pair['left'].copy(), 'right': pair['right'].copy()}
+            hrir.irs[speaker] = {"left": pair["left"].copy(), "right": pair["right"].copy()}
         return hrir
 
     def open_recording(self, file_path, speakers, side=None, silence_length=2.0):
@@ -48,8 +48,8 @@ class HRIR:
         """
         if self.fs != self.estimator.fs:
             raise ValueError(
-                'Refusing to open recording because HRIR\'s sampling rate doesn\'t match impulse response '
-                'estimator\'s sampling rate.'
+                "Refusing to open recording because HRIR's sampling rate doesn't match impulse response "
+                "estimator's sampling rate."
             )
 
         fs, recording = read_wav(file_path, expand=True)
@@ -58,10 +58,10 @@ class HRIR:
         print(f"Recording fs: {fs}, Estimator fs: {self.fs}")
 
         if fs != self.fs:
-            raise ValueError('Sampling rate of recording must match sampling rate of test signal.')
+            raise ValueError("Sampling rate of recording must match sampling rate of test signal.")
 
         if silence_length * self.fs != int(silence_length * self.fs):
-            raise ValueError('Silence length must produce full samples with given sampling rate.')
+            raise ValueError("Silence length must produce full samples with given sampling rate.")
         silence_length = int(silence_length * self.fs)
 
         # 2 tracks per speaker when side is not specified, only 1 track per speaker when it is
@@ -92,10 +92,10 @@ class HRIR:
                     self.irs[speaker] = dict()
                 if side is None:
                     # Left first, right then
-                    self.irs[speaker]['left'] = ImpulseResponse(
+                    self.irs[speaker]["left"] = ImpulseResponse(
                         self.estimator.estimate(column[i, :]), self.fs, column[i, :]
                     )
-                    self.irs[speaker]['right'] = ImpulseResponse(
+                    self.irs[speaker]["right"] = ImpulseResponse(
                         self.estimator.estimate(column[i + 1, :]), self.fs, column[i + 1, :]
                     )
                 else:
@@ -126,7 +126,7 @@ class HRIR:
         for speaker, pair in self.irs.items():
             for side, ir in pair.items():
                 irs.append(ir.data)
-                ir_order.append(f'{speaker}-{side}')
+                ir_order.append(f"{speaker}-{side}")
 
         # Add silent tracks
         for ch in track_order:
@@ -155,8 +155,8 @@ class HRIR:
         left = []
         right = []
         for speaker, pair in self.irs.items():
-            left.append(pair['left'].data)
-            right.append(pair['right'].data)
+            left.append(pair["left"].data)
+            right.append(pair["right"].data)
         # Pad and sum left and right channels
         max_len = max(ir.shape[0] for ir in left)
         left = [np.pad(ir, (0, max_len - len(ir))) for ir in left]
@@ -205,14 +205,14 @@ class HRIR:
         """
         if self.fs != self.estimator.fs:
             raise ValueError(
-                'Refusing to crop heads because HRIR sampling rate doesn\'t match impulse response '
-                'estimator\'s sampling rate.'
+                "Refusing to crop heads because HRIR sampling rate doesn't match impulse response "
+                "estimator's sampling rate."
             )
 
         for speaker, pair in self.irs.items():
             # Peaks
-            peak_left = pair['left'].peak_index()
-            peak_right = pair['right'].peak_index()
+            peak_left = pair["left"].peak_index()
+            peak_right = pair["right"].peak_index()
             itd = np.abs(peak_left - peak_right) / self.fs
 
             # Speaker channel delay
@@ -221,41 +221,41 @@ class HRIR:
 
             if peak_left < peak_right:
                 # Delay to left ear is smaller, this is must left side speaker
-                if speaker[1] == 'R':
+                if speaker[1] == "R":
                     # Speaker name indicates this is right side speaker but delay to left ear is smaller than to right.
                     # There is something wrong with the measurement
                     warnings.warn(
-                        f'Warning: {speaker} measurement has lower delay to left ear than to right ear. '
-                        f'{speaker} should be at the right side of the head so the sound should arrive first '
-                        f'in the right ear. This is usually a problem with the measurement process or the '
-                        f'speaker order given is not correct. Detected delay difference is '
-                        f'{itd * 1000:.4f} milliseconds.'
+                        f"Warning: {speaker} measurement has lower delay to left ear than to right ear. "
+                        f"{speaker} should be at the right side of the head so the sound should arrive first "
+                        f"in the right ear. This is usually a problem with the measurement process or the "
+                        f"speaker order given is not correct. Detected delay difference is "
+                        f"{itd * 1000:.4f} milliseconds."
                     )
                 # Crop out silence from the beginning, only required channel delay remains
                 # Secondary ear has additional delay for inter aural time difference
-                pair['left'].data = pair['left'].data[peak_left - delay :]
-                pair['right'].data = pair['right'].data[peak_left - delay :]
+                pair["left"].data = pair["left"].data[peak_left - delay :]
+                pair["right"].data = pair["right"].data[peak_left - delay :]
             else:
                 # Delay to right ear is smaller, this is must right side speaker
-                if speaker[1] == 'L':
+                if speaker[1] == "L":
                     # Speaker name indicates this is left side speaker but delay to right ear is smaller than to left.
                     # There si something wrong with the measurement
                     warnings.warn(
-                        f'Warning: {speaker} measurement has lower delay to right ear than to left ear. '
-                        f'{speaker} should be at the left side of the head so the sound should arrive first '
-                        f'in the left ear. This is usually a problem with the measurement process or the '
-                        f'speaker order given is not correct. Detected delay difference is '
-                        f'{itd * 1000:.4f} milliseconds.'
+                        f"Warning: {speaker} measurement has lower delay to right ear than to left ear. "
+                        f"{speaker} should be at the left side of the head so the sound should arrive first "
+                        f"in the left ear. This is usually a problem with the measurement process or the "
+                        f"speaker order given is not correct. Detected delay difference is "
+                        f"{itd * 1000:.4f} milliseconds."
                     )
                 # Crop out silence from the beginning, only required channel delay remains
                 # Secondary ear has additional delay for inter aural time difference
-                pair['right'].data = pair['right'].data[peak_right - delay :]
-                pair['left'].data = pair['left'].data[peak_right - delay :]
+                pair["right"].data = pair["right"].data[peak_right - delay :]
+                pair["left"].data = pair["left"].data[peak_right - delay :]
 
             # Make sure impulse response starts from silence
             window = signal.hanning(head * 2)[:head]
-            pair['left'].data[:head] *= window
-            pair['right'].data[:head] *= window
+            pair["left"].data[:head] *= window
+            pair["right"].data[:head] *= window
 
     def crop_tails(self):
         """Crops out tails after every impulse response has decayed to noise floor."""
@@ -264,8 +264,8 @@ class HRIR:
 
         if self.fs != self.estimator.fs:
             raise ValueError(
-                'Refusing to crop tails because HRIR\'s sampling rate doesn\'t match impulse response '
-                'estimator\'s sampling rate.'
+                "Refusing to crop tails because HRIR's sampling rate doesn't match impulse response "
+                "estimator's sampling rate."
             )
         # Find indices after which there is only noise in each track
         tail_indices = []
@@ -290,14 +290,14 @@ class HRIR:
     def align_ipsilateral_all(self, speaker_pairs=None, segment_ms=30):
         if speaker_pairs is None:
             speaker_pairs = [
-                ('FL', 'FR'),
-                ('SL', 'SR'),
-                ('BL', 'BR'),
-                ('WL', 'WR'),
-                ('TFL', 'TFR'),
-                ('TSL', 'TSR'),
-                ('TBL', 'TBR'),
-                ('FC', 'FC'),
+                ("FL", "FR"),
+                ("SL", "SR"),
+                ("BL", "BR"),
+                ("WL", "WR"),
+                ("TFL", "TFR"),
+                ("TSL", "TSR"),
+                ("TBL", "TBR"),
+                ("FC", "FC"),
             ]
 
         fs = self.fs
@@ -307,22 +307,22 @@ class HRIR:
             if sp1 not in self.irs or sp2 not in self.irs:
                 continue
 
-            data1 = self.irs[sp1]['left'].data[:seg_len]
-            data2 = self.irs[sp2]['right'].data[:seg_len]
+            data1 = self.irs[sp1]["left"].data[:seg_len]
+            data2 = self.irs[sp2]["right"].data[:seg_len]
 
-            corr = correlate(data1, data2, mode='full')
+            corr = correlate(data1, data2, mode="full")
             lags = np.arange(-len(data1) + 1, len(data1))
             lag = lags[np.argmax(corr)]
 
             if lag > 0:
-                for side in ('left', 'right'):
+                for side in ("left", "right"):
                     d = self.irs[sp2][side].data
-                    padded = np.concatenate((np.zeros(lag), d))[:len(d)]
+                    padded = np.concatenate((np.zeros(lag), d))[: len(d)]
                     self.irs[sp2][side].data = padded
 
             elif lag < 0:
                 neg = -lag
-                for side in ('left', 'right'):
+                for side in ("left", "right"):
                     d = self.irs[sp1][side].data
                     padded = np.concatenate((np.zeros(neg), d))[: len(d)]
                     self.irs[sp1][side].data = padded
@@ -343,7 +343,7 @@ class HRIR:
             List of two FIR filters as numpy arrays, first for left and second for right
         """
 
-        if method == 'mids':
+        if method == "mids":
             # Find gain for right side
             # R diff - L diff = L mean - R mean
             gain = right_fr.copy().center([100, 3000]) - left_fr.copy().center([100, 3000])
@@ -351,8 +351,8 @@ class HRIR:
             n = int(round(self.fs * 0.1))  # 100 ms
             firs = [signal.unit_impulse(n), signal.unit_impulse(n) * gain]
 
-        elif method == 'trend':
-            trend = FrequencyResponse(name='trend', frequency=left_fr.frequency, raw=left_fr.raw - right_fr.raw)
+        elif method == "trend":
+            trend = FrequencyResponse(name="trend", frequency=left_fr.frequency, raw=left_fr.raw - right_fr.raw)
             trend.smoothen_fractional_octave(
                 window_size=2, treble_f_lower=20000, treble_f_upper=int(round(self.fs / 2))
             )
@@ -362,8 +362,8 @@ class HRIR:
             fir = right_fr.minimum_phase_impulse_response(fs=self.fs, normalize=False)
             firs = [signal.unit_impulse((len(fir))), fir]
 
-        elif method == 'left' or method == 'right':
-            if method == 'left':
+        elif method == "left" or method == "right":
+            if method == "left":
                 ref = left_fr
                 subj = right_fr
             else:
@@ -384,12 +384,12 @@ class HRIR:
             subj.equalize(max_gain=15, treble_f_lower=20000, treble_f_upper=self.fs / 2)
             # Unit impulse for left side and equalization FIR filter for right side
             fir = subj.minimum_phase_impulse_response(fs=self.fs, normalize=False)
-            if method == 'left':
+            if method == "left":
                 firs = [signal.unit_impulse((len(fir))), fir]
             else:
                 firs = [fir, signal.unit_impulse((len(fir)))]
 
-        elif method == 'avg' or method == 'min':
+        elif method == "avg" or method == "min":
             # Center around 0 dB
             left_gain = left_fr.copy().center([100, 10000])
             right_gain = right_fr.copy().center([100, 10000])
@@ -402,7 +402,7 @@ class HRIR:
             right_fr.smoothen_fractional_octave(window_size=1 / 3, treble_f_lower=20000, treble_f_upper=23999)
 
             # Target
-            if method == 'avg':
+            if method == "avg":
                 # Target is the average between the two FRs
                 target = (left_fr.raw + right_fr.raw) / 2
             else:
@@ -445,7 +445,7 @@ class HRIR:
         # Create frequency responses for left and right side IRs
         stacks = [[], []]
         for speaker, pair in self.irs.items():
-            if speaker not in ['FL', 'FR']:
+            if speaker not in ["FL", "FR"]:
                 continue
             for i, ir in enumerate(pair.values()):
                 stacks[i].append(ir.data)
@@ -453,14 +453,14 @@ class HRIR:
         # Group the same left and right side speakers
         eqir = HRIR(self.estimator)
         for speakers in [
-            ['FC'],
-            ['FL', 'FR'],
-            ['SL', 'SR'],
-            ['BL', 'BR'],
-            ['WL', 'WR'],
-            ['TFL', 'TFR'],
-            ['TSL', 'TSR'],
-            ['TBL', 'TBR'],
+            ["FC"],
+            ["FL", "FR"],
+            ["SL", "SR"],
+            ["BL", "BR"],
+            ["WL", "WR"],
+            ["TFL", "TFR"],
+            ["TSL", "TSR"],
+            ["TBL", "TBR"],
         ]:
             if len([ch for ch in speakers if ch in self.irs]) < len(speakers):
                 # All the speakers in the current speaker group must exist, otherwise balancing makes no sense
@@ -468,8 +468,8 @@ class HRIR:
             # Stack impulse responses
             left, right = [], []
             for speaker in speakers:
-                left.append(self.irs[speaker]['left'].data)
-                right.append(self.irs[speaker]['right'].data)
+                left.append(self.irs[speaker]["left"].data)
+                right.append(self.irs[speaker]["right"].data)
 
             # Create frequency responses
             # Pad to equal lengths before averaging
@@ -488,8 +488,8 @@ class HRIR:
                 firs = self.channel_balance_firs(left_fr, right_fr, method)
             # Assign to speakers in EQ HRIR
             for speaker in speakers:
-                self.irs[speaker]['left'].equalize(firs[0])
-                self.irs[speaker]['right'].equalize(firs[1])
+                self.irs[speaker]["left"].equalize(firs[0])
+                self.irs[speaker]["right"].equalize(firs[1])
 
         return eqir
 
@@ -519,7 +519,7 @@ class HRIR:
                     plot_decay=plot_decay,
                     plot_waterfall=plot_waterfall,
                 )
-                fig.suptitle(f'{speaker}-{side}')
+                fig.suptitle(f"{speaker}-{side}")
                 figs[speaker][side] = fig
 
         # Synchronize axes limits
@@ -539,11 +539,11 @@ class HRIR:
             os.makedirs(dir_path, exist_ok=True)
             for speaker, pair in self.irs.items():
                 for side, ir in pair.items():
-                    file_path = os.path.join(dir_path, f'{speaker}-{side}.png')
-                    figs[speaker][side].savefig(file_path, bbox_inches='tight')
+                    file_path = os.path.join(dir_path, f"{speaker}-{side}.png")
+                    figs[speaker][side].savefig(file_path, bbox_inches="tight")
                     # Optimize file size
                     im = Image.open(file_path)
-                    im = im.convert('P', palette=Image.ADAPTIVE, colors=60)
+                    im = im.convert("P", palette=Image.ADAPTIVE, colors=60)
                     im.save(file_path, optimize=True)
 
         # Close plots
@@ -582,20 +582,20 @@ class HRIR:
 
         fig, ax = plt.subplots()
         fig.set_size_inches(12, 9)
-        left.plot_fr(fig=fig, ax=ax, fr=left_fr, plot_raw=True, raw_color='#7db4db', plot_smoothed=False)
-        right.plot_fr(fig=fig, ax=ax, fr=right_fr, plot_raw=True, raw_color='#dd8081', plot_smoothed=False)
-        left.plot_fr(fig=fig, ax=ax, fr=left_fr, plot_smoothed=True, smoothed_color='#1f77b4', plot_raw=False)
-        right.plot_fr(fig=fig, ax=ax, fr=right_fr, plot_smoothed=True, smoothed_color='#d62728', plot_raw=False)
-        ax.plot(left_fr.frequency, left_fr.smoothed - right_fr.smoothed, color='#680fb9')
-        ax.legend(['Left raw', 'Right raw', 'Left smoothed', 'Right smoothed', 'Difference'])
+        left.plot_fr(fig=fig, ax=ax, fr=left_fr, plot_raw=True, raw_color="#7db4db", plot_smoothed=False)
+        right.plot_fr(fig=fig, ax=ax, fr=right_fr, plot_raw=True, raw_color="#dd8081", plot_smoothed=False)
+        left.plot_fr(fig=fig, ax=ax, fr=left_fr, plot_smoothed=True, smoothed_color="#1f77b4", plot_raw=False)
+        right.plot_fr(fig=fig, ax=ax, fr=right_fr, plot_smoothed=True, smoothed_color="#d62728", plot_raw=False)
+        ax.plot(left_fr.frequency, left_fr.smoothed - right_fr.smoothed, color="#680fb9")
+        ax.legend(["Left raw", "Right raw", "Left smoothed", "Right smoothed", "Difference"])
 
         # Save figures
-        file_path = os.path.join(dir_path, 'results.png')
-        fig.savefig(file_path, bbox_inches='tight')
+        file_path = os.path.join(dir_path, "results.png")
+        fig.savefig(file_path, bbox_inches="tight")
         plt.close(fig)
         # Optimize file size
         im = Image.open(file_path)
-        im = im.convert('P', palette=Image.ADAPTIVE, colors=60)
+        im = im.convert("P", palette=Image.ADAPTIVE, colors=60)
         im.save(file_path, optimize=True)
 
     def equalize(self, fir):
@@ -628,7 +628,7 @@ class HRIR:
 
         for speaker, pair in self.irs.items():
             for side, ir in pair.items():
-                ir.equalize(fir[0] if side == 'left' else fir[1])
+                ir.equalize(fir[0] if side == "left" else fir[1])
 
     def resample(self, fs):
         """Resamples all impulse response to the given sampling rate.

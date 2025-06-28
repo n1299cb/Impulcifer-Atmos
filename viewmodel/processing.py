@@ -12,7 +12,7 @@ class ProcessingViewModel:
     def run(self, settings: ProcessingSettings) -> subprocess.CompletedProcess:
         args: List[str] = [
             sys.executable,
-            "impulcifer.py",
+            "earprint.py",
             "--dir_path",
             settings.measurement_dir,
         ]

@@ -5,7 +5,7 @@ from typing import Dict, Any, Union
 
 from models import UserProfile
 
-PROFILES_FILE = os.environ.get("IMPULCIFER_PROFILES", "profiles.json")
+PROFILES_FILE = os.environ.get("EARPRINT_PROFILES", "profiles.json")
 
 
 def load_profiles(file_path: str = PROFILES_FILE) -> Dict[str, Dict[str, Any]]:

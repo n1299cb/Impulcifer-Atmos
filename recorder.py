@@ -1,4 +1,4 @@
-# This file is part of a modified version of Impulcifer.
+# This file is part of Earprint, a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
 # Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
 #
@@ -367,7 +367,7 @@ def create_cli():
         required=True,
         help='File path to write the recording. This must have ".wav" extension and be either'
         '"headphones.wav" or any combination of supported speaker names separated by commas '
-        "eg. FL,FC,FR.wav to be recognized by Impulcifer as a recording file. It's "
+        "eg. FL,FC,FR.wav to be recognized by Earprint as a recording file. It's "
         "convenient to point the file path directly to the recording directory such as "
         '"data\\my_hrir\\FL,FR.wav".',
     )

@@ -21,5 +21,5 @@ The project ships with simple regression tests. Execute them with
 pytest
 ```
 
-Set the `IMPULCIFER_TEST_CAPTURE_DIR` environment variable to point to
+Set the `EARPRINT_TEST_CAPTURE_DIR` environment variable to point to
 real measurement data to skip synthetic samples.

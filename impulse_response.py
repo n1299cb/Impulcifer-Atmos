@@ -1,4 +1,4 @@
-# This file is part of a modified version of Impulcifer.
+# This file is part of Earprint, a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
 # Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
 #
@@ -266,7 +266,7 @@ class ImpulseResponse:
         )
 
         decay_times = dict()
-        limits = [(-1, -10, -10, 'EDT'), (-5, -25, -20, 'RT20'), (-5, -35, -30, 'RT30'), (-5, -65, -60, 'RT60')]
+        limits = [(-1, -10, -10, "EDT"), (-5, -25, -20, "RT20"), (-5, -35, -30, "RT30"), (-5, -65, -60, "RT60")]
         for start_target, end_target, decay_target, name in limits:
             decay_times[name] = None
             if end_target < noise_floor + offset + 10:
@@ -282,7 +282,7 @@ class ImpulseResponse:
             slope, intercept, _, _, _ = stats.linregress(t[start:end], schroeder[start:end])
             decay_times[name] = decay_target / slope
 
-        return decay_times['EDT'], decay_times['RT20'], decay_times['RT30'], decay_times['RT60']
+        return decay_times["EDT"], decay_times["RT20"], decay_times["RT30"], decay_times["RT60"]
 
     def crop_head(self, head_ms=1):
         """Crops away head."""
@@ -299,7 +299,7 @@ class ImpulseResponse:
         Returns:
             None
         """
-        self.data = signal.convolve(self.data, fir, mode='full')
+        self.data = signal.convolve(self.data, fir, mode="full")
 
     def resample(self, fs):
         """Resamples this impulse response to the given sampling rate."""
@@ -315,7 +315,7 @@ class ImpulseResponse:
         Returns:
             Convolved data
         """
-        return signal.convolve(x, self.data, mode='full')
+        return signal.convolve(x, self.data, mode="full")
 
     def adjust_decay(self, target):
         """Adjusts decay time in place.
@@ -370,7 +370,7 @@ class ImpulseResponse:
         f, m = self.magnitude_response()
         n = self.fs / 2 / 4  # 4 Hz resolution
         step = int(len(f) / n)
-        fr = FrequencyResponse(name='Frequency response', frequency=f[1::step], raw=m[1::step])
+        fr = FrequencyResponse(name="Frequency response", frequency=f[1::step], raw=m[1::step])
         fr.interpolate(f_step=1.01, f_min=10, f_max=self.fs / 2)
         return fr
 
@@ -414,7 +414,7 @@ class ImpulseResponse:
             ax = []
             for i in range(5):
                 ax.append(fig.add_subplot(2, 3, i + 1))
-            ax.append(fig.add_subplot(2, 3, 6, projection='3d'))
+            ax.append(fig.add_subplot(2, 3, 6, projection="3d"))
             ax = np.vstack([ax[:3], ax[3:]])
         if plot_recording:
             self.plot_recording(fig=fig, ax=ax[0, 0])
@@ -450,12 +450,12 @@ class ImpulseResponse:
             fig, ax = plt.subplots()
 
         t = np.linspace(0, len(self.recording) / self.fs, len(self.recording))
-        ax.plot(t, self.recording, color=COLORS['blue'], linewidth=0.5)
+        ax.plot(t, self.recording, color=COLORS["blue"], linewidth=0.5)
 
         ax.grid(True)
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Amplitude')
-        ax.set_title('Sine Sweep')
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        ax.set_title("Sine Sweep")
 
         # Save image
         if plot_file_path:
@@ -487,7 +487,7 @@ class ImpulseResponse:
         # Overlapping in samples
         noverlap = int(nfft - (len(self.recording) - nfft) / n_segments)
         # Get spectrogram data
-        spectrum, freqs, t = specgram(self.recording, Fs=self.fs, NFFT=nfft, noverlap=noverlap, mode='psd')
+        spectrum, freqs, t = specgram(self.recording, Fs=self.fs, NFFT=nfft, noverlap=noverlap, mode="psd")
 
         # Remove zero frequency
         f = freqs[1:]
@@ -497,17 +497,17 @@ class ImpulseResponse:
 
         # Create spectrogram image
         t, f = np.meshgrid(t, f)
-        cs = ax.pcolormesh(t, f, z, cmap='gnuplot2', vmin=-150, shading='auto')
+        cs = ax.pcolormesh(t, f, z, cmap="gnuplot2", vmin=-150, shading="auto")
 
         divider = make_axes_locatable(ax)
-        cax = divider.append_axes('right', size='5%', pad=0.05)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(cs, cax=cax)
 
         ax.semilogy()
-        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.0f}'))
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Frequency (Hz)')
-        ax.set_title('Spectrogram')
+        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.0f}"))
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Frequency (Hz)")
+        ax.set_title("Spectrogram")
 
         # Save image
         if plot_file_path:
@@ -535,11 +535,11 @@ class ImpulseResponse:
         if fig is None:
             fig, ax = plt.subplots()
         t = np.arange(start * 1000, start * 1000 + 1000 / self.fs * len(ir), 1000 / self.fs)
-        ax.plot(t, ir, color=COLORS['blue'], linewidth=0.5)
-        ax.set_xlabel('Time (ms)')
-        ax.set_ylabel('Amplitude')
+        ax.plot(t, ir, color=COLORS["blue"], linewidth=0.5)
+        ax.set_xlabel("Time (ms)")
+        ax.set_ylabel("Amplitude")
         ax.grid(True)
-        ax.set_title(f'Impulse response ({end * 1000:.0f} ms)')
+        ax.set_title(f"Impulse response ({end * 1000:.0f} ms)")
 
         if plot_file_path:
             fig.savefig(plot_file_path)
@@ -553,19 +553,19 @@ class ImpulseResponse:
         ax=None,
         plot_file_path=None,
         plot_raw=True,
-        raw_color='#7db4db',
+        raw_color="#7db4db",
         plot_smoothed=True,
-        smoothed_color='#1f77b4',
+        smoothed_color="#1f77b4",
         plot_error=True,
-        error_color='#dd8081',
+        error_color="#dd8081",
         plot_error_smoothed=True,
-        error_smoothed_color='#d62728',
+        error_smoothed_color="#d62728",
         plot_target=True,
-        target_color='#ecdef9',
+        target_color="#ecdef9",
         plot_equalization=True,
-        equalization_color='#2ca02c',
+        equalization_color="#2ca02c",
         plot_equalized=True,
-        equalized_color='#680fb9',
+        equalized_color="#680fb9",
         fix_ylim=False,
     ):
         """Plots frequency response
@@ -600,49 +600,49 @@ class ImpulseResponse:
             fr.smoothen_fractional_octave(window_size=1 / 3, treble_f_lower=20000, treble_f_upper=23999)
         if fig is None:
             fig, ax = plt.subplots()
-        ax.set_xlabel('Frequency (Hz)')
+        ax.set_xlabel("Frequency (Hz)")
         ax.semilogx()
         ax.set_xlim([20, 20e3])
-        ax.set_ylabel('Amplitude (dB)')
+        ax.set_ylabel("Amplitude (dB)")
         ax.set_title(fr.name)
-        ax.grid(True, which='major')
-        ax.grid(True, which='minor')
-        ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.0f}'))
+        ax.grid(True, which="major")
+        ax.grid(True, which="minor")
+        ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.0f}"))
         legend = []
         v = []
         sl = np.logical_and(fr.frequency >= 20, fr.frequency <= 20000)
 
         if plot_target and len(fr.target):
             ax.plot(fr.frequency, fr.target, linewidth=5, color=target_color)
-            legend.append('Target')
+            legend.append("Target")
             v.append(fr.target[sl])
         if plot_raw and len(fr.raw):
             ax.plot(fr.frequency, fr.raw, linewidth=0.5, color=raw_color)
-            legend.append('Raw')
+            legend.append("Raw")
             v.append(fr.raw[sl])
         if plot_error and len(fr.error):
             ax.plot(fr.frequency, fr.error, linewidth=0.5, color=error_color)
-            legend.append('Error')
+            legend.append("Error")
             v.append(fr.error[sl])
         if plot_smoothed and len(fr.smoothed):
             ax.plot(fr.frequency, fr.smoothed, linewidth=1, color=smoothed_color)
-            legend.append('Raw Smoothed')
+            legend.append("Raw Smoothed")
             v.append(fr.smoothed[sl])
         if plot_error_smoothed and len(fr.error_smoothed):
             ax.plot(fr.frequency, fr.error_smoothed, linewidth=1, color=error_smoothed_color)
-            legend.append('Error Smoothed')
+            legend.append("Error Smoothed")
             v.append(fr.error_smoothed[sl])
         if plot_equalization and len(fr.equalization):
             ax.plot(fr.frequency, fr.equalization, linewidth=1, color=equalization_color)
-            legend.append('Equalization')
+            legend.append("Equalization")
             v.append(fr.equalization[sl])
         if plot_equalized and len(fr.equalized_raw) and not len(fr.equalized_smoothed):
             ax.plot(fr.frequency, fr.equalized_raw, linewidth=1, color=equalized_color)
-            legend.append('Equalized raw')
+            legend.append("Equalized raw")
             v.append(fr.equalized_raw[sl])
         if plot_equalized and len(fr.equalized_smoothed):
             ax.plot(fr.frequency, fr.equalized_smoothed, linewidth=1, color=equalized_color)
-            legend.append('Equalized smoothed')
+            legend.append("Equalized smoothed")
             v.append(fr.equalized_smoothed[sl])
 
         if fix_ylim:
@@ -685,21 +685,21 @@ class ImpulseResponse:
         squared = 10 * np.log10(squared + 1e-24)
         avg = 10 * np.log10(avg + 1e-24)
 
-        ax.plot(t * 1000, squared, color=COLORS['lightblue'], label='Squared impulse response')
+        ax.plot(t * 1000, squared, color=COLORS["lightblue"], label="Squared impulse response")
         ax.plot(
             t[window_size // 2 : window_size // 2 + len(avg)] * 1000,
             avg,
-            color=COLORS['blue'],
-            label=f'{window_size / self.fs *1000:.0f} ms moving average',
+            color=COLORS["blue"],
+            label=f"{window_size / self.fs *1000:.0f} ms moving average",
         )
 
         ax.set_ylim([np.min(avg) * 1.2, 0])
         ax.set_xlim([start / self.fs * 1000, end / self.fs * 1000])
-        ax.set_xlabel('Time (ms)')
-        ax.set_ylabel('Amplitude (dBr)')
-        ax.grid(True, which='major')
-        ax.set_title('Decay')
-        ax.legend(loc='upper right')
+        ax.set_xlabel("Time (ms)")
+        ax.set_ylabel("Amplitude (dBr)")
+        ax.grid(True, which="major")
+        ax.set_title("Decay")
+        ax.legend(loc="upper right")
 
         if plot_file_path:
             fig.savefig(plot_file_path)
@@ -731,7 +731,7 @@ class ImpulseResponse:
         data = self.data[start:stop]
 
         # Get spectrogram data
-        spectrum, freqs, t = specgram(data, Fs=self.fs, NFFT=nfft, noverlap=noverlap, mode='magnitude', window=window)
+        spectrum, freqs, t = specgram(data, Fs=self.fs, NFFT=nfft, noverlap=noverlap, mode="magnitude", window=window)
 
         # Remove 0 Hz component
         spectrum = spectrum[1:, :]
@@ -755,7 +755,7 @@ class ImpulseResponse:
         z = 20 * np.log10(z)
 
         # Smoothen
-        z = ndimage.uniform_filter(z, size=3, mode='constant')
+        z = ndimage.uniform_filter(z, size=3, mode="constant")
         t, f = np.meshgrid(t, f)
 
         # Smoothing creates "walls", remove them
@@ -764,21 +764,21 @@ class ImpulseResponse:
         z = z[1:-1, :-1]
 
         # Surface plot
-        ax.plot_surface(t, f, z, rcount=len(t), ccount=len(f), cmap='magma', antialiased=True, vmin=z_min, vmax=0)
+        ax.plot_surface(t, f, z, rcount=len(t), ccount=len(f), cmap="magma", antialiased=True, vmin=z_min, vmax=0)
 
         # Z axis
         ax.set_zlim([z_min, 0])
         ax.zaxis.set_major_locator(LinearLocator(10))
-        ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+        ax.zaxis.set_major_formatter(FormatStrFormatter("%.02f"))
 
         # X axis
         ax.set_xlim([0, None])
-        ax.set_xlabel('Time (ms)')
+        ax.set_xlabel("Time (ms)")
 
         # Y axis
         ax.set_ylim(np.log10([20, 20000]))
-        ax.set_ylabel('Frequency (Hz)')
-        ax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f'{10 ** x:.0f}'))
+        ax.set_ylabel("Frequency (Hz)")
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f"{10 ** x:.0f}"))
 
         # Orient
         ax.view_init(30, 30)

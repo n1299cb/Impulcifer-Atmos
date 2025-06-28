@@ -5,7 +5,7 @@ This code base follows a lightweight **Model–View–ViewModel (MVVM)** layout.
 - **Models (`models/`)** – simple data classes that capture user input and processing settings.
 - **ViewModels (`viewmodel/`)** – orchestrate command line tools and validate data. They expose methods used by the GUI.
 - **View (`gui.py`)** – Qt based interface that binds widgets to ViewModel commands.
-- **Domain tools (`impulcifer.py`, `recorder.py`, etc.)** – processing logic called by ViewModels.
+- **Domain tools (`earprint.py`, `recorder.py`, etc.)** – processing logic called by ViewModels.
 
 ## Current State
 

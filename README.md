@@ -1,3 +1,5 @@
+# Earprint
+#
 # This file is part of a modified fork of Impulcifer by Jaakko Pasanen.
 # Modifications © 2025 Blaring Sound LLC, licensed under the MIT License.
 
@@ -7,7 +9,7 @@ Modified and expanded to include 9.1.6 speaker formats.
 This project is a fork of Impulcifer by Jaakko Pasanen.
 Modifications © 2025 Blaring Sound LLC. Licensed under the MIT License.
 
-Impulcifer is a tool for creating binaural room impulse responses (BRIR) for speaker virtualization on headphones.
+Earprint is a tool for creating binaural room impulse responses (BRIR) for speaker virtualization on headphones.
 
 Normally headphones sound inside your head which is a clear disadvantage for games and movies but also for music
 because basically all material has been created for speakers. Virtual surround technologies for headphones have existed
@@ -18,15 +20,15 @@ has been tailored for your ears. BRIR is the tailored model for supreme virtual 
 done right virtualized speakers can be indistinguishable from real speakers.
 
 Watch these videos to get an idea what good BRIRs can do. The method used by Smyth Realizer and Creative Super X-Fi
-demos is the same what Impulcifer uses.
+demos is the same what Earprint uses.
 
 - [Realiser A16 Smyth Research (Kickstarter project)](https://www.youtube.com/watch?v=3mZhN3OG-tc)
 - [a16 realiser](https://www.youtube.com/watch?v=RtY9QIkRJxA)
 - [Creative Super X-Fi 3D Immersive Headphone Technology at CES 2018](https://www.youtube.com/watch?v=mAidEm9_JYM)
 
 These demos are trying to make headphones sound as much as possible like the speakers they have in the demo room for a
-good [wow](https://www.youtube.com/watch?v=KlLMlJ2tDkg) effect. Impulcifer actually takes this even further because
-Impulcifer can do measurements with only one speaker so you don't need access to surround speaker setup and can do room
+good [wow](https://www.youtube.com/watch?v=KlLMlJ2tDkg) effect. Earprint actually takes this even further because
+Earprint can do measurements with only one speaker so you don't need access to surround speaker setup and can do room
 acoustic corrections which are normally not possible in real rooms with DSP.
 
 ## License
@@ -56,8 +58,8 @@ functions. Command line tools read these defaults as well, so adjusting
 `settings` allows changing behaviour without editing multiple scripts.
 
 ## Installing
-Impulcifer is used from a command line and requires some prerequisites. These installation instructions will guide you
-through installing everything that is needed to run Impulcifer on you own PC.
+Earprint is used from a command line and requires some prerequisites. These installation instructions will guide you
+through installing everything that is needed to run Earprint on you own PC.
 
 - Download and install Git: https://git-scm.com/downloads. When installing Git on Windows, use Windows SSL verification
 instead of Open SSL or you might run into problems when installing project dependencies.
@@ -74,14 +76,14 @@ sudo apt install python3-dev python3-pip python3-venv
 Rest will be done in terminal / command prompt. On Windows you'll find it by searching `cmd` in Start menu.
 You should be able to simply copy and paste in these commands. 
 
-- Git clone Impulcifer. This will create a folder in your home folder called `Impulcifer`. See [Updating](#updating)
+- Git clone Earprint. This will create a folder in your home folder called `Earprint`. See [Updating](#updating)
 for other versions than the latest.  
 ```bash
-git clone https://github.com/jaakkopasanen/Impulcifer
+git clone https://github.com/n1299cb/Earprint
 ```
-- Go to Impulcifer folder.  
+- Go to Earprint folder.  
 ```bash
-cd Impulcifer
+cd Earprint
 ```
 - Create virtual environment for the project.  
 ```bash
@@ -108,12 +110,12 @@ pip install .
 ```
 - Verify installation. You should see help printed if everything went well.
 ```bash
-python impulcifer.py --help
+python earprint.py --help
 ```
 
-When coming back at a later time you'll only need to activate virtual environment again before using Impulcifer.
+When coming back at a later time you'll only need to activate virtual environment again before using Earprint.
 ```bash
-cd Impulcifer
+cd Earprint
 # On Windows
 venv\Scripts\activate
 # On Mac and Linux
@@ -121,7 +123,7 @@ venv\Scripts\activate
 ```
 
 ### Updating
-Impulcifer is under active development and updates quite frequently. Take a look at the [Changelog](./CHANGELOG.md) to
+Earprint is under active development and updates quite frequently. Take a look at the [Changelog](./CHANGELOG.md) to
 see what has changed.
 
 Versions in Changelog have Git tags with which you can switch to another version than the latest one:
@@ -150,16 +152,16 @@ For contributor setup and test instructions see [docs/DEVELOPMENT.md](docs/DEVEL
 
 ## Demo
 The actual BRIR measurements require a little investment in measurement gear and the chances are that you're here before
-you have acquired them. There is a demo available for testing out Impulcifer without having to do the actual
-measurements. `data/demo` folder contains five measurement files which are needed for running Impulcifer.
+you have acquired them. There is a demo available for testing out Earprint without having to do the actual
+measurements. `data/demo` folder contains five measurement files which are needed for running Earprint.
 `headphones.wav` has the sine sweep recordings done with headphones and all the rest files are recordings done with
 stereo speakers in multiple stages.
 
-You can try out what Impulcifer does by running:
+You can try out what Earprint does by running:
 ```bash
-python impulcifer.py --test_signal=data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl --dir_path=data/demo 
+python earprint.py --test_signal=data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl --dir_path=data/demo 
 ```
-Impulcifer will now process the measurements and produce `hrir.wav` and `hesuvi.wav` which can be used with headphone
+Earprint will now process the measurements and produce `hrir.wav` and `hesuvi.wav` which can be used with headphone
 speaker virtualization software such as [HeSuVi](https://sourceforge.net/projects/hesuvi/) to make headphones sound like
 speakers in a room. When testing with HeSuVi copy `hesuvi.wav` into `C:\Program Files\Equalizer APO\config\Hesuvi\hrir`,
 (re)start HeSuVi and select `hesuvi.wav` from the Common HRIRs list on Virtualization tab.
@@ -168,10 +170,10 @@ speakers in a room. When testing with HeSuVi copy `hesuvi.wav` into `C:\Program 
 BRIR measurements are done with binaural microphones which are also called ear canal blocking microphones or in-ear
 microphones. Exponential sine sweep test signal is played on speakers and the sound is recorded with the microphones at
 ear canal openings. This setup ensures that the sound measured by the microphones is affected by the room, your body,
-head and ears just like it is when listening to music playing on speakers. Impulcifer will then transform these
+head and ears just like it is when listening to music playing on speakers. Earprint will then transform these
 recordings into impulse responses, one per each speaker-ear pair.
 
-Impulcifer ships with a ready-made sweep file at `data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl` and a sample
+Earprint ships with a ready-made sweep file at `data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl` and a sample
 capture set in `data/demo`. When launching the GUI these paths are filled in automatically, but you can point the
 interface to your own sweep or capture directory at any time.
 
@@ -259,13 +261,13 @@ cable terminals in the amplifier. These commands assume the speaker is connected
 | Look 90 degrees right of the speaker (speaker on your left) | `python recorder.py --play="data/sweep-seg-FL-stereo-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav" --record="data/my_hrir/SL.wav"` |
 
 ## Processing
-Once you have obtained the sine sweep recordings, you can turn them into a BRIR file with Impulcifer. All the processing
+Once you have obtained the sine sweep recordings, you can turn them into a BRIR file with Earprint. All the processing
 is done by running a single command on command line. The command below assumes you have made a speaker recordings and
 a headphones recording and saved the recording files into `data/my_hrir` folder. Start command prompt, jump to
-Impulcifer folder and activate the virtual environment as described in the installation instructions if you don't have
-command prompt open yet. Sine sweep recordings are processed by running `impulcifer.py` with Python as shown below.
+Earprint folder and activate the virtual environment as described in the installation instructions if you don't have
+command prompt open yet. Sine sweep recordings are processed by running `earprint.py` with Python as shown below.
 ```bash
-python impulcifer.py --test_signal="data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl" \
+python earprint.py --test_signal="data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl" \
     --dir_path="data/my_hrir" --delay-file=delays.json --plot
 ```
 
@@ -274,10 +276,10 @@ The optional `--delay-file` argument loads per-speaker timing offsets from a JSO
 You should have several WAV files and graphs in the folder. `hesuvi.wav` can now be used with HeSuVi to make your
 headphones sound like speakers.
 
-`--dir_path=data/my_hrir` tells Impulcifer that the recordings can be found in a folder called `my_hrir` under `data`.
-Impulcifer will also write all the output files into this folder.
+`--dir_path=data/my_hrir` tells Earprint that the recordings can be found in a folder called `my_hrir` under `data`.
+Earprint will also write all the output files into this folder.
 
-Impulcifer always needs to know which sine sweep signal was used during recording process. Test signal can be either a
+Earprint always needs to know which sine sweep signal was used during recording process. Test signal can be either a
 WAV (`.wav`) file or a Pickle (`.pkl`) file. Test signal is read from a file called `test.pkl` or `test.wav`. 
 `impulse_response_estimator.py` produces both but using a Pickle file is a bit faster. Pickle file however cannot be
 used with `recorder.py`. An alternative way of passing the test signal is with a command line argument `--test_signal`
@@ -293,13 +295,13 @@ Similar pattern is used for room acoustics measurements. The idea is to measure 
 measurement microphone in the exact same spot where the binaural microphones were. Room measurement files have file name
 format of `room-<SPEAKERS>-<left|right>.wav`, where `<SPEAKERS>` is the comma separated list of speaker names and
 `<left|right>` is either "left" or "right". This tells if the measurement microphone is measuring at the left or right
-ear position. File name could be for example `room-FL,FR-left.wav`. Impulcifer does not support stereo measurement
+ear position. File name could be for example `room-FL,FR-left.wav`. Earprint does not support stereo measurement
 microphones because vast majority of measurement microphones are mono. Room recording files need to be single track
 only. Some measurement microphones like MiniDSP UMIK-1 are seen as stereo microphones by Windows and will for that
 reason record a stereo file. `recorder.py` can force the capture to be one channel by setting `--channels=1`.
 
 Generic room measurements can be done for speakers with which it's hard to position the measurement microphone
-correctly. Impulcifer reads these measurements from `room.wav` file which can contain any number of tracks and any
+correctly. Earprint reads these measurements from `room.wav` file which can contain any number of tracks and any
 number of sweeps per track. All the sweeps are being read and their frequency responses are combined. The combined
 frequency response is used for room correction with the speakers that don't have specific measurements
 (`room-FL,FR-left.wav` etc...).
@@ -341,7 +343,7 @@ alternative way to pass in the target file is with a command line argument `--ro
 Room correction can be skipped by adding a command line argument `--no_room_correction` without any value.
 
 #### Headphone Compensation
-Impulcifer will compensate for the headphone frequency response using headphone sine sweep recording if the folder
+Earprint will compensate for the headphone frequency response using headphone sine sweep recording if the folder
 contains file called `headphones.wav`. If you have the file but would like not to have headphone compensation, you can
 simply rename the file for example as `headphones.wav.bak` and run the command again. 
 
@@ -351,19 +353,19 @@ files `eq-left.csv` and `eq-right.csv`. Headphone equalization is useful for in-
 to do headphone compensation with IEMs. When using IEMS you still need an around ear headphone for the headphone
 compensation. **eq.wav is no longer supported!**
 
-Impulcifer will bake the frequency response transformation from the CSV file into the BRIR and you can enjoy speaker
+Earprint will bake the frequency response transformation from the CSV file into the BRIR and you can enjoy speaker
 sound with your IEMs. You can generate this filter with [AutoEQ](https://github.com/jaakkopasanen/AutoEq); see usage
 instructions for [using sound signatures](https://github.com/jaakkopasanen/AutoEq#using-sound-signatures) to learn how 
 to transfer one headphone into another. In this case the input directory needs to point to the IEM, compensation curve
 is the curve of the measurement system used to measure the IEM and the sound signature needs point to the existing
 result of the headphone which was used to make the headphone compensation recording.
 
-For example if the headphone compensation recording was made with Sennheiser HD 650 and you want to enjoy Impulcifer
+For example if the headphone compensation recording was made with Sennheiser HD 650 and you want to enjoy Earprint
 produced BRIR with Campfire Andromeda, you should run:
 ```bash
 python -m autoeq --input-file="measurements/oratory1990/data/in-ear/Campfire Audio Andromeda.csv" --output-dir="my-results/Andromeda (HD 650)" --target="targets/AutoEq in-ear.csv" --sound-signature="results/oratory1990/over-ear/Sennheiser HD 650/Sennheiser HD 650.csv" --equalize --bass-boost=8 --max-gain=12
 ```
-and then copy `AutoEq/my_results/Andromeda (HD 650)/Campfire Audio Andromeda.csv` to `Impulcifer/data/my_hrir/eq.csv`.
+and then copy `AutoEq/my_results/Andromeda (HD 650)/Campfire Audio Andromeda.csv` to `Earprint/data/my_hrir/eq.csv`.
 
 See how the Harman over-ear target is used for IEM in this case. This is because the goal is to make Andromeda sound as
 similar as possible to HD 650, which is an over-ear headphone. Normally with AutoEQ you would use Harman in-ear target
@@ -387,7 +389,7 @@ parameter takes a sampling rate in Hertz as value and will then resample the out
 the recording and output sampling rates differ. For example `--fs=44100`.
 
 #### Plotting Graphs
-Various graphs can be produced by providing `--plot` parameter to Impulcifer. These can be helpful in figuring out what
+Various graphs can be produced by providing `--plot` parameter to Earprint. These can be helpful in figuring out what
 went wrong if the produced BRIR doesn't sound right. Producing the plots will take some time.
 
 - **pre** plots are the unprocessed BRIR measurement
@@ -418,7 +420,7 @@ average level match that of the left side. This is essentially an automatic gues
 
 Setting `--channel_balance=1.4` or any numerical value will amplify right side IRs by that number of decibels.
 Positive values will boost right side and negative values will attenuate right side. You can find the correct value by
-trial and error either with Impulcifer or your virtualization software and running Impulcifer again with the best value.
+trial and error either with Earprint or your virtualization software and running Earprint again with the best value.
 Typically vocals or speech is good reference for finding the right side gain value because these are most often mixed
 in the center and therefore are the most important aspect of channel balance.
 
@@ -508,7 +510,7 @@ For a deeper walkthrough of these helpers, see
 
 ### Distance-Based Speaker Delays (Advanced)
 
-Pass `--interactive_delays` to `impulcifer.py` to enter the angle and distance
+Pass `--interactive_delays` to `earprint.py` to enter the angle and distance
 for each speaker before processing. The helper computes timing offsets using
 `utils.versus_distance()` and temporarily overrides the default zero-delay table
 so non-uniform setups remain in sync.
@@ -531,20 +533,20 @@ SL,5
 ## Tests
 
 Simple test scripts validate the processing pipeline. If you have real HRIR
-recordings, set `IMPULCIFER_TEST_CAPTURE_DIR` to their directory. Otherwise the
+recordings, set `EARPRINT_TEST_CAPTURE_DIR` to their directory. Otherwise the
 tests automatically generate a tiny synthetic dataset.
 
 Run them directly with Python:
 
 ```bash
-python test_impulcifer.py       # 9.1.6 layout
-python test_impulcifer_714.py   # 7.1.4 layout
+python test_earprint.py       # 9.1.6 layout
+python test_earprint_714.py   # 7.1.4 layout
 ```
 
 ## Real-Time Convolution Engine
 
 The `realtime_convolution.py` module offers low-latency binaural rendering.
-It loads the BRIRs produced by Impulcifer and processes any multichannel
+It loads the BRIRs produced by Earprint and processes any multichannel
 signal using efficient FFT overlap-add convolution. The engine can stream
 audio in real time with `sounddevice` or process files offline.
 

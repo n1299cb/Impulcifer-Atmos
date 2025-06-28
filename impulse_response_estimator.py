@@ -1,4 +1,4 @@
-# This file is part of a modified version of Impulcifer.
+# This file is part of Earprint, a modified version of Impulcifer.
 # Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
 # Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
 #
@@ -29,7 +29,7 @@ class ImpulseResponseEstimator(object):
 
     def __init__(self, min_duration=5.0, fs=44100):
         if fs != int(fs):
-            raise ValueError('Sampling rate "fs" must be an integer.')
+            raise ValueError("Sampling rate "fs" must be an integer.")
         self.fs = int(fs)
         # End frequency is always Nyquist frequency
         self.high = self.fs / 2
@@ -61,13 +61,13 @@ class ImpulseResponseEstimator(object):
         f, m = magnitude_response(self.estimate(self.test_signal), self.fs)
         plt.plot(f, m)
         plt.semilogx()
-        plt.legend(['Test signal spectrum', 'Inverse filter spectrum', 'Impulse response spectrum'])
-        plt.grid(True, which='major')
-        plt.grid(True, which='minor')
+        plt.legend(["Test signal spectrum", "Inverse filter spectrum", "Impulse response spectrum"])
+        plt.grid(True, which="major")
+        plt.grid(True, which="minor")
         plt.show()
 
         plt.plot(np.arange(len(self)) / self.fs, self.estimate(self.test_signal))
-        plt.title('Impulse response')
+        plt.title("Impulse response")
         plt.grid(True)
         plt.show()
 
@@ -83,7 +83,7 @@ class ImpulseResponseEstimator(object):
 
         # Now we have to normalize energy of result of dot product.
         # This is "naive" method but it just works.
-        frp = fft(convolve(inverse_filter, self.test_signal, method='auto'))
+        frp = fft(convolve(inverse_filter, self.test_signal, method="auto"))
         inverse_filter /= np.abs(frp[round(frp.shape[0] / 4)])
 
         return inverse_filter
@@ -154,8 +154,8 @@ class ImpulseResponseEstimator(object):
 
     def estimate(self, recording):
         """Estimates impulse response"""
-        usrmode = 'full' if settings.preserve_room_response else 'same'
-        return convolve(recording, self.inverse_filter, mode=usrmode, method='auto')
+        usrmode = "full" if settings.preserve_room_response else "same"
+        return convolve(recording, self.inverse_filter, mode=usrmode, method="auto")
 
     def sweep_sequence(self, speakers, tracks):
         """Creates sine sweep sequence data with multiple tracks
@@ -196,58 +196,58 @@ class ImpulseResponseEstimator(object):
         unique_speakers = []
         for speaker in speakers:
             if speaker in unique_speakers:
-                raise ValueError('All speaker names in speakers must be unique.')
+                raise ValueError("All speaker names in speakers must be unique.")
 
         # Remap channels according to SMPTE order
-        if tracks == '9.1.6':
+        if tracks == "9.1.6":
             standard_order = [
-                'FL',
-                'FR',
-                'FC',
-                'LFE',
-                'SL',
-                'SR',
-                'BL',
-                'BR',
-                'WL',
-                'WR',
-                'TFL',
-                'TFR',
-                'TSL',
-                'TSR',
-                'TBL',
-                'TBR',
+                "FL",
+                "FR",
+                "FC",
+                "LFE",
+                "SL",
+                "SR",
+                "BL",
+                "BR",
+                "WL",
+                "WR",
+                "TFL",
+                "TFR",
+                "TSL",
+                "TSR",
+                "TBL",
+                "TBR",
             ]
             n_tracks = 16
-        elif tracks == '7.1.4':
-            standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR', 'TFL', 'TFR', 'TBL', 'TBR']
+        elif tracks == "7.1.4":
+            standard_order = ["FL", "FR", "FC", "LFE", "SL", "SR", "BL", "BR", "TFL", "TFR", "TBL", "TBR"]
             n_tracks = 12
-        elif tracks == '7.1':
-            standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR', 'BL', 'BR']
+        elif tracks == "7.1":
+            standard_order = ["FL", "FR", "FC", "LFE", "SL", "SR", "BL", "BR"]
             n_tracks = 8
-        elif tracks == '5.1':
-            standard_order = ['FL', 'FR', 'FC', 'LFE', 'SL', 'SR']
+        elif tracks == "5.1":
+            standard_order = ["FL", "FR", "FC", "LFE", "SL", "SR"]
             n_tracks = 6
-        elif tracks == 'stereo':
-            standard_order = 'FL FR'.split()
+        elif tracks == "stereo":
+            standard_order = "FL FR".split()
             n_tracks = 2
-        elif tracks == 'mono':
-            standard_order = ['FL']
-            speakers = ['FL']
+        elif tracks == "mono":
+            standard_order = ["FL"]
+            speakers = ["FL"]
             n_tracks = 1
         else:
-            raise ValueError('Unsupported track configuration "{}".'.format(tracks))
+            raise ValueError("Unsupported track configuration "{}".".format(tracks))
 
         for speaker in speakers:
             if speaker not in standard_order:
                 raise ValueError(
-                    'Speaker name "{speaker}" not supported with track configuration "{tracks}"'.format(
+                    "Speaker name "{speaker}" not supported with track configuration "{tracks}"".format(
                         speaker=speaker, tracks=tracks
                     )
                 )
         speaker_indices = [standard_order.index(ch) for ch in speakers]
         if speaker_indices != sorted(speaker_indices):
-            raise ValueError('Speakers must follow SMPTE order: {}'.format(','.join(standard_order)))
+            raise ValueError("Speakers must follow SMPTE order: {}".format(",".join(standard_order)))
 
         # Create test signal sequence
         data = np.zeros((n_tracks, int((self.fs * 2.0 + len(self)) * len(speakers) + self.fs * 2.0)))
@@ -267,8 +267,8 @@ class ImpulseResponseEstimator(object):
         ire = cls(min_duration=(len(data) - 1) / fs, fs=fs)
         if np.max(ire.test_signal - data) > 1e-9:
             raise ValueError(
-                'Data read from WAV file does not match generated test signal. WAV file must be generated '
-                'with the current version of ImpulseResponseEstimator.'
+                "Data read from WAV file does not match generated test signal. WAV file must be generated "
+                "with the current version of ImpulseResponseEstimator."
             )
         return ire
 
@@ -291,7 +291,7 @@ class ImpulseResponseEstimator(object):
 
     def to_pickle(self, file_path):
         """Saves self to pickled file."""
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     def file_name(self, bit_depth):
@@ -303,56 +303,56 @@ class ImpulseResponseEstimator(object):
         Returns:
             File name name
         """
-        return f'{self.duration:.2f}s-{self.fs:d}Hz-{bit_depth:d}bit-{self.low:.2f}Hz-{self.high:.0f}Hz'
+        return f"{self.duration:.2f}s-{self.fs:d}Hz-{bit_depth:d}bit-{self.low:.2f}Hz-{self.high:.0f}Hz"
 
 
 def create_cli():
     arg_parser = ArgumentParser()
     arg_parser.add_argument(
-        '--dir_path',
+        "--dir_path",
         type=str,
         required=True,
-        help='Path to directory where generated test signal is saved. Default file name is used.',
+        help="Path to directory where generated test signal is saved. Default file name is used.",
     )
-    arg_parser.add_argument('--fs', type=int, required=True, help='Sampling rate in Hertz.')
+    arg_parser.add_argument("--fs", type=int, required=True, help="Sampling rate in Hertz.")
     arg_parser.add_argument(
-        '--duration',
+        "--duration",
         type=float,
         required=False,
         default=5.0,
-        help='Test signal duration in seconds. Defaults to 5.0 seconds.',
+        help="Test signal duration in seconds. Defaults to 5.0 seconds.",
     )
     arg_parser.add_argument(
-        '--bit_depth', type=int, required=False, default=32, help='Test signal WAV file bit depth. Defaults to 32 bits.'
+        "--bit_depth", type=int, required=False, default=32, help="Test signal WAV file bit depth. Defaults to 32 bits."
     )
     arg_parser.add_argument(
-        '--speakers',
+        "--speakers",
         type=str,
         required=False,
-        default='FL',
-        help='Speaker channel order in test signal sequence as comma separated values. Mono test '
-        'signal sequence is created by default but if speakers are specified a second sequence'
-        ' file will be generated which contains multiple sweeps separated by silences in the '
-        'order of given speaker channels. Stereo sequence can be generated by supplying value '
-        '"FL,FR". Supported channel names are "FL", "FR", "FC", "SL", "SR", "BL" and "BR".',
+        default="FL",
+        help="Speaker channel order in test signal sequence as comma separated values. Mono test "
+        "signal sequence is created by default but if speakers are specified a second sequence"
+        " file will be generated which contains multiple sweeps separated by silences in the "
+        "order of given speaker channels. Stereo sequence can be generated by supplying value "
+        ""FL,FR". Supported channel names are "FL", "FR", "FC", "SL", "SR", "BL" and "BR".",
     )
     arg_parser.add_argument(
-        '--tracks',
+        "--tracks",
         type=str,
         required=False,
-        default='mono',
-        help='WAV file track configuration. Supported values are "mono", "stereo", "5.1", '
-        '"7.1", "7.1.4" and "9.1.6". This should be set according to sound card. '
-        'Supported speaker names for "stereo" are "FL" and "FR". Supported speaker '
-        'names for "5.1" are "FL", "FR", "FC", "LFE", "BL" and "BR". Supported speaker '
-        'names for "7.1" are the same as 5.1 with "BL" and "BR" added. Formats '
-        '"7.1.4" and "9.1.6" extend 7.1 with top speaker pairs. "mono" will force '
-        'speakers to "FL".',
+        default="mono",
+        help="WAV file track configuration. Supported values are "mono", "stereo", "5.1", "
+        ""7.1", "7.1.4" and "9.1.6". This should be set according to sound card. "
+        "Supported speaker names for "stereo" are "FL" and "FR". Supported speaker "
+        "names for "5.1" are "FL", "FR", "FC", "LFE", "BL" and "BR". Supported speaker "
+        "names for "7.1" are the same as 5.1 with "BL" and "BR" added. Formats "
+        ""7.1.4" and "9.1.6" extend 7.1 with top speaker pairs. "mono" will force "
+        "speakers to "FL".",
     )
     cli_args = arg_parser.parse_args()
     if not os.path.isdir(cli_args.dir_path):
         # File path is required
-        raise TypeError('--dir_path must be a directory.')
+        raise TypeError("--dir_path must be a directory.")
     return cli_args
 
 
@@ -363,7 +363,7 @@ def main():
     fs = cli_args.fs
     duration = cli_args.duration
     bit_depth = cli_args.bit_depth
-    speakers = cli_args.speakers.split(',')
+    speakers = cli_args.speakers.split(",")
     tracks = cli_args.tracks
 
     # Create sweep sequence WAV data
@@ -371,17 +371,17 @@ def main():
     wav_data = ire.sweep_sequence(speakers, tracks)
 
     # Write test signal to WAV file
-    file_name = f'sweep-{ire.file_name(bit_depth)}.wav'
+    file_name = f"sweep-{ire.file_name(bit_depth)}.wav"
     write_wav(os.path.join(dir_path, file_name), ire.fs, ire.test_signal, bit_depth=bit_depth)
 
     # Write test signal to pickle file
-    file_name = f'sweep-{ire.file_name(bit_depth)}.pkl'
+    file_name = f"sweep-{ire.file_name(bit_depth)}.pkl"
     ire.to_pickle(os.path.join(dir_path, file_name))
 
     # Write test signal sequence to WAV file
-    file_name = f'sweep-seg-{",".join(speakers)}-{tracks}-{ire.file_name(bit_depth)}.wav'
+    file_name = f"sweep-seg-{",".join(speakers)}-{tracks}-{ire.file_name(bit_depth)}.wav"
     write_wav(os.path.join(dir_path, file_name), fs, wav_data, bit_depth=bit_depth)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
