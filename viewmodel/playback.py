@@ -7,7 +7,7 @@ from threading import Thread
 import numpy as np
 
 from models import PlaybackSettings
-from realtime_convolution import RealtimeConvolver
+from realtime_convolution import RealTimeConvolver
 from tracking import HeadTracker
 
 
@@ -16,7 +16,7 @@ class PlaybackViewModel:
 
     def __init__(self) -> None:
         self.tracker: HeadTracker | None = None
-        self.convolver: RealtimeConvolver | None = None
+        self.convolver: RealTimeConvolver | None = None
         self._thread: Thread | None = None
         self._running = False
 
@@ -33,7 +33,11 @@ class PlaybackViewModel:
     def play(self, settings: PlaybackSettings) -> None:
         brirs = self._load_brirs(settings.brir_dir)
         self.tracker = HeadTracker(port=settings.osc_port)
-        self.convolver = RealtimeConvolver(brirs, samplerate=settings.samplerate, blocksize=settings.blocksize)
+        self.convolver = RealTimeConvolver(
+            brirs,
+            samplerate=settings.samplerate,
+            block_size=settings.blocksize,
+        )
         self.tracker.start()
         self.convolver.start()
         self._running = True
