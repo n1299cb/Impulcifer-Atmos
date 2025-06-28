@@ -146,6 +146,29 @@ python -m pip install -U -r requirements.txt
 ```
 You can always invoke the update for required packages, it does no harm when nothing has changed.
 
+### Running the Python GUI
+
+Launch the graphical interface with:
+```bash
+python gui.py
+```
+If PySide6 can't find its Qt platform plugins you may get an error like:
+```
+qt.qpa.plugin: Could not find the Qt platform plugin "cocoa" in ""
+```
+On macOS set `QT_QPA_PLATFORM_PLUGIN_PATH` to the plugins shipped with PySide6.
+You won't see any output from the command, so you can verify the value after
+running it:
+```bash
+export QT_QPA_PLATFORM_PLUGIN_PATH=$(python3 - <<'EOF'
+import PySide6, pathlib
+print(pathlib.Path(PySide6.__file__).resolve().parent / "Qt" / "plugins")
+EOF
+)
+echo "Using Qt plugins from: $QT_QPA_PLATFORM_PLUGIN_PATH"
+```
+Once this variable is configured, run `python gui.py` again.
+
 ## Development
 For contributor setup and test instructions see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 

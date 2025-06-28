@@ -115,3 +115,4 @@ research/**/*.WAV
 research/**/*.pkl
 research/*/**/*.png
 .DS_Store
+.vscode/
