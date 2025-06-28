@@ -171,6 +171,10 @@ ear canal openings. This setup ensures that the sound measured by the microphone
 head and ears just like it is when listening to music playing on speakers. Impulcifer will then transform these
 recordings into impulse responses, one per each speaker-ear pair.
 
+Impulcifer ships with a ready-made sweep file at `data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl` and a sample
+capture set in `data/demo`. When launching the GUI these paths are filled in automatically, but you can point the
+interface to your own sweep or capture directory at any time.
+
 Guide for doing the measurements yourself and comments about the gear needed to do it can be found in
 [measurements](https://github.com/jaakkopasanen/Impulcifer/wiki/Measurements) page of Impulcifer wiki. The whole process
 is really quite simple and doesn't take more than couple of minutes. Reading through the measurement guide is most

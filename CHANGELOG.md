@@ -18,6 +18,8 @@ at tag `1.0.0` (`6817f62`). Major changes include:
 - Additional context attributes for `DeviceNotFoundError` to aid debugging.
 - Replacement of the original Tkinter GUI with a PySide6 interface built around
   a lightweight MVVM architecture.
+- GUI initializes the sweep path to `data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl` and the capture directory to
+  `data/demo` by default.
 
 ## Unreleased
 ### Removed

@@ -33,3 +33,11 @@ def test_file_and_directory_checks(tmp_path):
 
     assert vm.directory_exists(str(existing_dir))
     assert not vm.directory_exists(str(missing_dir))
+
+from models import MeasurementSetup
+from constants import DEFAULT_TEST_SIGNAL, DEFAULT_MEASUREMENT_DIR
+
+def test_measurement_setup_defaults():
+    setup = MeasurementSetup()
+    assert setup.test_signal == DEFAULT_TEST_SIGNAL
+    assert setup.measurement_dir == DEFAULT_MEASUREMENT_DIR
