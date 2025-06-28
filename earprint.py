@@ -690,27 +690,31 @@ def create_cli():
         "--channel_balance",
         type=str,
         default=argparse.SUPPRESS,
-        help="Channel balance correction by equalizing left and right ear results to the same "
-        "level or frequency response. "trend" equalizes right side by the difference trend "
-        "of right and left side. "left" equalizes right side to left side fr, "right" "
-        "equalizes left side to right side fr, "avg" equalizes both to the average fr, "min" "
-        "equalizes both to the minimum of left and right side frs. Number values will boost "
-        "or attenuate right side relative to left side by the number of dBs. "mids" is the "
-        "same as the numerical values but guesses the value automatically from mid frequency "
-        "levels.",
+        help=(
+            "Channel balance correction by equalizing left and right ear results to the same "
+            'level or frequency response. "trend" equalizes right side by the difference trend '
+            'of right and left side. "left" equalizes right side to left side fr, "right" '
+            'equalizes left side to right side fr, "avg" equalizes both to the average fr, "min" '
+            "equalizes both to the minimum of left and right side frs. Number values will boost "
+            'or attenuate right side relative to left side by the number of dBs. "mids" is the '
+            "same as the numerical values but guesses the value automatically from mid frequency "
+            "levels."
+        ),
     )
     arg_parser.add_argument(
         "--decay",
         type=str,
         default=argparse.SUPPRESS,
-        help="Target decay time in milliseconds to reach -60 dB. When the natural decay time is "
-        "longer than the target decay time, a downward slope will be applied to decay tail. "
-        "Decay cannot be increased with this. By default no decay time adjustment is done. "
-        "A comma separated list of channel name and  reverberation time pairs, separated by "
-        "a colon. If only a single numeric value is given, it is used for all channels. When "
-        "some channel names are give but not all, the missing channels are not affected. For "
-        "example "--decay=300" or "--decay=FL:500,FC:100,FR:500,SR:700,BR:700,BL:700,SL:700" "
-        "or "--decay=FC:100".",
+        help=(
+            "Target decay time in milliseconds to reach -60 dB. When the natural decay time is "
+            "longer than the target decay time, a downward slope will be applied to decay tail. "
+            "Decay cannot be increased with this. By default no decay time adjustment is done. "
+            "A comma separated list of channel name and  reverberation time pairs, separated by "
+            "a colon. If only a single numeric value is given, it is used for all channels. When "
+            "some channel names are give but not all, the missing channels are not affected. For "
+            'example "--decay=300" or "--decay=FL:500,FC:100,FR:500,SR:700,BR:700,BL:700,SL:700" '
+            'or "--decay=FC:100".'
+        ),
     )
     arg_parser.add_argument(
         "--target_level",
@@ -726,38 +730,46 @@ def create_cli():
         "--fr_combination_method",
         type=str,
         default="average",
-        help="Method for combining frequency responses of generic room measurements if there are "
-        "more than one tracks in the file. "average" will simply average the frequency"
-        "responses. "conservative" will take the minimum absolute value for each frequency "
-        "but only if the values in all the measurements are positive or negative at the same "
-        "time.",
+        help=(
+            "Method for combining frequency responses of generic room measurements if there are "
+            "more than one tracks in the file. \"average\" will simply average the frequency"
+            "responses. \"conservative\" will take the minimum absolute value for each frequency "
+            "but only if the values in all the measurements are positive or negative at the same "
+            "time."
+        ),
     )
     arg_parser.add_argument(
         "--specific_limit",
         type=float,
         default=400,
-        help="Upper limit for room equalization with speaker-ear specific room measurements. "
-        "Equalization will drop down to 0 dB at this frequency in the leading octave. 0 "
-        "disables limit.",
+        help=(
+            "Upper limit for room equalization with speaker-ear specific room measurements. "
+            "Equalization will drop down to 0 dB at this frequency in the leading octave. 0 "
+            "disables limit."
+        ),
     )
     arg_parser.add_argument(
         "--generic_limit",
         type=float,
         default=300,
-        help="Upper limit for room equalization with generic room measurements. "
-        "Equalization will drop down to 0 dB at this frequency in the leading octave. 0 "
-        "disables limit.",
+        help=(
+            "Upper limit for room equalization with generic room measurements. "
+            "Equalization will drop down to 0 dB at this frequency in the leading octave. 0 "
+            "disables limit."
+        ),
     )
     arg_parser.add_argument(
         "--bass_boost",
         type=str,
         default=argparse.SUPPRESS,
-        help="Bass boost shelf. Sub-bass frequencies will be boosted by this amount. Can be "
-        "either a single value for a gain in dB or a comma separated list of three values for "
-        "parameters of a low shelf filter, where the first is gain in dB, second is center "
-        "frequency (Fc) in Hz and the last is quality (Q). When only a single value (gain) is "
-        "given, default values for Fc and Q are used which are 105 Hz and 0.76, respectively. "
-        "For example "--bass_boost=6" or "--bass_boost=6,150,0.69".",
+        help=(
+            "Bass boost shelf. Sub-bass frequencies will be boosted by this amount. Can be "
+            "either a single value for a gain in dB or a comma separated list of three values for "
+            "parameters of a low shelf filter, where the first is gain in dB, second is center "
+            "frequency (Fc) in Hz and the last is quality (Q). When only a single value (gain) is "
+            "given, default values for Fc and Q are used which are 105 Hz and 0.76, respectively. "
+            'For example "--bass_boost=6" or "--bass_boost=6,150,0.69".'
+        ),
     )
     arg_parser.add_argument(
         "--tilt",

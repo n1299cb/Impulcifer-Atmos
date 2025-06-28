@@ -24,7 +24,7 @@ def test_processing_vm_builds_command(monkeypatch, tmp_path):
     vm = ProcessingViewModel()
     result = vm.run(settings)
 
-    assert "impulcifer.py" in captured["args"]
+    assert "earprint.py" in captured["args"]
     assert "--channel_balance" in captured["args"]
     assert result.stdout == "ok"
 

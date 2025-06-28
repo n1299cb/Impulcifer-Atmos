@@ -10,7 +10,7 @@ import pytest
 
 def test_save_and_load_custom_layout(tmp_path, monkeypatch):
     preset_file = tmp_path / 'preset.json'
-    monkeypatch.setenv('IMPULCIFER_LAYOUT_PRESETS', str(preset_file))
+    monkeypatch.setenv('EARPRINT_LAYOUT_PRESETS', str(preset_file))
     import constants
 
     importlib.reload(constants)

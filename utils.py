@@ -27,7 +27,9 @@ def read_wav(file_path, expand=False):
         - wav data as numpy array with one row per track, samples in range -1..1
     """
     if not os.path.isfile(file_path):
-        raise FileNotFoundError(f"File in path "{os.path.abspath(file_path)}" does not exist.")
+        raise FileNotFoundError(
+            f"File in path '{os.path.abspath(file_path)}' does not exist."
+        )
     data, fs = sf.read(file_path)
     if len(data.shape) > 1:
         # Soundfile has tracks on columns, we want them on rows
@@ -145,7 +147,7 @@ def versus_distance(angle=30, distance=3, breadth=0.148, ear="primary", sound_fi
     elif ear == "secondary":
         aa = (90 + angle) / 180 * np.pi
     else:
-        raise ValueError("Ear must be "primary" or "secondary".")
+        raise ValueError('Ear must be "primary" or "secondary".')
     b = np.sqrt(distance**2 + (breadth / 2) ** 2 - 2 * distance * (breadth / 2) * np.cos(aa))
     d = b - distance
     delay = d / sound_velocity
@@ -157,7 +159,7 @@ def versus_distance(angle=30, distance=3, breadth=0.148, ear="primary", sound_fi
     elif sound_field == "diffuse":
         spl *= -0
     else:
-        raise ValueError("Sound field must be "reverberant", "free" or "diffuse".")
+        raise ValueError('Sound field must be "reverberant", "free" or "diffuse".')
     return d, delay, spl
 
 
