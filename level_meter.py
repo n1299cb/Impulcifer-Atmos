@@ -11,6 +11,7 @@ import numpy as np
 import sounddevice as sd
 import queue
 import time
+import inspect
 
 
 class LevelMonitor:
@@ -45,15 +46,22 @@ class LevelMonitor:
     def start(self, duration=None, callback=None):
         """Start monitoring. If ``callback`` is None, prints dB levels."""
         self.running = True
-        with sd.InputStream(
-            device=self.device,
-            channels=self.channels,
-            samplerate=self.samplerate,
-            blocksize=self.blocksize,
-            callback=self._callback,
-            latency=self.latency,
-            loopback=self.loopback,
-        ):
+        stream_kwargs = {
+            "device": self.device,
+            "channels": self.channels,
+            "samplerate": self.samplerate,
+            "blocksize": self.blocksize,
+            "callback": self._callback,
+            "latency": self.latency,
+        }
+
+        try:
+            if "loopback" in inspect.signature(sd.InputStream).parameters:
+                stream_kwargs["loopback"] = self.loopback
+        except Exception:
+            pass
+
+        with sd.InputStream(**stream_kwargs):
             start_time = time.time()
             while self.running:
                 try:
