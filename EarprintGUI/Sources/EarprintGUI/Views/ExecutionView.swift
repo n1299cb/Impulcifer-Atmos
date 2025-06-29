@@ -23,6 +23,9 @@ struct ExecutionView: View {
 
                 Button("Cancel") { viewModel.cancel() }
                     .disabled(!viewModel.isRunning)
+            
+                Button("Clear Log") { viewModel.clearLog() }
+                    .disabled(viewModel.log.isEmpty)
             }
 
             ScrollView {

@@ -71,6 +71,10 @@ final class ProcessingViewModel: ObservableObject {
         startPython(script: scriptPath("capture_wizard.py"), args: ["--layout", layout, "--dir", dir])
     }
 
+    func clearLog() {
+        log = ""
+    }
+
     func cancel() {
         process?.terminate()
         process = nil
@@ -84,6 +88,7 @@ final class ProcessingViewModel {
     func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?) {}
     func layoutWizard(layout: String, dir: String) {}
     func captureWizard(layout: String, dir: String) {}
+    func clearLog() {}
     func cancel() {}
 }
 #endif

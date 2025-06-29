@@ -4,13 +4,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftGUI",
+    name: "EarprintGUI",
     platforms: [
         .macOS(.v12)
     ],
     targets: [
         .executableTarget(
-            name: "SwiftGUI"
+            name: "EarprintGUI"
         )
     ]
 )

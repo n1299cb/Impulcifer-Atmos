@@ -17,7 +17,7 @@ struct SetupView: View {
             HStack {
                 TextField("Measurement directory", text: $measurementDir)
                 Button("Browse") {
-                    if let path = openPanel(directory: true) {
+                    if let path = openPanel(directory: true, startPath: measurementDir) {
                         measurementDir = path
                     }
                 }
@@ -25,7 +25,7 @@ struct SetupView: View {
             HStack {
                 TextField("Test signal", text: $testSignal)
                 Button("Browse") {
-                    if let path = openPanel(directory: false) {
+                    if let path = openPanel(directory: false, startPath: testSignal) {
                         testSignal = path
                     }
                 }
@@ -47,11 +47,15 @@ struct SetupView: View {
         .padding()
     }
 
-    func openPanel(directory: Bool) -> String? {
+    func openPanel(directory: Bool, startPath: String) -> String? {
         let panel = NSOpenPanel()
         panel.canChooseFiles = !directory
         panel.canChooseDirectories = directory
         panel.allowsMultipleSelection = false
+        if !startPath.isEmpty {
+            let base = directory ? startPath : (startPath as NSString).deletingLastPathComponent
+            panel.directoryURL = URL(fileURLWithPath: base)
+        }
         return panel.runModal() == .OK ? panel.url?.path : nil
     }
 }
