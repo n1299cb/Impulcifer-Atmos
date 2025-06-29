@@ -54,14 +54,21 @@ def run_capture(
     message_fn(f"\nRecording layout '{layout_name}' into {out_dir}\n")
     os.makedirs(out_dir, exist_ok=True)
 
-    prompt_fn("Insert binaural microphones and wear headphones.\n" "Press Enter to record headphone response...")
-    recorder.play_and_record(
-        play=stereo_sweep,
-        record=os.path.join(out_dir, "headphones.wav"),
-        channels=2,
-        progress_callback=progress_fn,
-        **rec_kwargs,
+    prompt_fn(
+        "Insert binaural microphones and wear headphones.\n"
+        "Press Enter to record headphone response..."
     )
+    try:
+        recorder.play_and_record(
+            play=stereo_sweep,
+            record=os.path.join(out_dir, "headphones.wav"),
+            channels=2,
+            progress_callback=progress_fn,
+            **rec_kwargs,
+        )
+    except Exception as exc:  # pragma: no cover - depends on sounddevice
+        message_fn(f"\n⚠️  Recording failed: {exc}")
+        return
 
     for group in groups:
         filename = ",".join(group) + ".wav"
@@ -69,13 +76,17 @@ def run_capture(
         channels = len(group)
         prompt = f"\nPosition for {filename} and press Enter to start recording..."
         prompt_fn(prompt)
-        recorder.play_and_record(
-            play=sweep,
-            record=os.path.join(out_dir, filename),
-            channels=channels,
-            progress_callback=progress_fn,
-            **rec_kwargs,
-        )
+        try:
+            recorder.play_and_record(
+                play=sweep,
+                record=os.path.join(out_dir, filename),
+                channels=channels,
+                progress_callback=progress_fn,
+                **rec_kwargs,
+            )
+        except Exception as exc:  # pragma: no cover - depends on sounddevice
+            message_fn(f"\n⚠️  Recording failed: {exc}")
+            return
 
     message_fn("\n✅ Capture completed.")
 

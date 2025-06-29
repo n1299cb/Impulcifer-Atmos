@@ -11,7 +11,12 @@
 
 import os
 import re
-import sounddevice as sd
+try:
+    import sounddevice as sd
+except OSError as e:  # pragma: no cover - depends on system libs
+    raise RuntimeError(
+        "PortAudio library not found. Install PortAudio and reinstall the sounddevice package."
+    ) from e
 from utils import read_wav, write_wav
 import numpy as np
 from threading import Thread
