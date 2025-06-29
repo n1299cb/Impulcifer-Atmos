@@ -18,7 +18,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_TEST_SIGNAL = os.path.join(
     PROJECT_ROOT,
     "data",
-    "sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl",
+    "sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav",
 )
 DEFAULT_MEASUREMENT_DIR = os.path.join(PROJECT_ROOT, "data", "demo")
 

@@ -9,6 +9,7 @@
 
 import sys
 import os
+import PySide6
 import sounddevice as sd
 import soundfile as sf
 import math
@@ -19,6 +20,12 @@ import matplotlib
 import json
 from dataclasses import asdict
 from typing import Optional
+from pathlib import Path
+
+if sys.platform == "darwin" and "QT_QPA_PLATFORM_PLUGIN_PATH" not in os.environ:
+    plugin_dir = Path(PySide6.__file__).resolve().parent / "Qt" / "plugins"
+    os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = str(plugin_dir)
+    print(f"Using Qt plugins path: {plugin_dir}")
 
 matplotlib.use("QtAgg")
 from PySide6.QtWidgets import (

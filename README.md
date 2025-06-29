@@ -196,7 +196,9 @@ ear canal openings. This setup ensures that the sound measured by the microphone
 head and ears just like it is when listening to music playing on speakers. Earprint will then transform these
 recordings into impulse responses, one per each speaker-ear pair.
 
-Earprint ships with a ready-made sweep file at `data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl` and a sample
+Earprint ships with ready-made sweep files at
+`data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav` and
+`data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl` along with a sample
 capture set in `data/demo`. When launching the GUI these paths are filled in automatically, but you can point the
 interface to your own sweep or capture directory at any time.
 
@@ -303,10 +305,11 @@ headphones sound like speakers.
 Earprint will also write all the output files into this folder.
 
 Earprint always needs to know which sine sweep signal was used during recording process. Test signal can be either a
-WAV (`.wav`) file or a Pickle (`.pkl`) file. Test signal is read from a file called `test.pkl` or `test.wav`. 
-`impulse_response_estimator.py` produces both but using a Pickle file is a bit faster. Pickle file however cannot be
-used with `recorder.py`. An alternative way of passing the test signal is with a command line argument `--test_signal`
-which takes is a path to the file eg. `--test_signal="data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.pkl"`.
+WAV (`.wav`) file or a Pickle (`.pkl`) file. Test signal is read from a file called `test.wav` or `test.pkl`.
+`impulse_response_estimator.py` produces both but using a Pickle file is a bit faster. Pickle files cannot be
+played back directly with `recorder.py` or the GUI. Use the WAV version when capturing measurements.
+An alternative way of passing the test signal is with a command line argument `--test_signal` which takes
+the path to the file, for example `--test_signal="data/sweep-6.15s-48000Hz-32bit-2.93Hz-24000Hz.wav"`.
 
 Sine sweep recordings are read from WAV files which have speaker names separated with commas and `.wav` extension eg.
 `FL,FR.wav`. The individual speakers in the given file must be recorded in the order of the speaker names in the file
