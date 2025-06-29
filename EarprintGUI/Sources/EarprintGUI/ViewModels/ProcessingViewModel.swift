@@ -2,6 +2,7 @@ import Foundation
 #if canImport(SwiftUI)
 import SwiftUI
 
+@MainActor
 final class ProcessingViewModel: ObservableObject {
     @Published var log: String = ""
     @Published var isRunning: Bool = false
@@ -22,32 +23,34 @@ final class ProcessingViewModel: ObservableObject {
         isRunning = true
         log = ""
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.arguments = ["python3", script] + args
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = pipe
-            pipe.fileHandleForReading.readabilityHandler = { handle in
+            pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+                guard let self else { return }
                 let data = handle.availableData
                 guard !data.isEmpty, let str = String(data: data, encoding: .utf8) else { return }
-                DispatchQueue.main.async {
-                    self?.log += str
+                Task { @MainActor in
+                    self.log += str
                 }
             }
             do {
-                self?.process = process
+                Task { @MainActor in self.process = process }
                 try process.run()
                 process.waitUntilExit()
             } catch {
-                DispatchQueue.main.async {
-                    self?.log += "\(error)\n"
+                Task { @MainActor in
+                    self.log += "\(error)\n"
                 }
             }
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 pipe.fileHandleForReading.readabilityHandler = nil
-                self?.isRunning = false
-                self?.process = nil
+                self.isRunning = false
+                self.process = nil
             }
         }
     }
