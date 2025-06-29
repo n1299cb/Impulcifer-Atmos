@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import AppKit
 
@@ -34,3 +35,4 @@ struct VisualizationView: View {
         }
     }
 }
+#endif
