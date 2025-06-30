@@ -13,6 +13,15 @@ struct ExecutionView: View {
     var outputChannels: [Int]
     var inputChannels: [Int]
     var selectedLayout: String = ""
+    @Binding var enableCompensation: Bool
+    @Binding var headphoneEqEnabled: Bool
+    @Binding var headphoneFile: String
+    @Binding var compensationType: String
+    @Binding var customCompensationFile: String
+    @Binding var diffuseField: Bool
+    @Binding var xCurveAction: String
+    @Binding var xCurveType: String
+    @Binding var xCurveInCapture: Bool
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -26,7 +35,15 @@ struct ExecutionView: View {
                         playbackDevice: playbackDevice,
                         recordingDevice: recordingDevice,
                         outputChannels: outputChannels,
-                        inputChannels: inputChannels
+                        inputChannels: inputChannels,
+                        enableCompensation: enableCompensation,
+                        headphoneEqEnabled: headphoneEqEnabled,
+                        headphoneFile: headphoneFile,
+                        compensationType: compensationType == "custom" ? customCompensationFile : compensationType,
+                        diffuseField: diffuseField,
+                        xCurveAction: xCurveAction,
+                        xCurveType: xCurveType,
+                        xCurveInCapture: xCurveInCapture
                     )
                 }) {
                     Text(viewModel.isRunning ? "Running..." : "Run Processing")
@@ -40,7 +57,7 @@ struct ExecutionView: View {
                     .disabled(viewModel.log.isEmpty)
 
                 Button("Save Log") {
-                    if let url = savePanel() {
+                    if let url = savePanel(startPath: measurementDir) {
                         try? viewModel.log.write(to: url, atomically: true, encoding: .utf8)
                     }
                 }
@@ -80,11 +97,11 @@ struct ExecutionView: View {
         .padding()
     }
 
-    func savePanel(startPath: String) -> String? {
+    func savePanel(startPath: String) -> URL? {
         #if canImport(AppKit)
         let panel = NSSavePanel()
         panel.directoryURL = URL(fileURLWithPath: startPath)
-        return panel.runModal() == .OK ? panel.url?.path : nil
+        return panel.runModal() == .OK ? panel.url : nil
         #else
         return nil
         #endif

@@ -72,7 +72,15 @@ final class ProcessingViewModel: ObservableObject {
              playbackDevice: String?,
              recordingDevice: String?,
              outputChannels: [Int]?,
-             inputChannels: [Int]?) {
+             inputChannels: [Int]?,
+             enableCompensation: Bool,
+             headphoneEqEnabled: Bool,
+             headphoneFile: String?,
+             compensationType: String?,
+             diffuseField: Bool,
+             xCurveAction: String,
+             xCurveType: String?,
+             xCurveInCapture: Bool) {
         var args = ["--dir_path", measurementDir, "--test_signal", testSignal]
         if let balance = channelBalance, !balance.isEmpty {
             args += ["--channel_balance", balance]
@@ -88,6 +96,22 @@ final class ProcessingViewModel: ObservableObject {
         if let ins = inputChannels, !ins.isEmpty {
             args += ["--input_channels", ins.map(String.init).joined(separator: ",")]
         }
+        if enableCompensation {
+            args.append("--compensation")
+            if headphoneEqEnabled {
+                if let file = headphoneFile, !file.isEmpty { args += ["--headphones", file] }
+            } else {
+                args.append("--no_headphone_compensation")
+            }
+            if let cType = compensationType, !cType.isEmpty { args.append(cType) }
+        }
+        if diffuseField { args.append("--diffuse_field_compensation") }
+        if xCurveAction == "Apply X-Curve" { args.append("--apply_x_curve") }
+        if xCurveAction == "Remove X-Curve" { args.append("--remove_x_curve") }
+        if xCurveAction != "None", let ct = xCurveType, !ct.isEmpty {
+            args += ["--x_curve_type", ct]
+        }
+        if xCurveInCapture { args.append("--x_curve_in_capture") }
         startPython(script: scriptPath("earprint.py"), args: args)
     }
 

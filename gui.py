@@ -698,6 +698,9 @@ class EarprintGUI(QMainWindow):
         self.target_level_var.clear()
         layout.addLayout(self.labeled_row("Target Level (dB):", self.target_level_var, self.target_level_toggle))
 
+        self.interactive_delays_var = QCheckBox("Interactive Delays")
+        layout.addWidget(self.interactive_delays_var)
+
         self.channel_balance_var = QComboBox()
         self.channel_balance_var.addItem("Off", "off")
         self.channel_balance_var.addItem("Left", "left")
@@ -1153,8 +1156,8 @@ class EarprintGUI(QMainWindow):
         return ProcessingSettings(
             measurement_dir=self.measurement_dir_var.text(),
             test_signal=self.test_signal_path_var.text(),
-            decay_time=self.decay_time_var.text(),
-            target_level=self.target_level_var.text(),
+            decay_time=self.decay_time_var.text() if self.decay_time_toggle.isChecked() else "",
+            target_level=self.target_level_var.text() if self.target_level_toggle.isChecked() else "",
             channel_balance_enabled=self.channel_balance_toggle.isChecked(),
             channel_balance=self.channel_balance_var.currentData(),
             specific_limit_enabled=self.specific_limit_toggle.isChecked(),
@@ -1178,6 +1181,7 @@ class EarprintGUI(QMainWindow):
             x_curve_action=self.x_curve_action_var.currentText(),
             x_curve_type=self.x_curve_type_var.currentText(),
             x_curve_in_capture=self.x_curve_in_capture_var.isChecked(),
+            interactive_delays=self.interactive_delays_var.isChecked(),
         )
 
     def gather_preset_data(self) -> dict:
@@ -1258,8 +1262,12 @@ class EarprintGUI(QMainWindow):
     def apply_preset(self, data: dict):
         self.measurement_dir_var.setText(data.get("measurement_dir", ""))
         self.test_signal_path_var.setText(data.get("test_signal", ""))
-        self.decay_time_var.setText(data.get("decay_time", ""))
-        self.target_level_var.setText(data.get("target_level", ""))
+        decay = data.get("decay_time", "")
+        self.decay_time_var.setText(decay)
+        self.decay_time_toggle.setChecked(bool(decay))
+        target = data.get("target_level", "")
+        self.target_level_var.setText(target)
+        self.target_level_toggle.setChecked(bool(target))
         self.channel_balance_toggle.setChecked(data.get("channel_balance_enabled", False))
         idx = self.channel_balance_var.findData(data.get("channel_balance"))
         if idx >= 0:
@@ -1293,6 +1301,7 @@ class EarprintGUI(QMainWindow):
         if idx >= 0:
             self.x_curve_type_var.setCurrentIndex(idx)
         self.x_curve_in_capture_var.setChecked(data.get("x_curve_in_capture", False))
+        self.interactive_delays_var.setChecked(data.get("interactive_delays", False))
         layout_name = data.get("layout", self.selected_layout_name)
         if self.layout_var.findText(layout_name) == -1:
             self.layout_var.insertItem(self.layout_var.count() - 1, layout_name)

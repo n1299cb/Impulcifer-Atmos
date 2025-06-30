@@ -23,6 +23,8 @@ struct SetupView: View {
     @State private var playbackDevices: [AudioDevice] = []
     @State private var recordingDevices: [AudioDevice] = []
     @State private var showMapping = false
+    @State private var measurementDirValid: Bool = true
+    @State private var testSignalValid: Bool = true
 
     private let layouts = ["1.0", "2.0", "5.1", "5.1.2", "5.1.4", "7.1", "7.1.2", "7.1.4", "7.1.6", "9.1.4", "9.1.6", "ambisonics"].sorted()
 
@@ -30,6 +32,9 @@ struct SetupView: View {
         Form {
             HStack {
                 TextField("Measurement directory", text: $measurementDir)
+                    .overlay(RoundedRectangle(cornerRadius: 4)
+                        .stroke(measurementDirValid ? Color.green : Color.red))
+                    .onChange(of: measurementDir) { _ in validatePaths() }
                 Button("Browse") {
                     if let path = openPanel(directory: true, startPath: measurementDir) {
                         measurementDir = path
@@ -38,6 +43,9 @@ struct SetupView: View {
             }
             HStack {
                 TextField("Test signal", text: $testSignal)
+                    .overlay(RoundedRectangle(cornerRadius: 4)
+                        .stroke(testSignalValid ? Color.green : Color.red))
+                    .onChange(of: testSignal) { _ in validatePaths() }
                 Button("Browse") {
                     if let path = openPanel(directory: false, startPath: testSignal) {
                         testSignal = path
@@ -82,9 +90,16 @@ struct SetupView: View {
         }
         .padding()
         .onAppear(perform: loadDevices)
+        .onAppear(perform: validatePaths)
         .sheet(isPresented: $showMapping) {
             mappingSheet
         }
+    }
+
+    func validatePaths() {
+        var isDir: ObjCBool = false
+        measurementDirValid = FileManager.default.fileExists(atPath: measurementDir, isDirectory: &isDir) && isDir.boolValue
+        testSignalValid = FileManager.default.fileExists(atPath: testSignal)
     }
 
     func openPanel(directory: Bool, startPath: String) -> String? {

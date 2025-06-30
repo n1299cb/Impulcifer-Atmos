@@ -48,11 +48,11 @@ struct RoomResponseView: View {
         .padding()
     }
 
-    func savePanel(startPath: String) -> String? {
+    func savePanel(startPath: String) -> URL? {
         #if canImport(AppKit)
         let panel = NSSavePanel()
         panel.directoryURL = URL(fileURLWithPath: startPath)
-        return panel.runModal() == .OK ? panel.url?.path : nil
+        return panel.runModal() == .OK ? panel.url : nil
         #else
         return nil
         #endif

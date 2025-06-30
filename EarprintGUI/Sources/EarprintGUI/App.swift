@@ -10,6 +10,15 @@ struct EarprintApp: App {
     @State private var playbackDevice: String = ""
     @State private var recordingDevice: String = ""
     @State private var channelMapping: [String: [Int]] = [:]
+    @State private var enableCompensation: Bool = false
+    @State private var headphoneEqEnabled: Bool = false
+    @State private var headphoneFile: String = ""
+    @State private var compensationType: String = "diffuse"
+    @State private var customCompensationFile: String = ""
+    @State private var diffuseField: Bool = false
+    @State private var xCurveAction: String = "None"
+    @State private var xCurveType: String = "minus3db_oct"
+    @State private var xCurveInCapture: Bool = false
     @StateObject private var processingVM = ProcessingViewModel()
 
     var body: some Scene {
@@ -22,7 +31,7 @@ struct EarprintApp: App {
                           targetLevel: $targetLevel,
                           selectedLayout: $selectedLayout,
                           playbackDevice: $playbackDevice,
-                          recordingDevice: $recording_device,
+                          recordingDevice: $recordingDevice,
                           channelMapping: $channelMapping)
                     .tabItem { Text("Setup") }
                 ExecutionView(viewModel: processingVM,
@@ -33,8 +42,17 @@ struct EarprintApp: App {
                               playbackDevice: playbackDevice,
                               recordingDevice: recordingDevice,
                               outputChannels: channelMapping["output_channels"] ?? [],
-                              inputChannels: channelMapping["input_channels"] ?? [])
-                              selectedLayout: selectedLayout)
+                              inputChannels: channelMapping["input_channels"] ?? [],
+                              selectedLayout: selectedLayout,
+                              enableCompensation: $enableCompensation,
+                              headphoneEqEnabled: $headphoneEqEnabled,
+                              headphoneFile: $headphoneFile,
+                              compensationType: $compensationType,
+                              customCompensationFile: $customCompensationFile,
+                              diffuseField: $diffuseField,
+                              xCurveAction: $xCurveAction,
+                              xCurveType: $xCurveType,
+                              xCurveInCapture: $xCurveInCapture)
                     .tabItem { Text("Execution") }
                 HeadphoneEQView(viewModel: processingVM,
                                 measurementDir: measurementDir,
@@ -51,7 +69,16 @@ struct EarprintApp: App {
                 ProcessingOptionsView(channelBalance: $channelBalance,
                                      targetLevel: $targetLevel)
                     .tabItem { Text("Processing Options") }
-                CompensationView(viewModel: processingVM)
+                CompensationView(viewModel: processingVM,
+                                 enableCompensation: $enableCompensation,
+                                 headphoneEqEnabled: $headphoneEqEnabled,
+                                 headphoneFile: $headphoneFile,
+                                 compensationType: $compensationType,
+                                 customCompensationFile: $customCompensationFile,
+                                 diffuseField: $diffuseField,
+                                 xCurveAction: $xCurveAction,
+                                 xCurveType: $xCurveType,
+                                 xCurveInCapture: $xCurveInCapture)
                     .tabItem { Text("Compensation") }
                 PresetView(viewModel: processingVM,
                            measurementDir: measurementDir)
