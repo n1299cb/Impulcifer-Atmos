@@ -169,6 +169,18 @@ echo "Using Qt plugins from: $QT_QPA_PLATFORM_PLUGIN_PATH"
 ```
 Once this variable is configured, run `python gui.py` again.
 
+### Running the Swift GUI
+
+The repository also ships with a native macOS interface written in SwiftUI.
+Build and launch it with:
+```bash
+cd EarprintGUI
+swift run
+```
+The Swift app mirrors the tabs of the Python GUI and executes the same
+Python scripts under the hood. A recent Xcode or the Swift toolchain for
+macOS 12+ is required.
+
 ## Development
 For contributor setup and test instructions see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 

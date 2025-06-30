@@ -72,8 +72,10 @@ struct SetupView: View {
             Picker("Layout", selection: $selectedLayout) {
                 ForEach(layouts, id: \.self) { Text($0) }
             }
-            TextField("Playback Device", text: $playbackDevice)
-            TextField("Recording Device", text: $recordingDevice)
+            HStack {
+                Spacer()
+                Button("Refresh Devices") { loadDevices() }
+            }
             TextField("Channel Balance", text: $channelBalance)
             TextField("Target Level", text: $targetLevel)
             HStack {
