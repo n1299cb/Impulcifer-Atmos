@@ -10,7 +10,7 @@ callbacks.
 
 import os
 import argparse
-from typing import Optional, Callable
+from typing import Any, Callable, Optional
 
 from generate_layout import select_layout, init_layout
 import recorder
@@ -34,10 +34,10 @@ def run_capture(
     out_dir: str,
     stereo_sweep: str = DEFAULT_STEREO_SWEEP,
     mono_sweep: str = DEFAULT_MONO_SWEEP,
-    prompt_fn=input,
-    message_fn=print,
-    progress_fn=None,
-    **rec_kwargs,
+    prompt_fn: Callable[[str], Any] = input,
+    message_fn: Callable[[str], Any] = print,
+    progress_fn: Optional[Callable[[float, float], None]] = None,
+    **rec_kwargs: Any,
 ) -> None:
     """Run interactive capture for each speaker group.
 
@@ -50,10 +50,7 @@ def run_capture(
     message_fn(f"\nRecording layout '{layout_name}' into {out_dir}\n")
     os.makedirs(out_dir, exist_ok=True)
 
-    prompt_fn(
-        "Insert binaural microphones and wear headphones.\n"
-        "Press Enter to record headphone response..."
-    )
+    prompt_fn("Insert binaural microphones and wear headphones.\n" "Press Enter to record headphone response...")
     try:
         recorder.play_and_record(
             play=stereo_sweep,
@@ -117,8 +114,10 @@ def main() -> None:
 
     progress_fn: Optional[Callable[[float, float], None]]
     if args.print_progress:
+
         def progress_fn(progress: float, remaining: float) -> None:
             print(f"PROGRESS {progress:.3f} {remaining:.3f}", flush=True)
+
     else:
         progress_fn = None
 

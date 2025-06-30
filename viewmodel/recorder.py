@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Callable, List, Optional
 import subprocess
 import sys
 import os
@@ -9,7 +9,11 @@ from models import RecorderSettings
 class RecordingViewModel:
     """ViewModel handling recording commands."""
 
-    def run_recorder(self, settings: RecorderSettings, progress_callback=None) -> subprocess.CompletedProcess:
+    def run_recorder(
+        self,
+        settings: RecorderSettings,
+        progress_callback: Optional[Callable[[float, float], None]] = None,
+    ) -> subprocess.CompletedProcess:
         args = [
             sys.executable,
             "recorder.py",
@@ -49,9 +53,9 @@ class RecordingViewModel:
         layout_name: str,
         layout_groups: List[List[str]],
         settings: RecorderSettings,
-        prompt_fn=None,
-        message_fn=None,
-        progress_callback=None,
+        prompt_fn: Optional[Callable[[str], Any]] = None,
+        message_fn: Optional[Callable[[str], Any]] = None,
+        progress_callback: Optional[Callable[[float, float], None]] = None,
     ) -> None:
         from capture_wizard import run_capture
 

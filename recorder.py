@@ -4,6 +4,7 @@
 
 import os
 import re
+
 try:
     import sounddevice as sd
 except OSError:  # pragma: no cover - depends on system libs
@@ -25,7 +26,7 @@ import numpy as np
 from threading import Thread
 import argparse
 import time
-from typing import Optional
+from typing import Callable, Optional
 from constants import SPEAKER_NAMES, SMPTE_ORDER
 
 
@@ -267,17 +268,17 @@ def set_default_devices(input_device, output_device):
 
 
 def play_and_record(
-    play=None,
-    record=None,
-    input_device=None,
-    output_device=None,
-    host_api=None,
-    channels=2,
-    append=False,
-    output_file=None,
-    report_file=None,
-    progress_callback=None,
-):
+    play: Optional[str] = None,
+    record: Optional[str] = None,
+    input_device: Optional[int] = None,
+    output_device: Optional[int] = None,
+    host_api: Optional[str] = None,
+    channels: int = 2,
+    append: bool = False,
+    output_file: Optional[str] = None,
+    report_file: Optional[str] = None,
+    progress_callback: Optional[Callable[[float, float], None]] = None,
+) -> None:
     """Plays one file and records another at the same time
 
     Args:
@@ -434,8 +435,10 @@ def create_cli():
 if __name__ == "__main__":
     args = create_cli()
     if args.pop("print_progress", False):
+
         def progress_fn(progress: float, remaining: float) -> None:
             print(f"PROGRESS {progress:.3f} {remaining:.3f}", flush=True)
+
     else:
         progress_fn = None
 

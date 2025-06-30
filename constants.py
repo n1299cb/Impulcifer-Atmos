@@ -108,7 +108,7 @@ SPEAKER_LAYOUT_INDEXES: dict[str, list[tuple[int, ...]]] = {
 USER_LAYOUT_PRESETS_FILE = os.environ.get("EARPRINT_LAYOUT_PRESETS", "user_layouts.json")
 
 
-def load_user_layout_presets(file_path: str = USER_LAYOUT_PRESETS_FILE) -> dict:
+def load_user_layout_presets(file_path: str = USER_LAYOUT_PRESETS_FILE) -> Dict[str, List[List[str]]]:
     """Load user-defined layouts from JSON file."""
     if not os.path.exists(file_path):
         return {}
@@ -157,7 +157,7 @@ def register_user_layouts(layouts: dict[str, list[list[str]]]) -> None:
         ]
 
 
-def load_and_register_user_layouts(file_path: str) -> dict:
+def load_and_register_user_layouts(file_path: str) -> Dict[str, List[List[str]]]:
     """Load presets from ``file_path`` and register them."""
     layouts = load_user_layout_presets(file_path)
     register_user_layouts(layouts)
