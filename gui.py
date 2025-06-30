@@ -84,6 +84,7 @@ from viewmodel.layout import LayoutViewModel
 from level_meter import LevelMonitor
 import preset_manager
 import user_profiles
+import room_presets
 from contextlib import redirect_stdout
 import io
 import datetime
@@ -124,6 +125,7 @@ class EarprintGUI(QMainWindow):
         self.create_measurement_setup_tab()  # Measurement setup defines widgets used in later tabs
         self.create_preset_tab()
         self.create_profile_tab()
+        self.create_room_preset_tab()
         self.create_visualization_tab()
         self.setup_shortcuts()
 
@@ -1259,6 +1261,57 @@ class EarprintGUI(QMainWindow):
         user_profiles.delete_profile(item.text())
         self.refresh_profiles()
 
+    def gather_room_preset_data(self):
+        from models import RoomPreset
+        return RoomPreset(
+            brir_dir=self.profile_brir_var.text(),
+            measurement_dir=self.measurement_dir_var.text(),
+            notes=self.room_notes_var.toPlainText(),
+            measurement_date=datetime.date.today().isoformat(),
+        )
+
+    def refresh_room_presets(self):
+        self.room_list.clear()
+        for name in room_presets.load_room_presets().keys():
+            self.room_list.addItem(name)
+
+    def save_current_room_preset(self):
+        name, ok = QInputDialog.getText(self, "Save Room", "Room name:")
+        if not ok or not name:
+            return
+        room_presets.save_room_preset(name, self.gather_room_preset_data())
+        self.refresh_room_presets()
+
+    def load_selected_room_preset(self):
+        item = self.room_list.currentItem()
+        if not item:
+            return
+        name = item.text()
+        data = room_presets.load_room_presets().get(name)
+        if not data:
+            return
+        self.profile_brir_var.setText(data.get("brir_dir", ""))
+        self.measurement_dir_var.setText(data.get("measurement_dir", ""))
+        self.room_notes_var.setPlainText(data.get("notes", ""))
+
+    def delete_selected_room_preset(self):
+        item = self.room_list.currentItem()
+        if not item:
+            return
+        room_presets.delete_room_preset(item.text())
+        self.refresh_room_presets()
+
+    def import_room_preset(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Import Room Preset", "", "JSON Files (*.json);;All Files (*)"
+        )
+        if file_path:
+            try:
+                room_presets.import_room_preset(file_path)
+                self.refresh_room_presets()
+            except (OSError, ValueError) as e:
+                QMessageBox.critical(self, "Import Error", str(e))
+
     def apply_preset(self, data: dict):
         self.measurement_dir_var.setText(data.get("measurement_dir", ""))
         self.test_signal_path_var.setText(data.get("test_signal", ""))
@@ -1367,6 +1420,38 @@ class EarprintGUI(QMainWindow):
 
         self.tabs.addTab(tab, "Profiles")
         self.refresh_profiles()
+
+    def create_room_preset_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
+
+        self.room_list = QListWidget()
+        layout.addWidget(self.room_list)
+
+        self.room_notes_var = QTextEdit()
+        self.room_notes_var.setFixedHeight(60)
+        layout.addLayout(self.labeled_row("Notes:", self.room_notes_var))
+
+        btn_row = QHBoxLayout()
+        load_btn = QPushButton("Load")
+        save_btn = QPushButton("Save")
+        delete_btn = QPushButton("Delete")
+        import_btn = QPushButton("Import…")
+        btn_row.addWidget(load_btn)
+        btn_row.addWidget(save_btn)
+        btn_row.addWidget(delete_btn)
+        btn_row.addWidget(import_btn)
+        layout.addLayout(btn_row)
+
+        load_btn.clicked.connect(self.load_selected_room_preset)
+        save_btn.clicked.connect(self.save_current_room_preset)
+        delete_btn.clicked.connect(self.delete_selected_room_preset)
+        import_btn.clicked.connect(self.import_room_preset)
+
+        self.tabs.addTab(tab, "Rooms")
+        self.refresh_room_presets()
 
     def create_visualization_tab(self):
         tab = QWidget()

@@ -95,9 +95,13 @@ struct EarprintApp: App {
                             measurementDir: measurementDir)
                     .tabItem { Text("Profiles") }
                     .tag(7)
+                RoomPresetView(viewModel: processingVM,
+                               measurementDir: $measurementDir)
+                    .tabItem { Text("Rooms") }
+                    .tag(8)
                 VisualizationView(measurementDir: measurementDir)
                     .tabItem { Text("Visualization") }
-                    .tag(8)
+                    .tag(9)
             }
             .frame(minWidth: 600, minHeight: 400)
         }

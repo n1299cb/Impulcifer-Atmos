@@ -86,6 +86,11 @@ class RealTimeConvolver:
                 "right": np.fft.rfft(buf_r),
             }
 
+    def _angular_distance(self, a: float, b: float) -> float:
+        """Return smallest distance between two angles in degrees."""
+        diff = abs(a - b) % 360.0
+        return min(diff, 360.0 - diff)
+
     def process_block(self, block: np.ndarray) -> np.ndarray:
         """Process single audio block.
 
@@ -109,18 +114,22 @@ class RealTimeConvolver:
             else:
                 if isinstance(self.angles[0], (tuple, list)):
                     orient = np.array([self._yaw, self._pitch, self._roll])
-                    dists = [np.linalg.norm(orient - np.array(a)) for a in self.angles]
+                    dists = np.array([np.linalg.norm(orient - np.array(a)) for a in self.angles], dtype=float)
                 else:
-                    dists = [abs(a - self._yaw) for a in self.angles]
-                idx = np.argsort(dists)[:2]
-                a0, a1 = self.angles[idx[0]], self.angles[idx[1]]
-                d0, d1 = dists[idx[0]], dists[idx[1]]
-                w1 = 0.5 if d0 + d1 == 0 else 1 - d0 / (d0 + d1)
-                w2 = 1 - w1
-                ir0 = self.ir_fft[a0]
-                ir1 = self.ir_fft[a1]
-                ir_l = w1 * ir0["left"] + w2 * ir1["left"]
-                ir_r = w1 * ir0["right"] + w2 * ir1["right"]
+                    dists = np.array([self._angular_distance(a, self._yaw) for a in self.angles], dtype=float)
+
+                if np.any(dists == 0):
+                    weights = (dists == 0).astype(float)
+                else:
+                    inv = 1.0 / dists
+                    weights = inv / inv.sum()
+
+                ir_l = np.zeros_like(self.ir_fft[self.angles[0]]["left"], dtype=complex)
+                ir_r = np.zeros_like(ir_l)
+                for w, a in zip(weights, self.angles):
+                    ir_l += w * self.ir_fft[a]["left"]
+                    ir_r += w * self.ir_fft[a]["right"]
+
                 out_l = buf_fft[0] * ir_l
                 out_r = buf_fft[1] * ir_r
         else:
