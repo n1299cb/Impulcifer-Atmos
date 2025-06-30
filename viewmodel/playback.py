@@ -46,7 +46,11 @@ class PlaybackViewModel:
         def _loop() -> None:
             while self._running:
                 if self.tracker:
-                    self.convolver.set_yaw(self.tracker.yaw())
+                    self.convolver.set_orientation(
+                        self.tracker.yaw(),
+                        self.tracker.pitch(),
+                        self.tracker.roll(),
+                    )
                 time.sleep(0.01)
 
         self._thread = Thread(target=_loop, daemon=True)

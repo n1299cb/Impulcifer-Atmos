@@ -16,8 +16,12 @@ class HeadTracker:
         self.host = host
         self.port = port
         self._yaw = 0.0
+        self._pitch = 0.0
+        self._roll = 0.0
         self._dispatcher = Dispatcher()
         self._dispatcher.map("/yaw", self._on_yaw)
+        self._dispatcher.map("/pitch", self._on_pitch)
+        self._dispatcher.map("/roll", self._on_roll)
         self._server = ThreadingOSCUDPServer((host, port), self._dispatcher)
         self._thread: Optional[threading.Thread] = None
 
@@ -25,6 +29,20 @@ class HeadTracker:
         if args:
             try:
                 self._yaw = float(args[0])
+            except (ValueError, TypeError):
+                pass
+
+    def _on_pitch(self, address: str, *args: float) -> None:
+        if args:
+            try:
+                self._pitch = float(args[0])
+            except (ValueError, TypeError):
+                pass
+
+    def _on_roll(self, address: str, *args: float) -> None:
+        if args:
+            try:
+                self._roll = float(args[0])
             except (ValueError, TypeError):
                 pass
 
@@ -41,3 +59,9 @@ class HeadTracker:
 
     def yaw(self) -> float:
         return self._yaw
+
+    def pitch(self) -> float:
+        return self._pitch
+
+    def roll(self) -> float:
+        return self._roll

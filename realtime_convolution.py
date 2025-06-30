@@ -24,7 +24,7 @@ class RealTimeConvolver:
 
     def __init__(
         self,
-        irs: Union[HRIR, Dict[float, Tuple[np.ndarray, np.ndarray]]],
+        irs: Union[HRIR, Dict[Union[float, Tuple[float, float, float]], Tuple[np.ndarray, np.ndarray]]],
         samplerate: Optional[int] = None,
         block_size: int = 1024,
     ) -> None:
@@ -32,15 +32,17 @@ class RealTimeConvolver:
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
         self._yaw = 0.0
+        self._pitch = 0.0
+        self._roll = 0.0
 
         if isinstance(irs, dict):
             if samplerate is None:
                 raise ValueError("samplerate must be given for BRIR dictionaries")
             self.fs = samplerate
-            self.brirs: Dict[float, Tuple[np.ndarray, np.ndarray]] = {
-                float(a): (np.asarray(l), np.asarray(r)) for a, (l, r) in irs.items()
+            self.brirs: Dict[Union[float, Tuple[float, float, float]], Tuple[np.ndarray, np.ndarray]] = {
+                a: (np.asarray(l), np.asarray(r)) for a, (l, r) in irs.items()
             }
-            self.angles = sorted(self.brirs.keys())
+            self.angles = list(self.brirs.keys())
             self._prepare_ir_fft_brirs()
             self.n_speakers = 2
         else:
@@ -96,13 +98,31 @@ class RealTimeConvolver:
         if hasattr(self, "brirs"):
             if block.shape != (2, self.block_size):
                 raise ValueError("Invalid input block shape")
-            angle = min(self.angles, key=lambda a: abs(a - self._yaw))
-            ir = self.ir_fft[angle]
             buf = np.zeros((2, self.fft_size))
             buf[:, : self.block_size] = block
             buf_fft = np.fft.rfft(buf, axis=1)
-            out_l = buf_fft[0] * ir["left"]
-            out_r = buf_fft[1] * ir["right"]
+
+            if len(self.angles) == 1:
+                ir = self.ir_fft[self.angles[0]]
+                out_l = buf_fft[0] * ir["left"]
+                out_r = buf_fft[1] * ir["right"]
+            else:
+                if isinstance(self.angles[0], (tuple, list)):
+                    orient = np.array([self._yaw, self._pitch, self._roll])
+                    dists = [np.linalg.norm(orient - np.array(a)) for a in self.angles]
+                else:
+                    dists = [abs(a - self._yaw) for a in self.angles]
+                idx = np.argsort(dists)[:2]
+                a0, a1 = self.angles[idx[0]], self.angles[idx[1]]
+                d0, d1 = dists[idx[0]], dists[idx[1]]
+                w1 = 0.5 if d0 + d1 == 0 else 1 - d0 / (d0 + d1)
+                w2 = 1 - w1
+                ir0 = self.ir_fft[a0]
+                ir1 = self.ir_fft[a1]
+                ir_l = w1 * ir0["left"] + w2 * ir1["left"]
+                ir_r = w1 * ir0["right"] + w2 * ir1["right"]
+                out_l = buf_fft[0] * ir_l
+                out_r = buf_fft[1] * ir_r
         else:
             if block.shape != (self.n_speakers, self.block_size):
                 raise ValueError("Invalid input block shape")
@@ -126,9 +146,11 @@ class RealTimeConvolver:
 
         return np.stack([y_l[: self.block_size], y_r[: self.block_size]])
 
-    def set_yaw(self, yaw: float) -> None:
+    def set_orientation(self, yaw: float, pitch: float = 0.0, roll: float = 0.0) -> None:
         """Update current head orientation."""
         self._yaw = float(yaw)
+        self._pitch = float(pitch)
+        self._roll = float(roll)
 
     def start(
         self,
