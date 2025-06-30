@@ -27,6 +27,7 @@ class RealTimeConvolver:
         irs: Union[HRIR, Dict[Union[float, Tuple[float, float, float]], Tuple[np.ndarray, np.ndarray]]],
         samplerate: Optional[int] = None,
         block_size: int = 1024,
+        cross_talk_filters: Optional[Dict[str, np.ndarray]] = None,
     ) -> None:
         self.block_size = block_size
         self._thread: Optional[threading.Thread] = None
@@ -52,6 +53,18 @@ class RealTimeConvolver:
             self._prepare_ir_fft_hrir(irs)
 
         self.overlap = np.zeros((2, self.fft_size - self.block_size))
+
+        # Optional cross-talk cancellation stage
+        self.cross_talk_filters = cross_talk_filters
+        if self.cross_talk_filters is not None:
+            max_len = max(len(f) for f in self.cross_talk_filters.values())
+            self.ct_fft_size = self._next_pow2(self.block_size + max_len - 1)
+            self.ct_fft = {}
+            for key, filt in self.cross_talk_filters.items():
+                buf = np.zeros(self.ct_fft_size)
+                buf[: len(filt)] = filt
+                self.ct_fft[key] = np.fft.rfft(buf)
+            self.ct_overlap = np.zeros((2, self.ct_fft_size - self.block_size))
 
     def _next_pow2(self, x: int) -> int:
         return 1 << (x - 1).bit_length()
@@ -153,7 +166,23 @@ class RealTimeConvolver:
         self.overlap[0] = y_l[self.block_size :]
         self.overlap[1] = y_r[self.block_size :]
 
-        return np.stack([y_l[: self.block_size], y_r[: self.block_size]])
+        out = np.stack([y_l[: self.block_size], y_r[: self.block_size]])
+
+        if self.cross_talk_filters is not None:
+            buf = np.zeros((2, self.ct_fft_size))
+            buf[:, : self.block_size] = out
+            buf_fft = np.fft.rfft(buf, axis=1)
+            out_l = buf_fft[0] * self.ct_fft["LL"] + buf_fft[1] * self.ct_fft["RL"]
+            out_r = buf_fft[0] * self.ct_fft["LR"] + buf_fft[1] * self.ct_fft["RR"]
+            y_l = np.fft.irfft(out_l)
+            y_r = np.fft.irfft(out_r)
+            y_l[: self.ct_overlap.shape[1]] += self.ct_overlap[0]
+            y_r[: self.ct_overlap.shape[1]] += self.ct_overlap[1]
+            self.ct_overlap[0] = y_l[self.block_size :]
+            self.ct_overlap[1] = y_r[self.block_size :]
+            out = np.stack([y_l[: self.block_size], y_r[: self.block_size]])
+
+        return out
 
     def set_orientation(self, yaw: float, pitch: float = 0.0, roll: float = 0.0) -> None:
         """Update current head orientation."""

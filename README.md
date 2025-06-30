@@ -594,3 +594,21 @@ Example converting a multichannel WAV file:
 ```bash
 python -m realtime_convolution input_multichannel.wav output_stereo.wav
 ```
+
+### Optional Cross-Talk Cancellation
+
+`RealTimeConvolver` now supports an optional cross-talk cancellation stage. If
+you plan to play the binaural output through loudspeakers or multi-driver
+headphones, provide FIR filters that invert the speaker-to-ear cross-talk. Use
+`crosstalk.compute_crosstalk_filters()` to generate simple filters from your
+measured HRIR data and pass them to the convolver:
+
+```python
+from crosstalk import compute_crosstalk_filters
+filters = compute_crosstalk_filters(hrir)
+engine = RealTimeConvolver(hrir, cross_talk_filters=filters)
+```
+
+When enabled, the engine outputs two loudspeaker channels that preserve the
+original binaural cues, closing part of the gap toward Smyth Realiser style
+virtualization.
