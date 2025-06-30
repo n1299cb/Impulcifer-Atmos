@@ -174,8 +174,6 @@ SPEAKER_LIST_PATTERN = r"{speaker_pattern}+(,{speaker_pattern})*".format(speaker
 
 SPEAKER_DELAYS = {_speaker: 0 for _speaker in SPEAKER_NAMES}
 
-# Centralised processing configuration
-from config import settings
 
 # Available X-Curve profiles with reference frequency and slope in dB/octave
 X_CURVE_TYPES = {

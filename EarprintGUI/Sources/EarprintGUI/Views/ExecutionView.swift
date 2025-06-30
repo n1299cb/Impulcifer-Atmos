@@ -97,10 +97,13 @@ struct ExecutionView: View {
                 Button("Capture Wizard") {
                     viewModel.captureWizard(layout: selectedLayout, dir: measurementDir)
                 }
-                Button("Export Hesuvi") {
-                    if let dest = savePanel(startPath: measurementDir) {
-                        viewModel.exportHesuviPreset(measurementDir: measurementDir, destination: dest)
+                if !viewModel.isRunning {
+                    Button("Export Hesuvi") {
+                        if let dest = savePanel(startPath: measurementDir) {
+                            viewModel.exportHesuviPreset(measurementDir: measurementDir, destination: dest)
+                        }
                     }
+                    .disabled(!FileManager.default.fileExists(atPath: URL(fileURLWithPath: measurementDir).appendingPathComponent("hesuvi.wav").path))
                 }
             ScrollView {
                 Text(viewModel.log)

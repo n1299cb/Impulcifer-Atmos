@@ -20,10 +20,11 @@ struct EarprintApp: App {
     @State private var xCurveType: String = "minus3db_oct"
     @State private var xCurveInCapture: Bool = false
     @StateObject private var processingVM = ProcessingViewModel()
+    @State private var selectedTab: Int = 0
 
     var body: some Scene {
         WindowGroup {
-            TabView {
+            TabView(selection: $selectedTab) {
                 SetupView(viewModel: processingVM,
                           measurementDir: $measurementDir,
                           testSignal: $testSignal,
@@ -34,6 +35,7 @@ struct EarprintApp: App {
                           recordingDevice: $recordingDevice,
                           channelMapping: $channelMapping)
                     .tabItem { Text("Setup") }
+                    .tag(0)
                 ExecutionView(viewModel: processingVM,
                               measurementDir: measurementDir,
                               testSignal: testSignal,
@@ -54,21 +56,25 @@ struct EarprintApp: App {
                               xCurveType: $xCurveType,
                               xCurveInCapture: $xCurveInCapture)
                     .tabItem { Text("Execution") }
+                    .tag(1)
                 HeadphoneEQView(viewModel: processingVM,
                                 measurementDir: measurementDir,
                                 testSignal: testSignal,
                                 playbackDevice: playbackDevice,
                                 recordingDevice: recordingDevice)
                     .tabItem { Text("Headphone EQ") }
+                    .tag(2)
                 RoomResponseView(viewModel: processingVM,
                                  measurementDir: measurementDir,
                                  testSignal: testSignal,
                                  playbackDevice: playbackDevice,
                                  recordingDevice: recordingDevice)
                     .tabItem { Text("Room Response") }
+                    .tag(3)
                 ProcessingOptionsView(channelBalance: $channelBalance,
                                      targetLevel: $targetLevel)
                     .tabItem { Text("Processing Options") }
+                    .tag(4)
                 CompensationView(viewModel: processingVM,
                                  enableCompensation: $enableCompensation,
                                  headphoneEqEnabled: $headphoneEqEnabled,
@@ -80,16 +86,28 @@ struct EarprintApp: App {
                                  xCurveType: $xCurveType,
                                  xCurveInCapture: $xCurveInCapture)
                     .tabItem { Text("Compensation") }
+                    .tag(5)
                 PresetView(viewModel: processingVM,
                            measurementDir: measurementDir)
                     .tabItem { Text("Presets") }
+                    .tag(6)
                 ProfileView(viewModel: processingVM,
                             measurementDir: measurementDir)
                     .tabItem { Text("Profiles") }
+                    .tag(7)
                 VisualizationView(measurementDir: measurementDir)
                     .tabItem { Text("Visualization") }
+                    .tag(8)
             }
             .frame(minWidth: 600, minHeight: 400)
+        }
+        .commands {
+            CommandMenu("Navigate") {
+                Button("Setup") { selectedTab = 0 }
+                    .keyboardShortcut("1", modifiers: .command)
+                Button("Execution") { selectedTab = 1 }
+                    .keyboardShortcut("2", modifiers: .command)
+            }
         }
     }
 }
