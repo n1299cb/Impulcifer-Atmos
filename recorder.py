@@ -13,7 +13,7 @@ import os
 import re
 try:
     import sounddevice as sd
-except OSError as e:  # pragma: no cover - depends on system libs
+except OSError:  # pragma: no cover - depends on system libs
     # Provide a minimal stub when PortAudio is unavailable so that unit tests can
     # import this module without requiring the native library. Only the
     # functions accessed during testing are implemented.

@@ -208,7 +208,7 @@ def convolve_file(
 
     import soundfile as sf
 
-    fs, hrir_fs = hrir.fs, hrir.fs
+    fs = hrir.fs
     data, fs_in = sf.read(input_wav, always_2d=True)
     if fs_in != fs:
         raise ValueError("Sampling rate mismatch")
