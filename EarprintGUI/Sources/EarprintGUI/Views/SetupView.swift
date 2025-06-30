@@ -36,12 +36,13 @@ struct SetupView: View {
     @State private var layouts: [String] = []
 
     var body: some View {
-        Form {
-            HStack {
-                TextField("Measurement directory", text: $measurementDir)
-                    .overlay(RoundedRectangle(cornerRadius: 4)
-                        .stroke(measurementDirValid ? Color.green : Color.red))
-                    .onChange(of: measurementDir) { _ in validatePaths() }
+        VStack(alignment: .leading) {
+            Form {
+                HStack {
+                    TextField("Measurement directory", text: $measurementDir)
+                        .overlay(RoundedRectangle(cornerRadius: 4)
+                            .stroke(measurementDirValid ? Color.green : Color.red))
+                        .onChange(of: measurementDir) { _ in validatePaths() }
                 Button("Browse") {
                     if let path = openPanel(directory: true, startPath: measurementDir) {
                         measurementDir = path
@@ -111,6 +112,12 @@ struct SetupView: View {
                         .progressViewStyle(.linear)
                 }
             }
+            if !viewModel.log.isEmpty {
+                ScrollView {
+                    Text(viewModel.log)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
         .padding()
         .onAppear(perform: loadLayouts)
@@ -120,6 +127,8 @@ struct SetupView: View {
             mappingSheet
         }
     }
+    }
+
 
     func validatePaths() {
         var isDir: ObjCBool = false
@@ -232,7 +241,12 @@ struct SetupView: View {
             guard
                 let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                 let devs = obj["devices"] as? [[String: Any]]
-            else { return }
+            else {
+                DispatchQueue.main.async {
+                    self.viewModel.log += String(data: data, encoding: .utf8) ?? "Failed to load audio devices\n"
+                }
+                return
+            }
             let defaults = (obj["default"] as? [Int]) ?? [-1, -1]
             let all = devs.enumerated().map { idx, d in
                 AudioDevice(
@@ -277,6 +291,10 @@ struct SetupView: View {
                     if self.selectedLayout.isEmpty, let first = arr.first {
                         self.selectedLayout = first
                     }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.viewModel.log += String(data: data, encoding: .utf8) ?? "Failed to load layouts\n"
                 }
             }
         }

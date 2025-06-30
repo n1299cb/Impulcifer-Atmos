@@ -65,7 +65,8 @@ through installing everything that is needed to run Earprint on you own PC.
 instead of Open SSL or you might run into problems when installing project dependencies.
 - Download and install 64-bit [Python 3.8](https://www.python.org/getit/). Make sure to check *Add Python 3.8 to PATH*.
 - You may need to install libsndfile if you're having problems with `soundfile` when installing `requirements.txt`.
-- On Linux you may need to install Python dev packages  
+- Install the PortAudio library if `sounddevice` reports "PortAudio library not found" (for example `brew install portaudio` on macOS).
+- On Linux you may need to install Python dev packages
 ```bash
 sudo apt install python3-dev python3-pip python3-venv
 ```
