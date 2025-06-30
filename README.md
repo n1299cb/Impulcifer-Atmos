@@ -182,8 +182,25 @@ The Swift app mirrors the tabs of the Python GUI and executes the same
 Python scripts under the hood. A recent Xcode or the Swift toolchain for
 macOS 12+ is required.
 
+### Troubleshooting the Swift GUI
+
+If device lists remain empty or the app logs `PortAudio library not found`, the
+`sounddevice` module couldn't access the PortAudio backend. On macOS install it
+with Homebrew and then reinstall the Python requirements:
+
+```bash
+brew install portaudio
+pip install -U -r requirements.txt
+```
+You can verify device enumeration works with:
+
+```bash
+python3 -c "import sounddevice, json; print(json.dumps(sounddevice.query_devices()))"
+```
+
 ## Development
 For contributor setup and test instructions see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+To build a Pro Tools plug‑in see [docs/AAX_PLUGIN.md](docs/AAX_PLUGIN.md).
 
 
 ## Demo
