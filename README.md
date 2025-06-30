@@ -220,6 +220,14 @@ speaker virtualization software such as [HeSuVi](https://sourceforge.net/project
 speakers in a room. When testing with HeSuVi copy `hesuvi.wav` into `C:\Program Files\Equalizer APO\config\Hesuvi\hrir`,
 (re)start HeSuVi and select `hesuvi.wav` from the Common HRIRs list on Virtualization tab.
 
+## Repository Assets
+Sample measurement data lives under the `data/` directory and reference
+images used in the documentation are stored in `img/`. These assets are
+kept in the repository for convenience as they are required when running
+the demo or the unit tests. Local helper files such as `atmos_brir for
+EQAPO.txt` or `webcam.html` have been removed and are ignored via
+`.gitignore` to avoid cluttering the version history.
+
 ## Measurement
 BRIR measurements are done with binaural microphones which are also called ear canal blocking microphones or in-ear
 microphones. Exponential sine sweep test signal is played on speakers and the sound is recorded with the microphones at
