@@ -33,7 +33,7 @@ struct SetupView: View {
     @State private var inputPipe: Pipe? = nil
     @State private var outputPipe: Pipe? = nil
 
-    private let layouts = ["1.0", "2.0", "5.1", "5.1.2", "5.1.4", "7.1", "7.1.2", "7.1.4", "7.1.6", "9.1.4", "9.1.6", "ambisonics"].sorted()
+    @State private var layouts: [String] = []
 
     var body: some View {
         Form {
@@ -111,6 +111,7 @@ struct SetupView: View {
             }
         }
         .padding()
+        .onAppear(perform: loadLayouts)
         .onAppear(perform: loadDevices)
         .onAppear(perform: validatePaths)
         .sheet(isPresented: $showMapping) {
@@ -253,6 +254,32 @@ struct SetupView: View {
             }
         }
     }
+
+    func loadLayouts() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = [
+                "python3",
+                "-c",
+                "import json,constants,sys; json.dump(sorted(constants.SPEAKER_LAYOUTS.keys()), sys.stdout)"
+            ]
+            let pipe = Pipe()
+            process.standardOutput = pipe
+            try? process.run()
+            process.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let arr = try? JSONSerialization.jsonObject(with: data) as? [String] {
+                DispatchQueue.main.async {
+                    self.layouts = arr
+                    if self.selectedLayout.isEmpty, let first = arr.first {
+                        self.selectedLayout = first
+                    }
+                }
+            }
+        }
+    }
+
 
     func autoMapChannels() {
         guard
