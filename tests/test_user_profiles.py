@@ -1,4 +1,5 @@
 import importlib
+import json
 
 import pytest
 
@@ -20,3 +21,18 @@ def test_save_and_load_profile(tmp_path, monkeypatch):
     user_profiles.delete_profile("test", str(profiles_file))
     profiles = user_profiles.load_profiles(str(profiles_file))
     assert profiles == {}
+
+
+def test_import_profile(tmp_path):
+    profiles_file = tmp_path / "profiles.json"
+    src = tmp_path / "profile.json"
+    json.dump({"brir_dir": "x", "latency": 1, "name": "src"}, src.open("w"))
+    import user_profiles
+
+    user_profiles.import_profile(str(src), file_path=str(profiles_file))
+    profiles = user_profiles.load_profiles(str(profiles_file))
+    assert profiles["src"]["latency"] == 1
+
+    user_profiles.import_profile(str(src), name="piece", fields=["brir_dir"], file_path=str(profiles_file))
+    profiles = user_profiles.load_profiles(str(profiles_file))
+    assert profiles["piece"] == {"brir_dir": "x"}

@@ -25,6 +25,13 @@ struct SetupView: View {
     @State private var showMapping = false
     @State private var measurementDirValid: Bool = true
     @State private var testSignalValid: Bool = true
+    @State private var inputLevel: Double = 0
+    @State private var outputLevel: Double = 0
+    @State private var isMonitoring: Bool = false
+    @State private var inputProcess: Process? = nil
+    @State private var outputProcess: Process? = nil
+    @State private var inputPipe: Pipe? = nil
+    @State private var outputPipe: Pipe? = nil
 
     private let layouts = ["1.0", "2.0", "5.1", "5.1.2", "5.1.4", "7.1", "7.1.2", "7.1.4", "7.1.6", "9.1.4", "9.1.6", "ambisonics"].sorted()
 
@@ -79,6 +86,21 @@ struct SetupView: View {
                 Button("Map Channels") { showMapping = true }
                 Button("Auto Map") { autoMapChannels() }
             }
+            HStack {
+                Text("Input Level")
+                ProgressView(value: inputLevel)
+                    .progressViewStyle(.linear)
+                    .frame(maxWidth: .infinity)
+                Button(isMonitoring ? "Stop Monitor" : "Start Monitor") {
+                    isMonitoring ? stopMonitor() : startMonitor()
+                }
+            }
+            HStack {
+                Text("Output Level")
+                ProgressView(value: outputLevel)
+                    .progressViewStyle(.linear)
+                    .frame(maxWidth: .infinity)
+            }
             if viewModel.isRunning {
                 if let progress = viewModel.progress {
                     ProgressView(value: progress)
@@ -117,6 +139,77 @@ struct SetupView: View {
             }
         }
         return panel.runModal() == .OK ? panel.url?.path : nil
+    }
+
+    func scriptPath(_ name: String) -> String {
+        let fm = FileManager.default
+        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
+        let direct = cwd.appendingPathComponent(name).path
+        if fm.fileExists(atPath: direct) { return direct }
+        let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
+        if fm.fileExists(atPath: parent) { return parent }
+        return name
+    }
+
+    func startMonitor() {
+        stopMonitor()
+        isMonitoring = true
+
+        if !recordingDevice.isEmpty {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", recordingDevice]
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = pipe
+            pipe.fileHandleForReading.readabilityHandler = { handle in
+                let data = handle.availableData
+                guard !data.isEmpty, let str = String(data: data, encoding: .utf8) else { return }
+                let vals = str.split(whereSeparator: \n)
+                if let last = vals.last, let db = Double(last) {
+                    let value = max(0, min(1, (db + 60) / 60))
+                    DispatchQueue.main.async { self.inputLevel = value }
+                }
+            }
+            inputProcess = proc
+            inputPipe = pipe
+            try? proc.run()
+        }
+
+        if !playbackDevice.isEmpty {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", playbackDevice, "--loopback"]
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = pipe
+            pipe.fileHandleForReading.readabilityHandler = { handle in
+                let data = handle.availableData
+                guard !data.isEmpty, let str = String(data: data, encoding: .utf8) else { return }
+                let vals = str.split(whereSeparator: \n)
+                if let last = vals.last, let db = Double(last) {
+                    let value = max(0, min(1, (db + 60) / 60))
+                    DispatchQueue.main.async { self.outputLevel = value }
+                }
+            }
+            outputProcess = proc
+            outputPipe = pipe
+            try? proc.run()
+        }
+    }
+
+    func stopMonitor() {
+        isMonitoring = false
+        inputProcess?.terminate()
+        outputProcess?.terminate()
+        inputProcess = nil
+        outputProcess = nil
+        inputPipe?.fileHandleForReading.readabilityHandler = nil
+        outputPipe?.fileHandleForReading.readabilityHandler = nil
+        inputPipe = nil
+        outputPipe = nil
+        inputLevel = 0
+        outputLevel = 0
     }
 
     func loadDevices() {

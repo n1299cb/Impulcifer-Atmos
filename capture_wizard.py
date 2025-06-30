@@ -121,8 +121,8 @@ def main() -> None:
 
     progress_fn = None
     if args.print_progress:
-        def progress_fn(progress: float, _remaining: float) -> None:
-            print(f"PROGRESS {progress:.3f}", flush=True)
+        def progress_fn(progress: float, remaining: float) -> None:
+            print(f"PROGRESS {progress:.3f} {remaining:.3f}", flush=True)
 
     layout_name, groups = select_layout(args.layout)
     init_layout(layout_name, groups, args.dir)

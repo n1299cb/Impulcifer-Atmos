@@ -29,10 +29,15 @@ struct VisualizationView: View {
 
     func loadImages() {
         guard !measurementDir.isEmpty else { images = []; return }
-        let url = URL(fileURLWithPath: measurementDir)
-        if let items = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil) {
-            images = items.filter { $0.pathExtension.lowercased() == "png" }.map { $0.path }
+        let plots = URL(fileURLWithPath: measurementDir).appendingPathComponent("plots")
+        guard let enumerator = FileManager.default.enumerator(at: plots, includingPropertiesForKeys: nil) else {
+            images = []
+            return
         }
+        images = enumerator.compactMap { item -> String? in
+            guard let url = item as? URL else { return nil }
+            return url.pathExtension.lowercased() == "png" ? url.path : nil
+        }.sorted()
     }
 }
 #endif

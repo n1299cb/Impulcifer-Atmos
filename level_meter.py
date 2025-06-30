@@ -92,6 +92,11 @@ def main():
     parser.add_argument("--samplerate", type=int, default=48000, help="Sampling rate")
     parser.add_argument("--blocksize", type=int, default=1024, help="Block size for stream")
     parser.add_argument("--duration", type=float, default=None, help="Optional duration in seconds")
+    parser.add_argument(
+        "--loopback",
+        action="store_true",
+        help="Enable loopback mode for output monitoring if supported",
+    )
     args = parser.parse_args()
 
     monitor = LevelMonitor(
@@ -99,6 +104,7 @@ def main():
         samplerate=args.samplerate,
         channels=args.channels,
         blocksize=args.blocksize,
+        loopback=args.loopback,
     )
     monitor.start(duration=args.duration)
 

@@ -7,6 +7,9 @@ final class ProcessingViewModel: ObservableObject {
     @Published var log: String = ""
     @Published var isRunning: Bool = false
     @Published var progress: Double? = nil
+    @Published var remainingTime: Double? = nil
+    @Published var autoLog: Bool = false
+    @Published var logFile: String = ""
 
     private var process: Process?
 
@@ -23,6 +26,7 @@ final class ProcessingViewModel: ObservableObject {
     private func startPython(script: String, args: [String]) {
         isRunning = true
         progress = nil
+        remainingTime = nil
         log = ""
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
@@ -42,8 +46,11 @@ final class ProcessingViewModel: ObservableObject {
                         if comps.count >= 2, let val = Double(comps[1]) {
                             self.progress = val
                         }
+                        if comps.count >= 3, let rem = Double(comps[2]) {
+                            self.remainingTime = rem
+                        }
                     } else {
-                        self.log += str
+                        self.appendLog(str)
                     }
                 }
             }
@@ -53,13 +60,14 @@ final class ProcessingViewModel: ObservableObject {
                 process.waitUntilExit()
             } catch {
                 Task { @MainActor in
-                    self.log += "\(error)\n"
+                    self.appendLog("\(error)\n")
                 }
             }
             Task { @MainActor in
                 pipe.fileHandleForReading.readabilityHandler = nil
                 self.isRunning = false
                 self.progress = nil
+                self.remainingTime = nil
                 self.process = nil
             }
         }
@@ -158,9 +166,26 @@ final class ProcessingViewModel: ObservableObject {
         let dest = URL(fileURLWithPath: destination)
         do {
             try FileManager.default.copyItem(at: src, to: dest)
-            log += "Exported to \(destination)\n"
+            appendLog("Exported to \(destination)\n")
         } catch {
-            log += "Export failed: \(error)\n"
+            appendLog("Export failed: \(error)\n")
+        }
+    }
+
+    private func appendLog(_ text: String) {
+        log += text
+        guard autoLog, !logFile.isEmpty else { return }
+        let url = URL(fileURLWithPath: logFile)
+        if let data = text.data(using: .utf8) {
+            if FileManager.default.fileExists(atPath: logFile) {
+                if let handle = try? FileHandle(forWritingTo: url) {
+                    defer { try? handle.close() }
+                    handle.seekToEndOfFile()
+                    handle.write(data)
+                }
+            } else {
+                try? data.write(to: url)
+            }
         }
     }
 
@@ -180,6 +205,9 @@ final class ProcessingViewModel {
     var log: String = ""
     var isRunning: Bool = false
     var progress: Double? = nil
+    var remainingTime: Double? = nil
+    var autoLog: Bool = false
+    var logFile: String = ""
     func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?, playbackDevice: String?, recordingDevice: String?, outputChannels: [Int]?, inputChannels: [Int]?) {}
     func layoutWizard(layout: String, dir: String) {}
     func captureWizard(layout: String, dir: String) {}

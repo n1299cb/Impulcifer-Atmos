@@ -422,8 +422,9 @@ went wrong if the produced BRIR doesn't sound right. Producing the plots will ta
 - **room** plots are room measurements done with measurement microphone
 - **post** plots are the final results after all processing
 
-The GUI's **Visualization** tab can display these images. Set your measurement
-directory, click **Refresh**, and select a plot from the list to view it.
+The GUI's **Visualization** tab scans the `plots` subdirectory of the selected
+measurement directory. Click **Refresh** and choose a plot from the list to view
+it.
 
 #### Channel Balance Correction
 Channel balance can be corrected with `--channel_balance` parameter. In ideal case this would not be needed and the

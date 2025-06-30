@@ -1,7 +1,7 @@
 import os
 import json
 from dataclasses import asdict, is_dataclass
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional, List
 
 from models import ProcessingSettings
 
@@ -44,3 +44,24 @@ def delete_preset(name: str, file_path: str = PRESETS_FILE) -> None:
         del presets[name]
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(presets, f, indent=2)
+
+
+def import_preset(
+    src_file: str,
+    name: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    file_path: str = PRESETS_FILE,
+) -> None:
+    """Import a preset from ``src_file`` optionally selecting ``fields``."""
+
+    with open(src_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("Invalid preset data")
+    if fields is not None:
+        data = {k: data[k] for k in fields if k in data}
+    if name is None:
+        base = os.path.splitext(os.path.basename(src_file))[0]
+        name = data.get("name", base)
+
+    save_preset(name, data, file_path)

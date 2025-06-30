@@ -62,6 +62,15 @@ struct ExecutionView: View {
                     }
                 }
                 .disabled(viewModel.log.isEmpty)
+
+                Toggle("Auto Log", isOn: $viewModel.autoLog)
+                TextField("/path/to/log.txt", text: $viewModel.logFile)
+                    .frame(maxWidth: .infinity)
+                Button("Browse") {
+                    if let url = savePanel(startPath: measurementDir) {
+                        viewModel.logFile = url.path
+                    }
+                }
             }
 
             if viewModel.isRunning {
@@ -72,6 +81,10 @@ struct ExecutionView: View {
                     ProgressView()
                         .progressViewStyle(.linear)
                         .frame(maxWidth: .infinity)
+                }
+                if let remaining = viewModel.remainingTime {
+                    Text(String(format: "%.1fs remaining", remaining))
+                        .font(.caption)
                 }
             }
                 Button("Launch Recorder") {

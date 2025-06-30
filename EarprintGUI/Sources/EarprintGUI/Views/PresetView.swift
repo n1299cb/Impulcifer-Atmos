@@ -13,6 +13,9 @@ struct PresetView: View {
             HStack {
                 Button("Refresh") { loadPresets() }
                 Button("Load") { if let s = selected { loadPreset(name: s) } }
+                Button("Save") { if let s = selected { savePreset(name: s) } }
+                Button("Delete") { if let s = selected { deletePreset(name: s) } }
+                Button("Import…") { importPreset() }
             }
             List(presets, id: \.self, selection: $selected) { Text($0) }
         }
@@ -29,6 +32,53 @@ struct PresetView: View {
 
     func loadPreset(name: String) {
         viewModel.log += "Loaded preset \(name)\n"
+    }
+
+    func savePreset(name: String) {
+        let dir = URL(fileURLWithPath: measurementDir).appendingPathComponent("presets")
+        let src = dir.appendingPathComponent(name)
+        if let url = savePanel(start: dir.path, name: name) {
+            try? FileManager.default.copyItem(at: src, to: url)
+            loadPresets()
+        }
+    }
+
+    func deletePreset(name: String) {
+        let file = URL(fileURLWithPath: measurementDir).appendingPathComponent("presets").appendingPathComponent(name)
+        try? FileManager.default.removeItem(at: file)
+        loadPresets()
+    }
+
+    func importPreset() {
+        let dir = URL(fileURLWithPath: measurementDir).appendingPathComponent("presets")
+        if let url = openPanel(start: dir.path) {
+            let dest = dir.appendingPathComponent(url.lastPathComponent)
+            try? FileManager.default.copyItem(at: url, to: dest)
+            loadPresets()
+        }
+    }
+
+    func openPanel(start: String) -> URL? {
+        #if canImport(AppKit)
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = URL(fileURLWithPath: start)
+        return panel.runModal() == .OK ? panel.url : nil
+        #else
+        return nil
+        #endif
+    }
+
+    func savePanel(start: String, name: String) -> URL? {
+        #if canImport(AppKit)
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = name
+        panel.directoryURL = URL(fileURLWithPath: start)
+        return panel.runModal() == .OK ? panel.url : nil
+        #else
+        return nil
+        #endif
     }
 }
 #endif

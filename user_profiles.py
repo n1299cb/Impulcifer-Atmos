@@ -1,7 +1,7 @@
 import os
 import json
 from dataclasses import asdict, is_dataclass
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional, List
 
 from models import UserProfile
 
@@ -44,3 +44,24 @@ def delete_profile(name: str, file_path: str = PROFILES_FILE) -> None:
         del profiles[name]
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(profiles, f, indent=2)
+
+
+def import_profile(
+    src_file: str,
+    name: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    file_path: str = PROFILES_FILE,
+) -> None:
+    """Import a user profile from ``src_file`` optionally selecting ``fields``."""
+
+    with open(src_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("Invalid profile data")
+    if fields is not None:
+        data = {k: data[k] for k in fields if k in data}
+    if name is None:
+        base = os.path.splitext(os.path.basename(src_file))[0]
+        name = data.get("name", base)
+
+    save_profile(name, data, file_path)

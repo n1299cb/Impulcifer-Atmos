@@ -442,7 +442,7 @@ if __name__ == "__main__":
     args = create_cli()
     progress_fn = None
     if args.pop("print_progress", False):
-        def progress_fn(progress: float, _remaining: float) -> None:
-            print(f"PROGRESS {progress:.3f}", flush=True)
+        def progress_fn(progress: float, remaining: float) -> None:
+            print(f"PROGRESS {progress:.3f} {remaining:.3f}", flush=True)
 
     play_and_record(**args, progress_callback=progress_fn)
