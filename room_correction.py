@@ -1,11 +1,4 @@
-# This file is part of a modified version of Impulcifer.
-# Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
-# Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
-#
-# This file may include integrated or rewritten components from the original project.
-# For details on changes and authorship, see the project README or CHANGELOG.
-
-# -*- coding: utf-8 -*-
+# See NOTICE.md for license and attribution details.
 
 import os
 import re

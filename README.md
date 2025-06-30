@@ -8,6 +8,7 @@ Modified and expanded to include 9.1.6 speaker formats.
 
 This project is a fork of Impulcifer by Jaakko Pasanen.
 Modifications © 2025 Blaring Sound LLC. Licensed under the MIT License.
+File headers referencing this fork have been consolidated into NOTICE.md.
 
 Earprint is a tool for creating binaural room impulse responses (BRIR) for speaker virtualization on headphones.
 

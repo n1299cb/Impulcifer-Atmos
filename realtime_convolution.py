@@ -1,6 +1,5 @@
-# This file is part of Earprint, a modified version of Impulcifer.
-# Original code © 2018 Jaakko Pasanen — licensed under the MIT License.
-# Modifications © 2025 Blaring Sound LLC — also licensed under the MIT License unless otherwise stated.
+# See NOTICE.md for license and attribution details.
+
 """Real-time convolution engine for binaural rendering."""
 
 from __future__ import annotations
