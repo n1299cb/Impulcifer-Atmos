@@ -6,6 +6,7 @@ import SwiftUI
 final class ProcessingViewModel: ObservableObject {
     @Published var log: String = ""
     @Published var isRunning: Bool = false
+    @Published var progress: Double? = nil
 
     private var process: Process?
 
@@ -21,6 +22,7 @@ final class ProcessingViewModel: ObservableObject {
 
     private func startPython(script: String, args: [String]) {
         isRunning = true
+        progress = nil
         log = ""
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
@@ -35,7 +37,14 @@ final class ProcessingViewModel: ObservableObject {
                 let data = handle.availableData
                 guard !data.isEmpty, let str = String(data: data, encoding: .utf8) else { return }
                 Task { @MainActor in
-                    self.log += str
+                    if str.hasPrefix("PROGRESS") {
+                        let comps = str.split(separator: " ")
+                        if comps.count >= 2, let val = Double(comps[1]) {
+                            self.progress = val
+                        }
+                    } else {
+                        self.log += str
+                    }
                 }
             }
             do {
@@ -50,18 +59,34 @@ final class ProcessingViewModel: ObservableObject {
             Task { @MainActor in
                 pipe.fileHandleForReading.readabilityHandler = nil
                 self.isRunning = false
+                self.progress = nil
                 self.process = nil
             }
         }
     }
 
-    func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?) {
+    func run(measurementDir: String,
+             testSignal: String,
+             channelBalance: String?,
+             targetLevel: String?,
+             playbackDevice: String?,
+             recordingDevice: String?,
+             outputChannels: [Int]?,
+             inputChannels: [Int]?) {
         var args = ["--dir_path", measurementDir, "--test_signal", testSignal]
         if let balance = channelBalance, !balance.isEmpty {
             args += ["--channel_balance", balance]
         }
         if let target = targetLevel, !target.isEmpty {
             args += ["--target_level", target]
+        }
+        if let p = playbackDevice { args += ["--playback_device", p] }
+        if let r = recordingDevice { args += ["--recording_device", r] }
+        if let outs = outputChannels, !outs.isEmpty {
+            args += ["--output_channels", outs.map(String.init).joined(separator: ",")]
+        }
+        if let ins = inputChannels, !ins.isEmpty {
+            args += ["--input_channels", ins.map(String.init).joined(separator: ",")]
         }
         startPython(script: scriptPath("earprint.py"), args: args)
     }
@@ -74,6 +99,46 @@ final class ProcessingViewModel: ObservableObject {
         startPython(script: scriptPath("capture_wizard.py"), args: ["--layout", layout, "--dir", dir])
     }
 
+    func record(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String, outputFile: String?) {
+        var args = [
+            "--output_dir", measurementDir,
+            "--test_signal", testSignal,
+            "--playback_device", playbackDevice,
+            "--recording_device", recordingDevice
+        ]
+        if let file = outputFile { args += ["--output_file", file] }
+        startPython(script: scriptPath("recorder.py"), args: args)
+    }
+
+    func recordHeadphoneEQ(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String) {
+        let file = URL(fileURLWithPath: measurementDir).appendingPathComponent("headphones.wav").path
+        record(measurementDir: measurementDir,
+               testSignal: testSignal,
+               playbackDevice: playbackDevice,
+               recordingDevice: recordingDevice,
+               outputFile: file)
+    }
+
+    func recordRoomResponse(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String) {
+        let file = URL(fileURLWithPath: measurementDir).appendingPathComponent("room.wav").path
+        record(measurementDir: measurementDir,
+               testSignal: testSignal,
+               playbackDevice: playbackDevice,
+               recordingDevice: recordingDevice,
+               outputFile: file)
+    }
+
+    func exportHesuviPreset(measurementDir: String, destination: String) {
+        let src = URL(fileURLWithPath: measurementDir).appendingPathComponent("hesuvi.wav")
+        let dest = URL(fileURLWithPath: destination)
+        do {
+            try FileManager.default.copyItem(at: src, to: dest)
+            log += "Exported to \(destination)\n"
+        } catch {
+            log += "Export failed: \(error)\n"
+        }
+    }
+
     func clearLog() {
         log = ""
     }
@@ -82,15 +147,21 @@ final class ProcessingViewModel: ObservableObject {
         process?.terminate()
         process = nil
         isRunning = false
+        progress = nil
     }
 }
 #else
 final class ProcessingViewModel {
     var log: String = ""
     var isRunning: Bool = false
-    func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?) {}
+    var progress: Double? = nil
+    func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?, playbackDevice: String?, recordingDevice: String?, outputChannels: [Int]?, inputChannels: [Int]?) {}
     func layoutWizard(layout: String, dir: String) {}
     func captureWizard(layout: String, dir: String) {}
+    func record(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String, outputFile: String?) {}
+    func recordHeadphoneEQ(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String) {}
+    func recordRoomResponse(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String) {}
+    func exportHesuviPreset(measurementDir: String, destination: String) {}
     func clearLog() {}
     func cancel() {}
 }

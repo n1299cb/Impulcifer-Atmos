@@ -112,7 +112,17 @@ def main() -> None:
         help="Output device name or number",
     )
     parser.add_argument("--host_api", type=str, default=None, help="Preferred host API")
+    parser.add_argument(
+        "--print_progress",
+        action="store_true",
+        help="Print recording progress updates for GUI integration",
+    )
     args = parser.parse_args()
+
+    progress_fn = None
+    if args.print_progress:
+        def progress_fn(progress: float, _remaining: float) -> None:
+            print(f"PROGRESS {progress:.3f}", flush=True)
 
     layout_name, groups = select_layout(args.layout)
     init_layout(layout_name, groups, args.dir)
@@ -126,6 +136,7 @@ def main() -> None:
         input_device=args.input_device,
         output_device=args.output_device,
         host_api=args.host_api,
+        progress_fn=progress_fn,
     )
 
 
