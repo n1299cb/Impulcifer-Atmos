@@ -6,6 +6,8 @@
 
 import json
 import os
+from typing import TypedDict, Dict, List, Tuple
+
 from config import settings
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -40,7 +42,7 @@ SPEAKER_NAMES = [
 ]
 
 # Speaker layout indexes (without LFE channel for reference formats)
-SPEAKER_LAYOUT_INDEXES = {
+SPEAKER_LAYOUT_INDEXES: dict[str, list[tuple[int, ...]]] = {
     "1.0": [(0,)],  # Mono (front left)
     "2.0": [(0, 1)],  # Front Left, Front Right
     "5.1": [(0, 1), (2,), (6, 7)],  # 2.0 plus Center, Back Left and Back Right
@@ -130,13 +132,13 @@ def save_user_layout_preset(name: str, groups: list[list[str]], file_path: str =
 
 USER_SPEAKER_LAYOUTS = load_user_layout_presets()
 
-SPEAKER_LAYOUTS = {
+SPEAKER_LAYOUTS: dict[str, list[list[str]]] = {
     name: [[SPEAKER_NAMES[i] for i in group] for group in groups] for name, groups in SPEAKER_LAYOUT_INDEXES.items()
 }
 SPEAKER_LAYOUTS.update(USER_SPEAKER_LAYOUTS)
 
 # Convert user layout groups to index mappings using built-in speaker names
-USER_LAYOUT_INDEXES = {
+USER_LAYOUT_INDEXES: dict[str, list[tuple[int, ...]]] = {
     name: [tuple(SPEAKER_NAMES.index(ch) for ch in group) for group in groups]
     for name, groups in USER_SPEAKER_LAYOUTS.items()
     if all(ch in SPEAKER_NAMES for group in groups for ch in group)
@@ -187,7 +189,7 @@ X_CURVE_SLOPE_DB_PER_OCTAVE = X_CURVE_TYPES[X_CURVE_DEFAULT_TYPE]["slope"]
 
 
 # Each channel, left and right
-IR_ORDER = []
+IR_ORDER: list[str] = []
 # SPL change relative to middle of the head - disable
 IR_ROOM_SPL = {sp: {"left": 0.0, "right": 0.0} for sp in SPEAKER_NAMES}
 COLORS = {
@@ -273,9 +275,9 @@ CHANNEL_LABELS = {i: name for i, name in enumerate(SPEAKER_NAMES)}
 # Optional reverse lookup for GUI usage
 CHANNEL_LABELS_REVERSE = {name: i for i, name in CHANNEL_LABELS.items()}
 # Map layout name to flat list of speaker indices
-FORMAT_PRESETS = {name: [idx for group in groups for idx in group] for name, groups in SPEAKER_LAYOUT_INDEXES.items()}
+FORMAT_PRESETS: dict[str, list[int]] = {name: [idx for group in groups for idx in group] for name, groups in SPEAKER_LAYOUT_INDEXES.items()}
 # SMPTE layout index definitions per format
-SMPTE_LAYOUT_INDEXES = {
+SMPTE_LAYOUT_INDEXES: dict[str, list[tuple[int, ...]]] = {
     "1.0": [(0,)],
     "2.0": [(0, 1)],
     "5.1": [(0, 1), (2,), (3,), (6, 7)],
@@ -291,4 +293,4 @@ SMPTE_LAYOUT_INDEXES = {
 }
 # Preset orders using SPEAKER_LAYOUT_INDEXES for SMPTE
 # Flattened versions for GUI use
-SMPTE_ORDER = {fmt: [i for group in SMPTE_LAYOUT_INDEXES[fmt] for i in group] for fmt in SMPTE_LAYOUT_INDEXES}
+SMPTE_ORDER: dict[str, list[int]] = {fmt: [i for group in SMPTE_LAYOUT_INDEXES[fmt] for i in group] for fmt in SMPTE_LAYOUT_INDEXES}

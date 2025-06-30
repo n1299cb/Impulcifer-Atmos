@@ -10,6 +10,8 @@ callbacks.
 
 import os
 import argparse
+from typing import Optional, Callable
+
 from generate_layout import select_layout, init_layout
 import recorder
 
@@ -113,6 +115,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    progress_fn: Optional[Callable[[float, float], None]]
     if args.print_progress:
         def progress_fn(progress: float, remaining: float) -> None:
             print(f"PROGRESS {progress:.3f} {remaining:.3f}", flush=True)

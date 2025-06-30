@@ -4,3 +4,35 @@ line-length = 120
 [tool.flake8]
 max-line-length = 120
 extend-ignore = "E203,W503"
+
+[project]
+name = "earprint"
+version = "0.1.0"
+description = "Create binaural room impulse responses for headphone virtualization"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Jaakko Pasanen"},
+    {name = "Blaring Sound LLC"},
+]
+dependencies = [
+    "matplotlib~=3.7",
+    "numpy~=1.24",
+    "scipy~=1.10",
+    "soundfile~=0.12",
+    "sounddevice>=0.5",
+    "nnresample>=0.2.4",
+    "tabulate~=0.9",
+    "autoeq>=4.1.2",
+    "PySide6>=6.5",
+    "python-osc>=1.8",
+]
+
+[project.scripts]
+earprint = "earprint:main"
+capture-wizard = "capture_wizard:main"
+generate-layout = "generate_layout:main"
+impulse-response-estimator = "impulse_response_estimator:main"
+level-meter = "level_meter:main"
+realtime-convolution = "realtime_convolution:main"

@@ -116,3 +116,7 @@ research/**/*.pkl
 research/*/**/*.png
 .DS_Store
 .vscode/
+
+# Local utility files
+atmos_brir for EQAPO.txt
+webcam.html

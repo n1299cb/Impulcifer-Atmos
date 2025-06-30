@@ -3,7 +3,7 @@ import numpy as np
 import time
 from typing import Optional
 
-from realtime_convolution import RealTimeConvolver
+from realtime_convolution import RealTimeConvolver  # type: ignore
 
 
 def run_benchmark(
@@ -23,7 +23,7 @@ def run_benchmark(
         float(a): (np.random.randn(ir_length), np.random.randn(ir_length))
         for a in angle_vals
     }
-    engine = RealTimeConvolver(brirs, samplerate=samplerate, block_size=block_size)
+    engine = RealTimeConvolver(brirs, samplerate=samplerate, block_size=block_size)  # type: ignore[arg-type]
     print(
         f"Running benchmark with block_size={block_size}, ir_length={ir_length}, "
         f"angles={angles}, blocks={blocks}, samplerate={samplerate}" +
