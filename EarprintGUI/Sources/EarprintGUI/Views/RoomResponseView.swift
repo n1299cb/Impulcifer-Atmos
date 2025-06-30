@@ -20,12 +20,42 @@ struct RoomResponseView: View {
                                             recordingDevice: recordingDevice)
             }
             .disabled(measurementDir.isEmpty || testSignal.isEmpty)
+            if viewModel.isRunning {
+                if let progress = viewModel.progress {
+                    ProgressView(value: progress)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    ProgressView()
+                        .progressViewStyle(.linear)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            HStack {
+                Button("Clear Log") { viewModel.clearLog() }
+                    .disabled(viewModel.log.isEmpty)
+                Button("Save Log") {
+                    if let url = savePanel(startPath: measurementDir) {
+                        try? viewModel.log.write(to: url, atomically: true, encoding: .utf8)
+                    }
+                }
+                .disabled(viewModel.log.isEmpty)
+            }
             ScrollView {
                 Text(viewModel.log)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()
+    }
+
+    func savePanel(startPath: String) -> String? {
+        #if canImport(AppKit)
+        let panel = NSSavePanel()
+        panel.directoryURL = URL(fileURLWithPath: startPath)
+        return panel.runModal() == .OK ? panel.url?.path : nil
+        #else
+        return nil
+        #endif
     }
 }
 #endif

@@ -419,9 +419,20 @@ def create_cli():
         help="Add track(s) to existing file? Silence will be added to the end of all tracks to "
         "make the equal in length.",
     )
+    arg_parser.add_argument(
+        "--print_progress",
+        action="store_true",
+        help="Print recording progress updates for GUI integration",
+    )
     args = vars(arg_parser.parse_args())
     return args
 
 
 if __name__ == "__main__":
-    play_and_record(**create_cli())
+    args = create_cli()
+    progress_fn = None
+    if args.pop("print_progress", False):
+        def progress_fn(progress: float, _remaining: float) -> None:
+            print(f"PROGRESS {progress:.3f}", flush=True)
+
+    play_and_record(**args, progress_callback=progress_fn)

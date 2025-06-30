@@ -96,7 +96,7 @@ final class ProcessingViewModel: ObservableObject {
     }
 
     func captureWizard(layout: String, dir: String) {
-        startPython(script: scriptPath("capture_wizard.py"), args: ["--layout", layout, "--dir", dir])
+        startPython(script: scriptPath("capture_wizard.py"), args: ["--layout", layout, "--dir", dir, "--print_progress"])
     }
 
     func record(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String, outputFile: String?) {
@@ -104,7 +104,8 @@ final class ProcessingViewModel: ObservableObject {
             "--output_dir", measurementDir,
             "--test_signal", testSignal,
             "--playback_device", playbackDevice,
-            "--recording_device", recordingDevice
+            "--recording_device", recordingDevice,
+            "--print_progress"
         ]
         if let file = outputFile { args += ["--output_file", file] }
         startPython(script: scriptPath("recorder.py"), args: args)
