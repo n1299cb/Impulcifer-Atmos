@@ -119,10 +119,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    progress_fn = None
     if args.print_progress:
         def progress_fn(progress: float, remaining: float) -> None:
             print(f"PROGRESS {progress:.3f} {remaining:.3f}", flush=True)
+    else:
+        progress_fn = None
 
     layout_name, groups = select_layout(args.layout)
     init_layout(layout_name, groups, args.dir)
