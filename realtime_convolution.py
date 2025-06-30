@@ -9,6 +9,13 @@ import numpy as np
 from typing import Dict, Optional, Tuple, Union
 
 try:
+    import pyfftw  # type: ignore
+    from pyfftw.interfaces import numpy_fft as fft
+    pyfftw.interfaces.cache.enable()
+except Exception:  # pragma: no cover - optional dependency may be missing
+    from numpy import fft  # type: ignore
+
+try:
     import sounddevice as sd
 except Exception:  # pragma: no cover - optional dependency may be missing
     sd = None
@@ -63,7 +70,7 @@ class RealTimeConvolver:
             for key, filt in self.cross_talk_filters.items():
                 buf = np.zeros(self.ct_fft_size)
                 buf[: len(filt)] = filt
-                self.ct_fft[key] = np.fft.rfft(buf)
+                self.ct_fft[key] = fft.rfft(buf)
             self.ct_overlap = np.zeros((2, self.ct_fft_size - self.block_size))
 
     def _next_pow2(self, x: int) -> int:
@@ -81,7 +88,7 @@ class RealTimeConvolver:
                 buf = np.zeros(self.fft_size)
                 data = pair[ear].data
                 buf[: len(data)] = data
-                self.ir_fft[name][ear] = np.fft.rfft(buf)
+                self.ir_fft[name][ear] = fft.rfft(buf)
 
     def _prepare_ir_fft_brirs(self) -> None:
         max_len = 0
@@ -95,8 +102,8 @@ class RealTimeConvolver:
             buf_r = np.zeros(self.fft_size)
             buf_r[: len(right)] = right
             self.ir_fft[angle] = {
-                "left": np.fft.rfft(buf_l),
-                "right": np.fft.rfft(buf_r),
+                "left": fft.rfft(buf_l),
+                "right": fft.rfft(buf_r),
             }
 
     def _angular_distance(self, a: float, b: float) -> float:
@@ -118,7 +125,7 @@ class RealTimeConvolver:
                 raise ValueError("Invalid input block shape")
             buf = np.zeros((2, self.fft_size))
             buf[:, : self.block_size] = block
-            buf_fft = np.fft.rfft(buf, axis=1)
+            buf_fft = fft.rfft(buf, axis=1)
 
             if len(self.angles) == 1:
                 ir = self.ir_fft[self.angles[0]]
@@ -150,15 +157,15 @@ class RealTimeConvolver:
                 raise ValueError("Invalid input block shape")
             buf = np.zeros((self.n_speakers, self.fft_size))
             buf[:, : self.block_size] = block
-            buf_fft = np.fft.rfft(buf, axis=1)
+            buf_fft = fft.rfft(buf, axis=1)
             out_l = np.zeros(self.fft_size // 2 + 1, dtype=complex)
             out_r = np.zeros_like(out_l)
             for i, name in enumerate(self.speakers):
                 out_l += buf_fft[i] * self.ir_fft[name]["left"]
                 out_r += buf_fft[i] * self.ir_fft[name]["right"]
 
-        y_l = np.fft.irfft(out_l)
-        y_r = np.fft.irfft(out_r)
+        y_l = fft.irfft(out_l)
+        y_r = fft.irfft(out_r)
 
         y_l[: self.overlap.shape[1]] += self.overlap[0]
         y_r[: self.overlap.shape[1]] += self.overlap[1]
@@ -171,11 +178,11 @@ class RealTimeConvolver:
         if self.cross_talk_filters is not None:
             buf = np.zeros((2, self.ct_fft_size))
             buf[:, : self.block_size] = out
-            buf_fft = np.fft.rfft(buf, axis=1)
+            buf_fft = fft.rfft(buf, axis=1)
             out_l = buf_fft[0] * self.ct_fft["LL"] + buf_fft[1] * self.ct_fft["RL"]
             out_r = buf_fft[0] * self.ct_fft["LR"] + buf_fft[1] * self.ct_fft["RR"]
-            y_l = np.fft.irfft(out_l)
-            y_r = np.fft.irfft(out_r)
+            y_l = fft.irfft(out_l)
+            y_r = fft.irfft(out_r)
             y_l[: self.ct_overlap.shape[1]] += self.ct_overlap[0]
             y_r[: self.ct_overlap.shape[1]] += self.ct_overlap[1]
             self.ct_overlap[0] = y_l[self.block_size :]
@@ -196,8 +203,17 @@ class RealTimeConvolver:
         input_device: Optional[Union[int, str]] = None,
         output_device: Optional[Union[int, str]] = None,
         latency: float | None = None,
+        host_api: Optional[str] = None,
     ) -> None:
-        """Start real-time convolution in a background thread."""
+        """Start real-time convolution in a background thread.
+
+        Args:
+            duration: Stop after this many seconds (``None`` to run indefinitely).
+            input_device: Input device index or name.
+            output_device: Output device index or name.
+            latency: Desired latency in seconds.
+            host_api: Preferred host API name (e.g. ``"Core Audio"``).
+        """
         if self._thread is not None:
             return
         self._stop.clear()
@@ -208,6 +224,7 @@ class RealTimeConvolver:
                 "input_device": input_device,
                 "output_device": output_device,
                 "latency": latency,
+                "host_api": host_api,
             },
             daemon=True,
         )
@@ -229,8 +246,17 @@ class RealTimeConvolver:
         input_device: Optional[Union[int, str]] = None,
         output_device: Optional[Union[int, str]] = None,
         latency: float | None = None,
+        host_api: Optional[str] = None,
     ) -> None:
-        """Run real-time convolution using ``sounddevice`` streams."""
+        """Run real-time convolution using ``sounddevice`` streams.
+
+        Args:
+            duration: Stop after this many seconds (``None`` to run indefinitely).
+            input_device: Input device index or name.
+            output_device: Output device index or name.
+            latency: Desired latency in seconds.
+            host_api: Preferred host API name (e.g. ``"Core Audio"``).
+        """
 
         if sd is None:
             raise RuntimeError("sounddevice library not available")
@@ -241,6 +267,16 @@ class RealTimeConvolver:
             block = np.transpose(indata)
             out_block = self.process_block(block)
             outdata[:] = np.transpose(out_block)
+
+        if host_api is not None:
+            try:
+                hostapis = sd.query_hostapis()
+                for idx, api in enumerate(hostapis):
+                    if host_api.lower() in api['name'].lower():
+                        sd.default.hostapi = idx
+                        break
+            except Exception:
+                pass
 
         with sd.Stream(
             samplerate=self.fs,

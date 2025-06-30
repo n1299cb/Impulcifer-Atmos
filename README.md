@@ -587,12 +587,22 @@ python test_earprint_714.py   # 7.1.4 layout
 The `realtime_convolution.py` module offers low-latency binaural rendering.
 It loads the BRIRs produced by Earprint and processes any multichannel
 signal using efficient FFT overlap-add convolution. The engine can stream
-audio in real time with `sounddevice` or process files offline.
+audio in real time with `sounddevice` or process files offline. When the
+optional `pyfftw` package is installed, the convolver uses FFTW for
+significantly faster transforms.
 
 Example converting a multichannel WAV file:
 
 ```bash
 python -m realtime_convolution input_multichannel.wav output_stereo.wav
+```
+
+When running on macOS, pass `host_api="Core Audio"` to force the low-latency
+Core Audio backend:
+
+```python
+engine = RealTimeConvolver(hrir)
+engine.start(host_api="Core Audio")
 ```
 
 ### Optional Cross-Talk Cancellation
