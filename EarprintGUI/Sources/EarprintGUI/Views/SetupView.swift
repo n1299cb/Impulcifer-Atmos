@@ -168,7 +168,7 @@ struct SetupView: View {
             pipe.fileHandleForReading.readabilityHandler = { handle in
                 let data = handle.availableData
                 guard !data.isEmpty, let str = String(data: data, encoding: .utf8) else { return }
-                let vals = str.split(whereSeparator: \n)
+                let vals = str.split(separator: "\n")
                 if let last = vals.last, let db = Double(last) {
                     let value = max(0, min(1, (db + 60) / 60))
                     DispatchQueue.main.async { self.inputLevel = value }
@@ -189,7 +189,7 @@ struct SetupView: View {
             pipe.fileHandleForReading.readabilityHandler = { handle in
                 let data = handle.availableData
                 guard !data.isEmpty, let str = String(data: data, encoding: .utf8) else { return }
-                let vals = str.split(whereSeparator: \n)
+                let vals = str.split(separator: "\n")
                 if let last = vals.last, let db = Double(last) {
                     let value = max(0, min(1, (db + 60) / 60))
                     DispatchQueue.main.async { self.outputLevel = value }
