@@ -72,7 +72,8 @@ struct EarprintApp: App {
                     .tabItem { Text("Room Response") }
                     .tag(3)
                 ProcessingOptionsView(channelBalance: $channelBalance,
-                                     targetLevel: $targetLevel)
+                                     targetLevel: $targetLevel,
+                                     testSignal: $testSignal)
                     .tabItem { Text("Processing Options") }
                     .tag(4)
                 CompensationView(viewModel: processingVM,
