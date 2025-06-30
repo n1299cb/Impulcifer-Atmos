@@ -4,14 +4,29 @@ import time
 from realtime_convolution import RealTimeConvolver
 
 
-def run_benchmark(block_size=1024, ir_length=256, angles=4, blocks=1000):
-    fs = 48000
+def run_benchmark(
+    block_size: int = 1024,
+    ir_length: int = 256,
+    angles: int = 4,
+    blocks: int = 1000,
+    samplerate: int = 48000,
+    seed: int | None = None,
+) -> None:
+    """Run the benchmark with synthetic BRIR data."""
+
+    if seed is not None:
+        np.random.seed(seed)
     angle_vals = np.linspace(0, 360, angles, endpoint=False)
     brirs = {
         float(a): (np.random.randn(ir_length), np.random.randn(ir_length))
         for a in angle_vals
     }
-    engine = RealTimeConvolver(brirs, samplerate=fs, block_size=block_size)
+    engine = RealTimeConvolver(brirs, samplerate=samplerate, block_size=block_size)
+    print(
+        f"Running benchmark with block_size={block_size}, ir_length={ir_length}, "
+        f"angles={angles}, blocks={blocks}, samplerate={samplerate}" +
+        (f", seed={seed}" if seed is not None else "")
+    )
     input_block = np.random.randn(2, block_size)
     start = time.perf_counter()
     for _ in range(blocks):
@@ -36,12 +51,23 @@ def main():
     parser.add_argument(
         "--angles", type=int, default=4, help="Number of synthetic BRIR angles"
     )
+    parser.add_argument(
+        "--samplerate", type=int, default=48000, help="Sample rate for synthetic data"
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible results",
+    )
     args = parser.parse_args()
     run_benchmark(
         block_size=args.block_size,
         ir_length=args.ir_length,
         angles=args.angles,
         blocks=args.blocks,
+        samplerate=args.samplerate,
+        seed=args.seed,
     )
 
 

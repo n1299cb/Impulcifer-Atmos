@@ -24,6 +24,7 @@ The wizard prompts you to insert the microphones, position for each speaker grou
 
 Both tools can also be launched from the GUI: the **Layout Wizard** button on the *Setup* tab opens the layout helper, while the **Capture Wizard** button on the *Execution* tab starts the step-by-step recorder.
 
+
 ## Real-Time Convolver Benchmark (`benchmark_realtime_convolver.py`)
 
 This small utility measures the processing throughput of the pure Python
@@ -37,11 +38,14 @@ Run it with default settings:
 python benchmark_realtime_convolver.py
 ```
 
-Options allow controlling block size, impulse response length, the number of
-angles and how many blocks to process:
+Options allow controlling block size, impulse response length, sample rate,
+the number of angles and how many blocks to process. A random seed can be set
+for reproducible results:
 
 ```bash
-python benchmark_realtime_convolver.py --block_size=512 --ir_length=128 --angles=8 --blocks=2000
+python benchmark_realtime_convolver.py \
+  --block_size=512 --ir_length=128 --samplerate=96000 \
+  --angles=8 --blocks=2000 --seed=42
 ```
 
 Use this tool to establish a performance baseline before experimenting with
