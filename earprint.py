@@ -192,7 +192,7 @@ def main(
                     fr.error += hp_eq.error
 
                 eq = eq_left if side == "left" else eq_right
-                if eq is not None and type(eq) == FrequencyResponse:
+                if isinstance(eq, FrequencyResponse):
                     # Equalization
                     fr.error += eq.error
 
