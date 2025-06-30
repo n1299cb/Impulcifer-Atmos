@@ -100,7 +100,7 @@ struct ExecutionView: View {
                 if !viewModel.isRunning {
                     Button("Export Hesuvi") {
                         if let dest = savePanel(startPath: measurementDir) {
-                            viewModel.exportHesuviPreset(measurementDir: measurementDir, destination: dest)
+                            viewModel.exportHesuviPreset(measurementDir: measurementDir, destination: dest.path)
                         }
                     }
                     .disabled(!FileManager.default.fileExists(atPath: URL(fileURLWithPath: measurementDir).appendingPathComponent("hesuvi.wav").path))

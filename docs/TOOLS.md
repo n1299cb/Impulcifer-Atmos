@@ -24,7 +24,6 @@ The wizard prompts you to insert the microphones, position for each speaker grou
 
 Both tools can also be launched from the GUI: the **Layout Wizard** button on the *Setup* tab opens the layout helper, while the **Capture Wizard** button on the *Execution* tab starts the step-by-step recorder.
 
-
 ## Real-Time Convolver Benchmark (`benchmark_realtime_convolver.py`)
 
 This small utility measures the processing throughput of the pure Python

@@ -1,6 +1,8 @@
 import argparse
 import numpy as np
 import time
+from typing import Optional
+
 from realtime_convolution import RealTimeConvolver
 
 
@@ -10,7 +12,7 @@ def run_benchmark(
     angles: int = 4,
     blocks: int = 1000,
     samplerate: int = 48000,
-    seed: int | None = None,
+    seed: Optional[int] = None,
 ) -> None:
     """Run the benchmark with synthetic BRIR data."""
 

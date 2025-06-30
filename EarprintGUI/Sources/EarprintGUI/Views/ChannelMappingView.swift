@@ -20,33 +20,41 @@ struct ChannelMappingView: View {
         _micSelections = State(initialValue: channelMapping.wrappedValue["input_channels"] ?? [0, 1])
     }
 
+    private var speakerSection: some View {
+        Form {
+            Section(header: Text("Speaker Channels")) {
+                ForEach(speakerLabels.indices, id: \.self) { idx in
+                    Picker(speakerLabels[idx], selection: $speakerSelections[idx]) {
+                        ForEach(0..<playbackChannels, id: \.self) { ch in
+                            Text("\(ch + 1)").tag(ch)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+            }
+        }
+    }
+
+    private var microphoneSection: some View {
+        Form {
+            Section(header: Text("Microphone Channels")) {
+                ForEach(0..<2, id: \.self) { idx in
+                    Picker(idx == 0 ? "Mic Left" : "Mic Right", selection: $micSelections[idx]) {
+                        ForEach(0..<recordingChannels, id: \.self) { ch in
+                            Text("\(ch + 1)").tag(ch)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+            }
+        }
+    }
+
     var body: some View {
         VStack {
             HStack {
-                Form {
-                    Section(header: Text("Speaker Channels")) {
-                        ForEach(speakerLabels.indices, id: \._self) { idx in
-                            Picker(speakerLabels[idx], selection: $speakerSelections[idx]) {
-                                ForEach(0..<playbackChannels, id: \._self) { ch in
-                                    Text("\(ch + 1)").tag(ch)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                        }
-                    }
-                }
-                Form {
-                    Section(header: Text("Microphone Channels")) {
-                        ForEach(0..<2, id: \._self) { idx in
-                            Picker(idx == 0 ? "Mic Left" : "Mic Right", selection: $micSelections[idx]) {
-                                ForEach(0..<recordingChannels, id: \._self) { ch in
-                                    Text("\(ch + 1)").tag(ch)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                        }
-                    }
-                }
+                speakerSection
+                microphoneSection
             }
             Button("Save") {
                 channelMapping["output_channels"] = speakerSelections
