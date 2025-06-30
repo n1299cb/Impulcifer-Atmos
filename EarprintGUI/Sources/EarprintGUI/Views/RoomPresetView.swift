@@ -95,7 +95,7 @@ struct RoomPresetView: View {
                 }
                 let name = (preset["name"] as? String) ?? url.deletingPathExtension().lastPathComponent
                 preset.removeValue(forKey: "name")
-                dict[name] = preset as? [String: Any]
+                dict[name] = preset
                 if let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]) {
                     try? data.write(to: dest)
                 }
