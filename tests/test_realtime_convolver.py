@@ -1,5 +1,8 @@
 import numpy as np
 from realtime_convolution import RealTimeConvolver
+from impulse_response import ImpulseResponse
+from hrir import HRIR
+from crosstalk import compute_crosstalk_filters
 
 
 def test_convolver_interpolates_between_angles():
@@ -60,3 +63,26 @@ def test_convolver_wraps_yaw_angles():
 
     assert abs(out[0, 0] - weights[0]) < 1e-6
     assert abs(out[1, 0] - weights[1]) < 1e-6
+
+
+def test_crosstalk_cancellation():
+    estimator = type("_e", (), {"fs": 48000})()
+    hrir = HRIR(estimator)
+    hrir.irs["FL"] = {
+        "left": ImpulseResponse(np.array([1.0]), 48000),
+        "right": ImpulseResponse(np.array([0.5]), 48000),
+    }
+    hrir.irs["FR"] = {
+        "left": ImpulseResponse(np.array([0.5]), 48000),
+        "right": ImpulseResponse(np.array([1.0]), 48000),
+    }
+    filters = compute_crosstalk_filters(hrir, "FL", "FR", length=2, regularization=0.0)
+    engine = RealTimeConvolver(hrir, block_size=2, cross_talk_filters=filters)
+    block = np.zeros((2, 2))
+    block[0, 0] = 1.0
+    out = engine.process_block(block)
+    # Physical loudspeaker crosstalk matrix
+    H = np.array([[1.0, 0.5], [0.5, 1.0]])
+    final_ears = H @ out[:, 0]
+    # Should reproduce the binaural signal produced by the virtualizer
+    assert np.allclose(final_ears, [1.0, 0.5], atol=1e-6)

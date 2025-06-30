@@ -23,3 +23,26 @@ python capture_wizard.py --layout=9.1.6 --dir=data/my_hrir --input_device='USB m
 The wizard prompts you to insert the microphones, position for each speaker group and confirm when ready. Additional options let you choose the sweep files and host API.
 
 Both tools can also be launched from the GUI: the **Layout Wizard** button on the *Setup* tab opens the layout helper, while the **Capture Wizard** button on the *Execution* tab starts the step-by-step recorder.
+
+## Real-Time Convolver Benchmark (`benchmark_realtime_convolver.py`)
+
+This small utility measures the processing throughput of the pure Python
+`RealTimeConvolver` implementation. It uses synthetic impulse responses so
+no measurement data is required. The benchmark repeatedly feeds random
+blocks into the engine and reports the average time per block.
+
+Run it with default settings:
+
+```bash
+python benchmark_realtime_convolver.py
+```
+
+Options allow controlling block size, impulse response length, the number of
+angles and how many blocks to process:
+
+```bash
+python benchmark_realtime_convolver.py --block_size=512 --ir_length=128 --angles=8 --blocks=2000
+```
+
+Use this tool to establish a performance baseline before experimenting with
+SIMD or GPU optimizations.
