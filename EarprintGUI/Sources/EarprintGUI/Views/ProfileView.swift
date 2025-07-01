@@ -68,24 +68,15 @@ struct ProfileView: View {
 
     func importProfile() {
         let dir = URL(fileURLWithPath: measurementDir).appendingPathComponent("profiles")
-        if let url = openPanel(start: dir.path) {
+        if let path = openPanel(directory: false, startPath: dir.path) {
+            let url = URL(fileURLWithPath: path)
             let dest = dir.appendingPathComponent(url.lastPathComponent)
             try? FileManager.default.copyItem(at: url, to: dest)
             loadProfiles()
         }
     }
 
-    func openPanel(start: String) -> URL? {
-        #if canImport(AppKit)
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = URL(fileURLWithPath: start)
-        return panel.runModal() == .OK ? panel.url : nil
-        #else
-        return nil
-        #endif
-    }
+    // openPanel helper is provided by Utilities.swift
 
     func savePanel(start: String, name: String) -> URL? {
         #if canImport(AppKit)

@@ -80,3 +80,4 @@ enum CoreAudioUtils {
         return (devices, defaultInput == 0 ? nil : defaultInput, defaultOutput == 0 ? nil : defaultOutput)
     }
 }
+#endif

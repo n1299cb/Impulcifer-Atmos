@@ -48,13 +48,13 @@ struct ProcessingOptionsView: View {
                 HStack {
                     TextField("Room Target File", text: $roomTarget)
                     Button("Browse") {
-                        if let path = openPanel(startPath: roomTarget) { roomTarget = path }
+                        if let path = openPanel(directory: false, startPath: roomTarget) { roomTarget = path }
                     }
                 }
                 HStack {
                     TextField("Mic Calibration File", text: $micCalibration)
                     Button("Browse") {
-                        if let path = openPanel(startPath: micCalibration) { micCalibration = path }
+                        if let path = openPanel(directory: false, startPath: micCalibration) { micCalibration = path }
                     }
                 }
                 Toggle("Specific Limit", isOn: $specificLimitEnabled)
@@ -88,18 +88,6 @@ struct ProcessingOptionsView: View {
         .padding()
     }
 
-    func openPanel(startPath: String) -> String? {
-        #if canImport(AppKit)
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.allowsMultipleSelection = false
-        if !startPath.isEmpty {
-            panel.directoryURL = URL(fileURLWithPath: startPath).deletingLastPathComponent()
-        }
-        return panel.runModal() == .OK ? panel.url?.path : nil
-        #else
-        return nil
-        #endif
-    }
+    // openPanel helper is provided by Utilities.swift
 }
 #endif

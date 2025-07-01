@@ -3,14 +3,6 @@ import SwiftUI
 #if canImport(CoreAudio)
 import CoreAudio
 #endif
-
-private let repoRoot = URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent() // Views
-    .deletingLastPathComponent() // EarprintGUI
-    .deletingLastPathComponent() // Sources
-    .deletingLastPathComponent() // EarprintGUI package
-    .deletingLastPathComponent() // repository root
-private let scriptsRoot = Bundle.module.resourceURL ?? repoRoot
 import AppKit
 
 struct SetupView: View {
@@ -161,37 +153,7 @@ struct SetupView: View {
         testSignalValid = FileManager.default.fileExists(atPath: testSignal)
     }
 
-    func openPanel(directory: Bool, startPath: String) -> String? {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = !directory
-        panel.canChooseDirectories = directory
-        panel.allowsMultipleSelection = false
-        if !startPath.isEmpty {
-            let base = directory ? startPath : (startPath as NSString).deletingLastPathComponent
-            var isDir: ObjCBool = false
-            if FileManager.default.fileExists(atPath: base, isDirectory: &isDir), isDir.boolValue {
-                panel.directoryURL = URL(fileURLWithPath: base)
-            } else {
-                panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
-            }
-        }
-        return panel.runModal() == .OK ? panel.url?.path : nil
-    }
-
-    func scriptPath(_ name: String) -> String {
-        let fm = FileManager.default
-        if let path = Bundle.module.path(forResource: name, ofType: nil) {
-            return path
-        }
-        let direct = scriptsRoot.appendingPathComponent(name).path
-        if fm.fileExists(atPath: direct) { return direct }
-        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-        let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
-        if fm.fileExists(atPath: parent) { return parent }
-        let repo = repoRoot.appendingPathComponent(name).path
-        if fm.fileExists(atPath: repo) { return repo }
-        return name
-    }
+    // openPanel and scriptPath helpers are provided by Utilities.swift
 
     func startMonitor() {
         stopMonitor()

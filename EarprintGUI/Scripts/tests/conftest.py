@@ -4,7 +4,10 @@ import numpy as np
 import pytest
 
 # Ensure repository modules can be imported when running pytest directly
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
+SCRIPTS_DIR = os.path.join(REPO_ROOT, "EarprintGUI", "Scripts")
+sys.path.insert(0, SCRIPTS_DIR)
+sys.path.append(REPO_ROOT)
 
 from impulse_response_estimator import ImpulseResponseEstimator
 from constants import SPEAKER_LAYOUTS

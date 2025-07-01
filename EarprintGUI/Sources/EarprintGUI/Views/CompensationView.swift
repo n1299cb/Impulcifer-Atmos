@@ -29,7 +29,7 @@ struct CompensationView: View {
             HStack {
                 TextField("Headphone EQ File", text: $headphoneFile)
                 Button("Browse") {
-                    if let path = openPanel(startPath: headphoneFile) { headphoneFile = path }
+                    if let path = openPanel(directory: false, startPath: headphoneFile) { headphoneFile = path }
                 }
             }
             Picker("Compensation Type", selection: $compensationType) {
@@ -40,9 +40,9 @@ struct CompensationView: View {
             if compensationType == "custom" {
                 HStack {
                     TextField("Custom Compensation File", text: $customCompensationFile)
-                    Button("Browse") {
-                        if let path = openPanel(startPath: customCompensationFile) { customCompensationFile = path }
-                    }
+                        Button("Browse") {
+                            if let path = openPanel(directory: false, startPath: customCompensationFile) { customCompensationFile = path }
+                        }
                 }
             }
             Toggle("Apply Diffuse-Field Compensation", isOn: $diffuseField)
@@ -65,18 +65,6 @@ struct CompensationView: View {
         .padding()
     }
 
-    func openPanel(startPath: String) -> String? {
-        #if canImport(AppKit)
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        if !startPath.isEmpty {
-            panel.directoryURL = URL(fileURLWithPath: startPath).deletingLastPathComponent()
-        }
-        return panel.runModal() == .OK ? panel.url?.path : nil
-        #else
-        return nil
-        #endif
-    }
+    // openPanel helper is provided by Utilities.swift
 }
 #endif

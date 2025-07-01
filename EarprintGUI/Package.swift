@@ -12,7 +12,7 @@ let package = Package(
         .executableTarget(
             name: "EarprintGUI",
             resources: [
-                .copy("Scripts")
+                .copy("../../Scripts")
             ]
         )
     ]

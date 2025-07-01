@@ -2,14 +2,6 @@ import Foundation
 #if canImport(SwiftUI)
 import SwiftUI
 
-private let repoRoot = URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent() // ViewModels
-    .deletingLastPathComponent() // EarprintGUI module
-    .deletingLastPathComponent() // Sources
-    .deletingLastPathComponent() // EarprintGUI package
-    .deletingLastPathComponent() // repository root
-private let scriptsRoot = Bundle.module.resourceURL ?? repoRoot
-
 @MainActor
 final class ProcessingViewModel: ObservableObject {
     @Published var log: String = ""
@@ -20,21 +12,8 @@ final class ProcessingViewModel: ObservableObject {
     @Published var logFile: String = ""
 
     private var process: Process?
-
-    private func scriptPath(_ name: String) -> String {
-        let fm = FileManager.default
-        if let path = Bundle.module.path(forResource: name, ofType: nil) {
-            return path
-        }
-        let direct = scriptsRoot.appendingPathComponent(name).path
-        if fm.fileExists(atPath: direct) { return direct }
-        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-        let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
-        if fm.fileExists(atPath: parent) { return parent }
-        let repo = repoRoot.appendingPathComponent(name).path
-        if fm.fileExists(atPath: repo) { return repo }
-        return name
-    }
+    
+    // scriptPath helper provided by Utilities.swift
 
     private func startPython(script: String, args: [String]) {
         isRunning = true

@@ -84,7 +84,8 @@ struct RoomPresetView: View {
     }
 
     func importPreset() {
-        if let url = openPanel(start: FileManager.default.currentDirectoryPath) {
+        if let path = openPanel(directory: false, startPath: FileManager.default.currentDirectoryPath) {
+            let url = URL(fileURLWithPath: path)
             let dest = presetFile()
             if let data = try? Data(contentsOf: url),
                var preset = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
@@ -104,16 +105,6 @@ struct RoomPresetView: View {
         }
     }
 
-    func openPanel(start: String) -> URL? {
-        #if canImport(AppKit)
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = URL(fileURLWithPath: start)
-        return panel.runModal() == .OK ? panel.url : nil
-        #else
-        return nil
-        #endif
-    }
+    // openPanel helper is provided by Utilities.swift
 }
 #endif
