@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import time
 from threading import Thread
-from typing import Optional, Dict
+from typing import Optional
 
 import numpy as np
 
@@ -35,12 +35,6 @@ class PlaybackViewModel:
             brirs[angle] = (data["left"], data["right"])
         return brirs
 
-    def _load_crosstalk(self, path: str) -> Dict[str, np.ndarray]:
-        data = np.load(path)
-        filters = {key: data[key] for key in ("LL", "LR", "RL", "RR") if key in data}
-        if len(filters) != 4:
-            raise ValueError("Crosstalk file must contain LL, LR, RL and RR arrays")
-        return filters
 
     def _smooth_angle(self, current: float, target: float) -> float:
         diff = (target - current + 180.0) % 360.0 - 180.0
@@ -48,15 +42,11 @@ class PlaybackViewModel:
 
     def play(self, settings: PlaybackSettings) -> None:
         brirs = self._load_brirs(settings.brir_dir)
-        crosstalk: Dict[str, np.ndarray] | None = None
-        if settings.crosstalk_filters:
-            crosstalk = self._load_crosstalk(settings.crosstalk_filters)
         self.tracker = HeadTracker(port=settings.osc_port)
         self.convolver = RealTimeConvolver(
             brirs,
             samplerate=settings.samplerate,
             block_size=settings.blocksize,
-            cross_talk_filters=crosstalk,
         )
         self.tracker.start()
         self.convolver.start(latency=settings.latency)
