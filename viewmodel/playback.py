@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import time
 from threading import Thread
-from typing import Optional
+from typing import Optional, Dict
 
 import numpy as np
 
@@ -20,6 +20,10 @@ class PlaybackViewModel:
         self.convolver: Optional[RealTimeConvolver] = None
         self._thread: Optional[Thread] = None
         self._running = False
+        self._yaw = 0.0
+        self._pitch = 0.0
+        self._roll = 0.0
+        self._alpha = 1.0
 
     def _load_brirs(self, path: str) -> dict[float, tuple[list[float], list[float]]]:
         brirs: dict[float, tuple[list[float], list[float]]] = {}
@@ -31,25 +35,49 @@ class PlaybackViewModel:
             brirs[angle] = (data["left"], data["right"])
         return brirs
 
+    def _load_crosstalk(self, path: str) -> Dict[str, np.ndarray]:
+        data = np.load(path)
+        filters = {key: data[key] for key in ("LL", "LR", "RL", "RR") if key in data}
+        if len(filters) != 4:
+            raise ValueError("Crosstalk file must contain LL, LR, RL and RR arrays")
+        return filters
+
+    def _smooth_angle(self, current: float, target: float) -> float:
+        diff = (target - current + 180.0) % 360.0 - 180.0
+        return current + self._alpha * diff
+
     def play(self, settings: PlaybackSettings) -> None:
         brirs = self._load_brirs(settings.brir_dir)
+        crosstalk: Dict[str, np.ndarray] | None = None
+        if settings.crosstalk_filters:
+            crosstalk = self._load_crosstalk(settings.crosstalk_filters)
         self.tracker = HeadTracker(port=settings.osc_port)
         self.convolver = RealTimeConvolver(
             brirs,
             samplerate=settings.samplerate,
             block_size=settings.blocksize,
+            cross_talk_filters=crosstalk,
         )
         self.tracker.start()
         self.convolver.start(latency=settings.latency)
         self._running = True
+        if settings.smoothing_ms > 0:
+            dt = 0.01
+            tau = settings.smoothing_ms / 1000.0
+            self._alpha = dt / (tau + dt)
+        else:
+            self._alpha = 1.0
 
         def _loop() -> None:
             while self._running:
                 if self.tracker:
+                    self._yaw = self._smooth_angle(self._yaw, self.tracker.yaw())
+                    self._pitch = self._smooth_angle(self._pitch, self.tracker.pitch())
+                    self._roll = self._smooth_angle(self._roll, self.tracker.roll())
                     self.convolver.set_orientation(
-                        self.tracker.yaw(),
-                        self.tracker.pitch(),
-                        self.tracker.roll(),
+                        self._yaw,
+                        self._pitch,
+                        self._roll,
                     )
                 time.sleep(0.01)
 

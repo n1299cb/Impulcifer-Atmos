@@ -10,3 +10,5 @@ class PlaybackSettings:
     samplerate: int = 48000
     blocksize: int = 1024
     latency: float = 0.0
+    crosstalk_filters: str | None = None
+    smoothing_ms: float = 50.0
