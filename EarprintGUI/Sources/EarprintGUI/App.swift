@@ -1,7 +1,19 @@
 #if canImport(SwiftUI)
 import SwiftUI
+import AppKit
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
+    }
+}
 
 struct EarprintApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var measurementDir: String = ""
     @State private var testSignal: String = ""
     @State private var channelBalance: String = ""
@@ -109,6 +121,10 @@ struct EarprintApp: App {
             .frame(minWidth: 600, minHeight: 400)
         }
         .commands {
+            CommandGroup(replacing: .appTermination) {
+                Button("Quit EarprintGUI") { NSApplication.shared.terminate(nil) }
+                    .keyboardShortcut("q")
+            }
             CommandMenu("Navigate") {
                 Button("Setup") { selectedTab = 0 }
                     .keyboardShortcut("1", modifiers: .command)
