@@ -1,8 +1,63 @@
-#include "RealTimeConvolver.h"
+#include "TrueRoom.h"
+#include "AAX.h"
 #include <algorithm>
 #include <cstring>
 
-RealTimeConvolver::RealTimeConvolver(
+AAX_CEffectParameters* AAX_CALLBACK TrueRoom::Create() {
+    return new TrueRoom();
+}
+
+TrueRoom::TrueRoom() = default;
+TrueRoom::~TrueRoom() = default;
+
+AAX_Result TrueRoom::EffectInit() {
+    // Allocate plugin parameters here
+    return AAX_SUCCESS;
+}
+
+AAX_Result TrueRoom::Initialize(double sampleRate, int32_t maxBlockSize) {
+    sampleRate_ = sampleRate;
+    blockSize_ = static_cast<size_t>(maxBlockSize);
+    return AAX_SUCCESS;
+}
+
+AAX_Result TrueRoom::ResetFieldData(AAX_CFieldIndex, void* oFieldData) const {
+    // Zero buffers between processing calls
+    std::memset(oFieldData, 0, sizeof(float));
+    return AAX_SUCCESS;
+}
+
+AAX_Result TrueRoom::LoadHRIR(const std::string& path) {
+    // Load HRIR WAV and prepare RealTimeConvolver
+    if (!hrir_.loadFromWav(path))
+        return AAX_ERROR_NULL_POINTER;
+    convolver_ = std::make_unique<RealTimeConvolver>(hrir_.leftIRs(), hrir_.rightIRs(), blockSize_);
+    return AAX_SUCCESS;
+}
+
+AAX_Result TrueRoom::ProcessAudio(const float* const* inSamples, float* const* outSamples, int32_t inNumSamples) {
+    if (!convolver_)
+        return AAX_ERROR_NULL_POINTER;
+
+    size_t nSpeakers = hrir_.leftIRs().size();
+    if (nSpeakers == 0)
+        return AAX_ERROR_NULL_POINTER;
+    std::vector<std::vector<float>> block(nSpeakers, std::vector<float>(inNumSamples));
+    // Use left input for now; a real implementation would map each speaker
+    // to its corresponding input channel or an encoded stream.
+    for (size_t i = 0; i < nSpeakers; ++i)
+        std::memcpy(block[i].data(), inSamples[0], sizeof(float) * inNumSamples);
+
+    std::vector<float> left(inNumSamples), right(inNumSamples);
+    convolver_->processBlock(block, left, right);
+    std::memcpy(outSamples[0], left.data(), sizeof(float) * inNumSamples);
+    std::memcpy(outSamples[1], right.data(), sizeof(float) * inNumSamples);
+    return AAX_SUCCESS;
+}
+
+// ----- RealTimeConvolver implementation -----
+
+TrueRoom::RealTimeConvolver::RealTimeConvolver(
     const std::vector<std::vector<float>>& leftIRs,
     const std::vector<std::vector<float>>& rightIRs,
     size_t maxBlockSize)
@@ -23,15 +78,15 @@ RealTimeConvolver::RealTimeConvolver(
     overlapR_.assign(fftSize_ - maxBlockSize_, 0.f);
 }
 
-RealTimeConvolver::~RealTimeConvolver() {}
+TrueRoom::RealTimeConvolver::~RealTimeConvolver() {}
 
-size_t RealTimeConvolver::nextPow2(size_t x) const {
+size_t TrueRoom::RealTimeConvolver::nextPow2(size_t x) const {
     size_t p = 1;
     while (p < x) p <<= 1;
     return p;
 }
 
-void RealTimeConvolver::prepareIRFFT(size_t fftSize) {
+void TrueRoom::RealTimeConvolver::prepareIRFFT(size_t fftSize) {
     size_t fftLen = fftSize / 2 + 1;
     irFFTLeft_.assign(nSpeakers_, std::vector<fftwf_complex>(fftLen));
     irFFTRight_.assign(nSpeakers_, std::vector<fftwf_complex>(fftLen));
@@ -51,9 +106,9 @@ void RealTimeConvolver::prepareIRFFT(size_t fftSize) {
     }
 }
 
-void RealTimeConvolver::processBlock(const std::vector<std::vector<float>>& input,
-                                     std::vector<float>& outLeft,
-                                     std::vector<float>& outRight)
+void TrueRoom::RealTimeConvolver::processBlock(const std::vector<std::vector<float>>& input,
+                                               std::vector<float>& outLeft,
+                                               std::vector<float>& outRight)
 {
     size_t nSamples = input[0].size();
     size_t neededFft = nextPow2(nSamples + maxIrLen_ - 1);
