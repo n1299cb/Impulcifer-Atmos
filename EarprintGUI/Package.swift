@@ -13,7 +13,7 @@ let package = Package(
             name: "EarprintGUI",
             resources: [
                 .copy("../../Scripts"),
-                .copy("Resources/EmbeddedPython")
+                .copy("../../Resources/EmbeddedPython")
             ]
         )
     ]
