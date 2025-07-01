@@ -319,7 +319,8 @@ struct SetupView: View {
             playbackChannels: pChannels,
             recordingChannels: rChannels,
             speakerLabels: labels,
-            channelMapping: $channelMapping
+            channelMapping: $channelMapping,
+            onSave: { showMapping = false }
         )
         .frame(minWidth: 300, minHeight: 200)
     }
