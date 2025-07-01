@@ -42,4 +42,6 @@ Make sure the WAV uses the layout expected by `hrir.py` so the loader can map ch
 
 After building, copy the `.aaxplugin` bundle to your Pro Tools plug-ins directory. Insert the effect on a stereo track and load your HRIR file through the plugin's interface to enable binaural rendering.
 
+The updated `TrueRoom` implementation also exposes a `SetYaw()` method so host automation or a head tracker can update the listener orientation. When used with a BRIR set containing multiple yaw angles, the convolver interpolates between the nearest measurements to produce smooth rotation.
+
 This skeleton provides a starting point—extend it with parameters for block size, HRIR selection and any additional controls you need.
