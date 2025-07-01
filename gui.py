@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QListWidget,
     QInputDialog,
+    QGroupBox,
 )
 from PySide6.QtGui import (
     QShortcut,
@@ -118,11 +119,10 @@ class EarprintGUI(QMainWindow):
         self.create_headphone_eq_tab()
         self.create_execution_tab()
         self.create_measurement_setup_tab()  # Measurement setup defines widgets used in later tabs
-        self.create_preset_tab()
         self.create_profile_tab()
-        self.create_room_preset_tab()
         self.create_visualization_tab()
         self.setup_shortcuts()
+        self.run_startup_checks()
 
     def create_measurement_setup_tab(self):
         tab = QWidget()
@@ -387,6 +387,8 @@ class EarprintGUI(QMainWindow):
         centered_button_layout.addStretch()
         layout.addLayout(centered_button_layout)
 
+        self.add_room_presets_section(layout)
+
         self.tabs.insertTab(1, tab, "Room Response")
 
     def create_headphone_eq_tab(self):
@@ -489,6 +491,8 @@ class EarprintGUI(QMainWindow):
         log_controls.addWidget(browse_log)
         layout.addLayout(log_controls)
         layout.addWidget(self.output_text)
+        self.startup_status_label = QLabel("Startup Check: Pending")
+        layout.addWidget(self.startup_status_label)
 
         self.tabs.addTab(tab, "Execution")
         self.tabs.setTabText(self.tabs.indexOf(tab), "★ Execution")
@@ -773,6 +777,7 @@ class EarprintGUI(QMainWindow):
         layout.addWidget(self.generic_limit_row_widget)
         layout.addWidget(self.fr_combination_row_widget)
 
+        self.add_processing_presets_section(layout)
         self.update_room_correction_fields()
         self.tabs.addTab(tab, "Processing Options")
 
@@ -796,6 +801,50 @@ class EarprintGUI(QMainWindow):
         )
         if file_path:
             self.room_target_path_var.setText(file_path)
+
+    def add_processing_presets_section(self, layout: QVBoxLayout):
+        group = QGroupBox("Processing Presets")
+        box = QVBoxLayout(group)
+        self.preset_list = QListWidget()
+        box.addWidget(self.preset_list)
+        btn_row = QHBoxLayout()
+        load_btn = QPushButton("Load")
+        save_btn = QPushButton("Save Current…")
+        delete_btn = QPushButton("Delete")
+        btn_row.addWidget(load_btn)
+        btn_row.addWidget(save_btn)
+        btn_row.addWidget(delete_btn)
+        box.addLayout(btn_row)
+        load_btn.clicked.connect(self.load_selected_preset)
+        save_btn.clicked.connect(self.save_current_preset)
+        delete_btn.clicked.connect(self.delete_selected_preset)
+        layout.addWidget(group)
+        self.refresh_presets()
+
+    def add_room_presets_section(self, layout: QVBoxLayout):
+        group = QGroupBox("Room Presets")
+        box = QVBoxLayout(group)
+        self.room_list = QListWidget()
+        box.addWidget(self.room_list)
+        self.room_notes_var = QTextEdit()
+        self.room_notes_var.setFixedHeight(60)
+        box.addLayout(self.labeled_row("Notes:", self.room_notes_var))
+        btn_row = QHBoxLayout()
+        load_btn = QPushButton("Load")
+        save_btn = QPushButton("Save")
+        delete_btn = QPushButton("Delete")
+        import_btn = QPushButton("Import…")
+        btn_row.addWidget(load_btn)
+        btn_row.addWidget(save_btn)
+        btn_row.addWidget(delete_btn)
+        btn_row.addWidget(import_btn)
+        box.addLayout(btn_row)
+        load_btn.clicked.connect(self.load_selected_room_preset)
+        save_btn.clicked.connect(self.save_current_room_preset)
+        delete_btn.clicked.connect(self.delete_selected_room_preset)
+        import_btn.clicked.connect(self.import_room_preset)
+        layout.addWidget(group)
+        self.refresh_room_presets()
 
     def labeled_row(self, label_text, widget, extra_widget=None):
         row = QHBoxLayout()
@@ -1356,30 +1405,6 @@ class EarprintGUI(QMainWindow):
         self.layout_var.setCurrentText(layout_name)
         self.selected_layout_name = layout_name
 
-    def create_preset_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
-
-        self.preset_list = QListWidget()
-        layout.addWidget(self.preset_list)
-
-        btn_row = QHBoxLayout()
-        load_btn = QPushButton("Load")
-        save_btn = QPushButton("Save Current…")
-        delete_btn = QPushButton("Delete")
-        btn_row.addWidget(load_btn)
-        btn_row.addWidget(save_btn)
-        btn_row.addWidget(delete_btn)
-        layout.addLayout(btn_row)
-
-        load_btn.clicked.connect(self.load_selected_preset)
-        save_btn.clicked.connect(self.save_current_preset)
-        delete_btn.clicked.connect(self.delete_selected_preset)
-
-        self.tabs.addTab(tab, "Presets")
-        self.refresh_presets()
 
     def create_profile_tab(self):
         tab = QWidget()
@@ -1415,38 +1440,6 @@ class EarprintGUI(QMainWindow):
 
         self.tabs.addTab(tab, "Profiles")
         self.refresh_profiles()
-
-    def create_room_preset_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(8)
-
-        self.room_list = QListWidget()
-        layout.addWidget(self.room_list)
-
-        self.room_notes_var = QTextEdit()
-        self.room_notes_var.setFixedHeight(60)
-        layout.addLayout(self.labeled_row("Notes:", self.room_notes_var))
-
-        btn_row = QHBoxLayout()
-        load_btn = QPushButton("Load")
-        save_btn = QPushButton("Save")
-        delete_btn = QPushButton("Delete")
-        import_btn = QPushButton("Import…")
-        btn_row.addWidget(load_btn)
-        btn_row.addWidget(save_btn)
-        btn_row.addWidget(delete_btn)
-        btn_row.addWidget(import_btn)
-        layout.addLayout(btn_row)
-
-        load_btn.clicked.connect(self.load_selected_room_preset)
-        save_btn.clicked.connect(self.save_current_room_preset)
-        delete_btn.clicked.connect(self.delete_selected_room_preset)
-        import_btn.clicked.connect(self.import_room_preset)
-
-        self.tabs.addTab(tab, "Rooms")
-        self.refresh_room_presets()
 
     def create_visualization_tab(self):
         tab = QWidget()
@@ -1787,6 +1780,34 @@ class EarprintGUI(QMainWindow):
             ),
         )
 
+    def run_startup_checks(self):
+        """Validate core paths and audio device access on launch."""
+        if not hasattr(self, "startup_status_label"):
+            return
+
+        issues = []
+        # Validate default test signal and measurement directory paths
+        errors = self.setup_vm.validate_paths()
+        for item in errors:
+            if item == "test_signal":
+                issues.append("test signal")
+            elif item == "measurement_dir":
+                issues.append("measurement dir")
+
+        # Check that at least one audio device is available
+        try:
+            sd.query_devices()
+        except Exception:
+            issues.append("audio device access")
+
+        if issues:
+            self.startup_status_label.setText(
+                "Startup Check: problem with " + ", ".join(issues)
+            )
+            self.startup_status_label.setStyleSheet("color: red;")
+        else:
+            self.startup_status_label.setText("Startup Check: OK")
+            self.startup_status_label.setStyleSheet("color: green;")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

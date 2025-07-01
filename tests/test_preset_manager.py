@@ -4,7 +4,7 @@ import pytest
 
 
 def test_save_and_load_preset(tmp_path, monkeypatch):
-    preset_file = tmp_path / "presets.json"
+    preset_file = tmp_path / "processing-presets.json"
     monkeypatch.setenv("EARPRINT_PRESETS", str(preset_file))
     import preset_manager
     importlib.reload(preset_manager)
@@ -22,7 +22,7 @@ def test_save_and_load_preset(tmp_path, monkeypatch):
 
 
 def test_import_preset(tmp_path):
-    preset_file = tmp_path / "presets.json"
+    preset_file = tmp_path / "processing-presets.json"
     src = tmp_path / "src.json"
     json.dump({"measurement_dir": "x", "test_signal": "sig.wav", "name": "src"}, src.open("w"))
     import preset_manager

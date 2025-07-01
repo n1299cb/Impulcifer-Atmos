@@ -10,7 +10,7 @@ Use this script to create a capture directory containing the expected WAV files 
 python generate_layout.py --layout=9.1.6 --dir=data/my_hrir
 ```
 
-The script writes a short `README.md` describing all files. Run it with `--verify` to check for missing or unexpected WAVs. You can also store the selected speaker groups into a JSON preset with `--save_preset my_layout.json`. Use `--list` to print the available layouts and `--preset_file presets.json` to load additional user presets.
+The script writes a short `README.md` describing all files. Run it with `--verify` to check for missing or unexpected WAVs. You can also store the selected speaker groups into a JSON preset with `--save_preset my_layout.json`. Use `--list` to print the available layouts and `--preset_file processing-presets.json` to load additional user presets.
 
 ## Capture Wizard (`capture_wizard.py`)
 

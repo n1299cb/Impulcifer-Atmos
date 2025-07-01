@@ -5,7 +5,7 @@ from typing import Dict, Any, Union, Optional, List
 
 from models import ProcessingSettings
 
-PRESETS_FILE = os.environ.get("EARPRINT_PRESETS", "presets.json")
+PRESETS_FILE = os.environ.get("EARPRINT_PRESETS", "processing-presets.json")
 
 
 def load_presets(file_path: str = PRESETS_FILE) -> Dict[str, Dict[str, Any]]:
