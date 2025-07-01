@@ -1,28 +1,29 @@
 # See NOTICE.md for license and attribution details.
 
+"""Create and post-process earprint measurements."""
+
+import argparse
+import copy
 import os
 import re
-import copy
-from scipy.signal import butter, lfilter
-import argparse
-from tabulate import tabulate
 from datetime import datetime
+
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 from autoeq.frequency_response import FrequencyResponse
-from impulse_response_estimator import ImpulseResponseEstimator
-from hrir import HRIR
-from room_correction import room_correction
-from utils import sync_axes, save_fig_as_png
-from constants import (
-    SPEAKER_NAMES,
-    SPEAKER_LIST_PATTERN,
-    HESUVI_TRACK_ORDER,
-)
+from matplotlib import pyplot as plt
+from matplotlib import ticker
+from scipy.signal import butter, lfilter
+from tabulate import tabulate
+
+from compensation import apply_x_curve as apply_x_curve_filter
+from compensation import diffuse_field_compensation
 from config import settings
-from compensation import diffuse_field_compensation, apply_x_curve as apply_x_curve_filter
-from constants import X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES
+from constants import (HESUVI_TRACK_ORDER, SPEAKER_LIST_PATTERN, SPEAKER_NAMES,
+                       X_CURVE_DEFAULT_TYPE, X_CURVE_TYPES)
+from hrir import HRIR
+from impulse_response_estimator import ImpulseResponseEstimator
+from room_correction import room_correction
+from utils import save_fig_as_png, sync_axes
 
 
 def main(
@@ -56,7 +57,11 @@ def main(
     interactive_delays=False,
     delay_file=None,
 ):
-    """"""
+    """Run the full earprint processing pipeline.
+
+    Captures measurements, performs headphone and room corrections and writes
+    output HRIR files along with optional plots.
+    """
     if dir_path is None or not os.path.isdir(dir_path):
         raise NotADirectoryError(f'Given dir path "{dir_path}"" is not a directory.')
 
@@ -82,13 +87,13 @@ def main(
     estimator = open_impulse_response_estimator(dir_path, file_path=test_signal)
 
     if delay_file:
-        from speaker_delay import load_delays
         from constants import SPEAKER_DELAYS
+        from speaker_delay import load_delays
 
         SPEAKER_DELAYS.update(load_delays(delay_file))
     elif interactive_delays:
-        from speaker_delay import interactive_speaker_delays
         from constants import SPEAKER_DELAYS
+        from speaker_delay import interactive_speaker_delays
 
         SPEAKER_DELAYS.update(interactive_speaker_delays())
 
@@ -168,9 +173,14 @@ def main(
         print("Equalizing...")
         for speaker, pair in hrir.irs.items():
             for side, ir in pair.items():
+                freqs = FrequencyResponse.generate_frequencies(
+                    f_step=1.01,
+                    f_min=10,
+                    f_max=estimator.fs / 2,
+                )
                 fr = FrequencyResponse(
                     name=f"{speaker}-{side} eq",
-                    frequency=FrequencyResponse.generate_frequencies(f_step=1.01, f_min=10, f_max=estimator.fs / 2),
+                    frequency=freqs,
                     raw=0,
                     error=0,
                 )
@@ -193,7 +203,7 @@ def main(
                 fr.error -= target.raw
 
                 # Smoothen and equalize
-                fr.smoothen_heavy_light()
+                fr.smoothen()
                 fr.equalize(max_gain=40, treble_f_lower=10000, treble_f_upper=estimator.fs / 2)
 
                 # Create FIR filter and equalize
@@ -234,14 +244,20 @@ def main(
     if fs is not None and fs != hrir.fs:
         print(f"Resampling BRIR to {fs} Hz")
         hrir.resample(fs)
-        hrir.normalize(peak_target=None if target_level is not None else -0.1, avg_target=target_level)
+        hrir.normalize(
+            peak_target=None if target_level is not None else -0.1,
+            avg_target=target_level,
+        )
 
     # Write multi-channel WAV file with standard track order
     print("Writing BRIRs...")
     hrir.write_wav(os.path.join(dir_path, "hrir.wav"))
 
     # Write multi-channel WAV file with HeSuVi track order
-    hrir.write_wav(os.path.join(dir_path, "hesuvi.wav"), track_order=HESUVI_TRACK_ORDER)
+    hrir.write_wav(
+        os.path.join(dir_path, "hesuvi.wav"),
+        track_order=HESUVI_TRACK_ORDER,
+    )
 
     print(readme)
 
@@ -257,7 +273,10 @@ def main(
                 del dsp_hrir.irs[sp]
 
         with contextlib.redirect_stdout(io.StringIO()):
-            dsp_hrir.normalize(peak_target=None if target_level is not None else -0.1, avg_target=target_level)
+            dsp_hrir.normalize(
+                peak_target=None if target_level is not None else -0.1,
+                avg_target=target_level,
+            )
 
         # Save channels in the order FL-L, FL-R, FR-L, FR-R
         jd_order = ["FL-left", "FL-right", "FR-left", "FR-right"]
@@ -333,7 +352,8 @@ def open_impulse_response_estimator(dir_path, file_path=None, fs=48000):
 
     Args:
         dir_path: Path to directory
-        file_path: Explicitly given (if any) path to impulse response estimator Pickle or test signal WAV file
+        file_path: Path to impulse response estimator Pickle or test signal WAV
+            file, if explicitly provided
         fs: Sample rate of file
 
     Returns:
@@ -377,7 +397,7 @@ def equalization(estimator, dir_path):
     eq_path = os.path.join(dir_path, "eq.csv")
     eq_fr = None
     if os.path.isfile(eq_path):
-        eq_fr = FrequencyResponse.read_from_csv(eq_path)
+        left_fr = FrequencyResponse.read_csv(left_path)
 
     # Left
     left_path = os.path.join(dir_path, "eq-left.csv")
@@ -393,7 +413,7 @@ def equalization(estimator, dir_path):
     right_path = os.path.join(dir_path, "eq-right.csv")
     right_fr = None
     if os.path.isfile(right_path):
-        right_fr = FrequencyResponse.read_from_csv(right_path)
+        right_fr = FrequencyResponse.read_csv(right_path)
     elif eq_fr is not None:
         right_fr = eq_fr
     if right_fr is not None and right_fr != left_fr:
@@ -405,15 +425,15 @@ def equalization(estimator, dir_path):
             # Both are the same, plot only one graph
             fig, ax = plt.subplots()
             fig.set_size_inches(12, 9)
-            left_fr.plot_graph(fig=fig, ax=ax, show=False)
+            left_fr.plot(fig=fig, ax=ax, show_fig=False)
         else:
             # Left and right are different, plot two graphs in the same figure
             fig, ax = plt.subplots(1, 2)
             fig.set_size_inches(22, 9)
             if left_fr is not None:
-                left_fr.plot_graph(fig=fig, ax=ax[0], show=False)
+                left_fr.plot(fig=fig, ax=ax[0], show_fig=False)
             if right_fr is not None:
-                right_fr.plot_graph(fig=fig, ax=ax[1], show=False)
+                right_fr.plot(fig=fig, ax=ax[1], show_fig=False)
         save_fig_as_png(os.path.join(dir_path, "plots", "eq.png"), fig)
 
     return left_fr, right_fr
@@ -455,11 +475,11 @@ def headphone_compensation(estimator, dir_path):
 
     # Left
     axl = fig.add_subplot(gs[0, 0])
-    left.plot_graph(fig=fig, ax=axl, show=False)
+    left.plot(fig=fig, ax=axl, show_fig=False)
     axl.set_title("Left")
     # Right
     axr = fig.add_subplot(gs[1, 0])
-    right.plot_graph(fig=fig, ax=axr, show=False)
+    right.plot(fig=fig, ax=axr, show_fig=False)
     axr.set_title("Right")
     # Sync axes
     sync_axes([axl, axr])
@@ -479,7 +499,10 @@ def headphone_compensation(estimator, dir_path):
     axl.set_ylim([np.min(stack) * 1.1, np.max(stack) * 1.1])
     axr.set_ylim([np.min(stack) * 1.1, np.max(stack) * 1.1])
     ax.set_title("Comparison")
-    ax.legend([f"Left raw {gain_l:+.1f} dB", f"Right raw {gain_r:+.1f} dB", "Difference"], fontsize=8)
+    ax.legend(
+        [f"Left raw {gain_l:+.1f} dB", f"Right raw {gain_r:+.1f} dB", "Difference"],
+        fontsize=8,
+    )
     ax.set_xlabel("Frequency (Hz)")
     ax.semilogx()
     ax.set_xlim([20, 20000])
@@ -501,7 +524,11 @@ def create_target(estimator, bass_boost_gain, bass_boost_fc, bass_boost_q, tilt)
     """Creates target frequency response with bass boost, tilt and high pass at 20 Hz"""
     target = FrequencyResponse(
         name="bass_and_tilt",
-        frequency=FrequencyResponse.generate_frequencies(f_min=10, f_max=estimator.fs / 2, f_step=1.01),
+        frequency=FrequencyResponse.generate_frequencies(
+            f_min=10,
+            f_max=estimator.fs / 2,
+            f_step=1.01,
+        ),
     )
     target.raw = target.create_target(
         bass_boost_gain=bass_boost_gain, bass_boost_fc=bass_boost_fc, bass_boost_q=bass_boost_q, tilt=tilt
@@ -589,7 +616,11 @@ def write_readme(file_path, hrir, fs):
                     f"{rt * 1000:.1f} ms" if rt is not None else "-",
                 ]
             )
-    table_str = tabulate(table, headers=["Speaker", "Side", "PNR", "ITD", "Length", rt_name], tablefmt="github")
+    table_str = tabulate(
+        table,
+        headers=["Speaker", "Side", "PNR", "ITD", "Length", rt_name],
+        tablefmt="github",
+    )
 
     # --- Calculating reflected sound energy (20–50 ms, 50–150 ms) per main ear channel ---
     def frame(ms: float) -> int:
@@ -632,17 +663,34 @@ def write_readme(file_path, hrir, fs):
 
 
 def create_cli():
+    """Create and parse command-line arguments for :func:`main`."""
+
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
-        "--c", type=float, default=1, help="Retain headroom in milliseconds before the impulse peak. Default is 1 ms."
+        "--c",
+        type=float,
+        default=1,
+        help=(
+            "Retain headroom in milliseconds before the impulse peak. "
+            "Default is 1 ms."
+        ),
     )
     arg_parser.add_argument(
-        "--jamesdsp", action="store_true", help="Generate an additional jamesdsp.wav containing only FL/FR IRs."
+        "--jamesdsp",
+        action="store_true",
+        help="Generate an additional jamesdsp.wav containing only FL/FR IRs.",
     )
     arg_parser.add_argument(
-        "--hangloose", action="store_true", help="Create Hangloose files per channel (left/right WAV per speaker)"
+        "--hangloose",
+        action="store_true",
+        help="Create Hangloose files per channel (left/right WAV per speaker)",
     )
-    arg_parser.add_argument("--dir_path", type=str, required=True, help="Path to directory for recordings and outputs.")
+    arg_parser.add_argument(
+        "--dir_path",
+        type=str,
+        required=True,
+        help="Path to directory for recordings and outputs.",
+    )
     arg_parser.add_argument(
         "--test_signal",
         type=str,
