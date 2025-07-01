@@ -10,6 +10,7 @@ private let repoRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent() // Sources
     .deletingLastPathComponent() // EarprintGUI package
     .deletingLastPathComponent() // repository root
+private let scriptsRoot = Bundle.module.resourceURL ?? repoRoot
 import AppKit
 
 struct SetupView: View {
@@ -91,12 +92,26 @@ struct SetupView: View {
             TextField("Target Level", text: $targetLevel)
             HStack {
                 Button("Layout Wizard") {
+                    guard measurementDirValid else {
+                        viewModel.log += "Please select a valid measurement directory before running Layout Wizard\n"
+                        return
+                    }
                     viewModel.layoutWizard(layout: selectedLayout, dir: measurementDir)
                 }
                 Button("Capture Wizard") {
+                    guard measurementDirValid else {
+                        viewModel.log += "Please select a valid measurement directory before running Capture Wizard\n"
+                        return
+                    }
                     viewModel.captureWizard(layout: selectedLayout, dir: measurementDir)
                 }
-                Button("Map Channels") { showMapping = true }
+                Button("Map Channels") {
+                    if fetchSpeakerLabels(layout: selectedLayout).isEmpty {
+                        viewModel.log += "No speaker labels found for layout \(selectedLayout).\n"
+                    } else {
+                        showMapping = true
+                    }
+                }
                 Button("Auto Map") { autoMapChannels() }
             }
             HStack {
@@ -165,9 +180,12 @@ struct SetupView: View {
 
     func scriptPath(_ name: String) -> String {
         let fm = FileManager.default
-        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-        let direct = cwd.appendingPathComponent(name).path
+        if let path = Bundle.module.path(forResource: name, ofType: nil) {
+            return path
+        }
+        let direct = scriptsRoot.appendingPathComponent(name).path
         if fm.fileExists(atPath: direct) { return direct }
+        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
         let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
         if fm.fileExists(atPath: parent) { return parent }
         let repo = repoRoot.appendingPathComponent(name).path
@@ -183,7 +201,7 @@ struct SetupView: View {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", recordingDevice]
-            proc.currentDirectoryURL = repoRoot
+            proc.currentDirectoryURL = scriptsRoot
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = pipe
@@ -205,7 +223,7 @@ struct SetupView: View {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", playbackDevice, "--loopback"]
-            proc.currentDirectoryURL = repoRoot
+            proc.currentDirectoryURL = scriptsRoot
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = pipe
@@ -265,7 +283,7 @@ struct SetupView: View {
 #endif
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.currentDirectoryURL = repoRoot
+            process.currentDirectoryURL = scriptsRoot
             process.arguments = [
                 "python3",
                 "-c",
@@ -313,7 +331,7 @@ struct SetupView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.currentDirectoryURL = repoRoot
+            process.currentDirectoryURL = scriptsRoot
             process.arguments = [
                 "python3",
                 "-c",
@@ -346,6 +364,10 @@ struct SetupView: View {
             let rDev = recordingDevices.first(where: { String($0.id) == recordingDevice })
         else { return }
         let spkCount = fetchSpeakerLabels(layout: selectedLayout).count
+        if spkCount == 0 {
+            viewModel.log += "Unable to auto map channels: no speaker labels for layout \(selectedLayout).\n"
+            return
+        }
         channelMapping["output_channels"] = Array(0..<min(pDev.maxOutput, spkCount))
         channelMapping["input_channels"] = Array(0..<min(rDev.maxInput, 2))
     }
@@ -367,7 +389,7 @@ struct SetupView: View {
     func fetchSpeakerLabels(layout: String) -> [String] {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.currentDirectoryURL = repoRoot
+        process.currentDirectoryURL = scriptsRoot
         process.arguments = [
             "python3",
             "-c",

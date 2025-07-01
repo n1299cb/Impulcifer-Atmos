@@ -8,6 +8,7 @@ private let repoRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent() // Sources
     .deletingLastPathComponent() // EarprintGUI package
     .deletingLastPathComponent() // repository root
+private let scriptsRoot = Bundle.module.resourceURL ?? repoRoot
 
 @MainActor
 final class ProcessingViewModel: ObservableObject {
@@ -22,9 +23,12 @@ final class ProcessingViewModel: ObservableObject {
 
     private func scriptPath(_ name: String) -> String {
         let fm = FileManager.default
-        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
-        let direct = cwd.appendingPathComponent(name).path
+        if let path = Bundle.module.path(forResource: name, ofType: nil) {
+            return path
+        }
+        let direct = scriptsRoot.appendingPathComponent(name).path
         if fm.fileExists(atPath: direct) { return direct }
+        let cwd = URL(fileURLWithPath: fm.currentDirectoryPath)
         let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
         if fm.fileExists(atPath: parent) { return parent }
         let repo = repoRoot.appendingPathComponent(name).path
@@ -41,7 +45,7 @@ final class ProcessingViewModel: ObservableObject {
             guard let self else { return }
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.currentDirectoryURL = repoRoot
+            process.currentDirectoryURL = scriptsRoot
             process.arguments = ["python3", script] + args
             let pipe = Pipe()
             process.standardOutput = pipe

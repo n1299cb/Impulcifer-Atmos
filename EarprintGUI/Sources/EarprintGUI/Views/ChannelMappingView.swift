@@ -25,6 +25,9 @@ struct ChannelMappingView: View {
     private var speakerSection: some View {
         Form {
             Section(header: Text("Speaker Channels")) {
+                if speakerLabels.isEmpty {
+                    Text("No speaker labels available").foregroundColor(.red)
+                }
                 ForEach(speakerLabels.indices, id: \.self) { idx in
                     Picker(speakerLabels[idx], selection: $speakerSelections[idx]) {
                         ForEach(0..<playbackChannels, id: \.self) { ch in

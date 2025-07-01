@@ -10,7 +10,10 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "EarprintGUI"
+            name: "EarprintGUI",
+            resources: [
+                .copy("Scripts")
+            ]
         )
     ]
 )
