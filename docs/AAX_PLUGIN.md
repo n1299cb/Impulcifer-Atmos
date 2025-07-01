@@ -10,7 +10,7 @@ This guide outlines how to wrap the real-time convolver in an AAX plugin so that
 
 ## 2. Plugin Skeleton
 
-The `cpp/aax` folder contains a minimal starting point. `TrueRoomPlugin.h` declares the plugin class and `TrueRoomPlugin.cpp` implements the wrapper.
+The `cpp/aax` folder contains the plugin sources. `TrueRoomPlugin.h` declares the plugin class and `TrueRoomPlugin.cpp` implements the wrapper. `HRIR.cpp` provides a small helper for loading multi-channel HRIR WAV files using libsndfile.
 
 ```cpp
 class TrueRoomPlugin : public AAX_CEffectParameters {
@@ -18,7 +18,7 @@ class TrueRoomPlugin : public AAX_CEffectParameters {
 };
 ```
 
-`ProcessAudio` copies the incoming block into `RealTimeConvolver` and writes the processed left/right channels back to Pro Tools.
+`ProcessAudio` copies the incoming block into `RealTimeConvolver` and writes the processed left/right channels back to Pro Tools. `Initialize()` is called by the host to update the sample rate and maximum block size used by the convolver.
 
 ## 3. Loading HRIR Files
 
@@ -34,8 +34,8 @@ Make sure the WAV uses the layout expected by `hrir.py` so the loader can map ch
 ## 4. Building the Plugin
 
 1. Add the `cpp` folder and AAX SDK headers to your compiler include path.
-2. Link against the AAX library and FFTW (used by `RealTimeConvolver`).
-3. Compile `TrueRoomPlugin.cpp` along with `RealTimeConvolver.cpp`.
+2. Link against the AAX library, FFTW and libsndfile (used by the HRIR loader).
+3. Compile `TrueRoomPlugin.cpp`, `RealTimeConvolver.cpp` and `HRIR.cpp`.
 4. Follow the AAX SDK documentation to generate the `.aaxplugin` bundle.
 
 ## 5. Usage
