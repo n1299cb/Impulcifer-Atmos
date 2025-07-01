@@ -1,5 +1,8 @@
 #if canImport(SwiftUI)
 import SwiftUI
+#if canImport(CoreAudio)
+import CoreAudio
+#endif
 
 private let repoRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent() // Views
@@ -237,6 +240,29 @@ struct SetupView: View {
 
     func loadDevices() {
         DispatchQueue.global(qos: .userInitiated).async {
+#if os(macOS)
+            let (caDevices, defaultInput, defaultOutput) = CoreAudioUtils.queryDevices()
+            if !caDevices.isEmpty {
+                let all = caDevices.enumerated().map { idx, d in
+                    AudioDevice(id: idx, name: d.name, maxOutput: d.maxOutput, maxInput: d.maxInput)
+                }
+                DispatchQueue.main.async {
+                    self.playbackDevices = all.filter { $0.maxOutput > 0 }
+                    self.recordingDevices = all.filter { $0.maxInput > 0 }
+                    if self.playbackDevice.isEmpty, let def = defaultOutput,
+                       let idx = caDevices.firstIndex(where: { $0.deviceID == def }),
+                       let dev = self.playbackDevices.first(where: { $0.id == idx }) {
+                        self.playbackDevice = String(dev.id)
+                    }
+                    if self.recordingDevice.isEmpty, let def = defaultInput,
+                       let idx = caDevices.firstIndex(where: { $0.deviceID == def }),
+                       let dev = self.recordingDevices.first(where: { $0.id == idx }) {
+                        self.recordingDevice = String(dev.id)
+                    }
+                }
+                return
+            }
+#endif
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.currentDirectoryURL = repoRoot
