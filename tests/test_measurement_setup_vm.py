@@ -34,6 +34,34 @@ def test_file_and_directory_checks(tmp_path):
     assert vm.directory_exists(str(existing_dir))
     assert not vm.directory_exists(str(missing_dir))
 
+
+def test_directory_helpers(tmp_path):
+    vm = MeasurementSetupViewModel()
+
+    # Prepare file and folder structure
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    (tmp_path / "a.wav").write_text("data")
+    (sub / "b.wav").write_text("data")
+
+    # missing_files should report absent files
+    missing = vm.missing_files(str(tmp_path), ["a.wav", "c.wav"])
+    assert str(tmp_path / "c.wav") in missing
+    assert str(tmp_path / "a.wav") not in missing
+
+    # missing_subdirs should report absent directories
+    missing = vm.missing_subdirs(str(tmp_path), ["sub", "missing"])
+    assert str(tmp_path / "missing") in missing
+    assert str(tmp_path / "sub") not in missing
+
+    # validate_structure checks nested layout
+    structure = {
+        "": ["a.wav"],
+        "sub": ["b.wav", "missing.wav"],
+    }
+    missing = vm.validate_structure(str(tmp_path), structure)
+    assert str(sub / "missing.wav") in missing
+
 from models import MeasurementSetup
 from constants import DEFAULT_TEST_SIGNAL, DEFAULT_MEASUREMENT_DIR
 

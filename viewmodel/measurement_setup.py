@@ -37,3 +37,41 @@ class MeasurementSetupViewModel:
     def directory_exists(self, path: str) -> bool:
         """Return True if the given directory path exists."""
         return os.path.isdir(path)
+
+    # --- New helper methods for complex directory validation ---
+
+    def missing_files(self, base_dir: str, files: List[str]) -> List[str]:
+        """Return a list of required files that are missing under ``base_dir``."""
+        missing: List[str] = []
+        for name in files:
+            path = os.path.join(base_dir, name)
+            if not os.path.isfile(path):
+                missing.append(path)
+        return missing
+
+    def missing_subdirs(self, base_dir: str, subdirs: List[str]) -> List[str]:
+        """Return a list of required subdirectories that are missing."""
+        missing: List[str] = []
+        for name in subdirs:
+            path = os.path.join(base_dir, name)
+            if not os.path.isdir(path):
+                missing.append(path)
+        return missing
+
+    def validate_structure(self, base_dir: str, structure: dict[str, List[str]]) -> List[str]:
+        """Validate nested directory structure.
+
+        ``structure`` maps relative directory paths to a list of required file
+        names. Missing directories or files are returned as a list of paths.
+        """
+        missing: List[str] = []
+        for subdir, files in structure.items():
+            dir_path = os.path.join(base_dir, subdir)
+            if not os.path.isdir(dir_path):
+                missing.append(dir_path)
+                continue
+            for name in files:
+                path = os.path.join(dir_path, name)
+                if not os.path.isfile(path):
+                    missing.append(path)
+        return missing
