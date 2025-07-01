@@ -11,7 +11,7 @@ version = "0.1.0"
 description = "Create binaural room impulse responses for headphone virtualization"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Jaakko Pasanen"},
     {name = "Blaring Sound LLC"},
@@ -36,3 +36,33 @@ generate-layout = "generate_layout:main"
 impulse-response-estimator = "impulse_response_estimator:main"
 level-meter = "level_meter:main"
 realtime-convolution = "realtime_convolution:main"
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["models", "viewmodel"]
+py-modules = [
+    "benchmark_realtime_convolver",
+    "capture_wizard",
+    "compensation",
+    "config",
+    "constants",
+    "earprint",
+    "generate_layout",
+    "gui",
+    "hrir",
+    "impulse_response",
+    "impulse_response_estimator",
+    "level_meter",
+    "preset_manager",
+    "realtime_convolution",
+    "recorder",
+    "room_correction",
+    "room_presets",
+    "speaker_delay",
+    "tracking",
+    "user_profiles",
+    "utils",
+]
