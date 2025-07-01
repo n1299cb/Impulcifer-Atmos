@@ -1,5 +1,12 @@
 #if canImport(SwiftUI)
 import SwiftUI
+
+private let repoRoot = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent() // Views
+    .deletingLastPathComponent() // EarprintGUI
+    .deletingLastPathComponent() // Sources
+    .deletingLastPathComponent() // EarprintGUI package
+    .deletingLastPathComponent() // repository root
 import AppKit
 
 struct SetupView: View {
@@ -160,6 +167,8 @@ struct SetupView: View {
         if fm.fileExists(atPath: direct) { return direct }
         let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
         if fm.fileExists(atPath: parent) { return parent }
+        let repo = repoRoot.appendingPathComponent(name).path
+        if fm.fileExists(atPath: repo) { return repo }
         return name
     }
 
@@ -171,6 +180,7 @@ struct SetupView: View {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", recordingDevice]
+            proc.currentDirectoryURL = repoRoot
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = pipe
@@ -192,6 +202,7 @@ struct SetupView: View {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", playbackDevice, "--loopback"]
+            proc.currentDirectoryURL = repoRoot
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = pipe
@@ -228,6 +239,7 @@ struct SetupView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.currentDirectoryURL = repoRoot
             process.arguments = [
                 "python3",
                 "-c",
@@ -275,6 +287,7 @@ struct SetupView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.currentDirectoryURL = repoRoot
             process.arguments = [
                 "python3",
                 "-c",
@@ -328,6 +341,7 @@ struct SetupView: View {
     func fetchSpeakerLabels(layout: String) -> [String] {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.currentDirectoryURL = repoRoot
         process.arguments = [
             "python3",
             "-c",

@@ -2,6 +2,13 @@ import Foundation
 #if canImport(SwiftUI)
 import SwiftUI
 
+private let repoRoot = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent() // ViewModels
+    .deletingLastPathComponent() // EarprintGUI module
+    .deletingLastPathComponent() // Sources
+    .deletingLastPathComponent() // EarprintGUI package
+    .deletingLastPathComponent() // repository root
+
 @MainActor
 final class ProcessingViewModel: ObservableObject {
     @Published var log: String = ""
@@ -20,6 +27,8 @@ final class ProcessingViewModel: ObservableObject {
         if fm.fileExists(atPath: direct) { return direct }
         let parent = cwd.deletingLastPathComponent().appendingPathComponent(name).path
         if fm.fileExists(atPath: parent) { return parent }
+        let repo = repoRoot.appendingPathComponent(name).path
+        if fm.fileExists(atPath: repo) { return repo }
         return name
     }
 
@@ -32,6 +41,7 @@ final class ProcessingViewModel: ObservableObject {
             guard let self else { return }
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.currentDirectoryURL = repoRoot
             process.arguments = ["python3", script] + args
             let pipe = Pipe()
             process.standardOutput = pipe
