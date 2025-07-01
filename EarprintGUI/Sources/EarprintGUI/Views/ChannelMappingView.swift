@@ -6,16 +6,18 @@ struct ChannelMappingView: View {
     var recordingChannels: Int
     var speakerLabels: [String]
     @Binding var channelMapping: [String: [Int]]
+    var onSave: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
 
     @State private var speakerSelections: [Int]
     @State private var micSelections: [Int]
 
-    init(playbackChannels: Int, recordingChannels: Int, speakerLabels: [String], channelMapping: Binding<[String: [Int]]>) {
+    init(playbackChannels: Int, recordingChannels: Int, speakerLabels: [String], channelMapping: Binding<[String: [Int]]>, onSave: @escaping () -> Void = {}) {
         self.playbackChannels = playbackChannels
         self.recordingChannels = recordingChannels
         self.speakerLabels = speakerLabels
         self._channelMapping = channelMapping
+        self.onSave = onSave
         _speakerSelections = State(initialValue: channelMapping.wrappedValue["output_channels"] ?? Array(0..<speakerLabels.count))
         _micSelections = State(initialValue: channelMapping.wrappedValue["input_channels"] ?? [0, 1])
     }
@@ -59,6 +61,7 @@ struct ChannelMappingView: View {
             Button("Save") {
                 channelMapping["output_channels"] = speakerSelections
                 channelMapping["input_channels"] = micSelections
+                onSave()
                 dismiss()
             }
         }
