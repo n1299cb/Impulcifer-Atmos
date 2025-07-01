@@ -161,9 +161,18 @@ struct SetupView: View {
 
         if !recordingDevice.isEmpty {
             let proc = Process()
-            proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", recordingDevice]
             proc.currentDirectoryURL = scriptsRoot
+            if let py = embeddedPythonURL {
+                proc.executableURL = py
+                proc.arguments = [scriptPath("level_meter.py"), "--device", recordingDevice]
+                proc.environment = [
+                    "PYTHONHOME": py.deletingLastPathComponent().deletingLastPathComponent().path,
+                    "PYTHONPATH": scriptsRoot.path
+                ]
+            } else {
+                proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", recordingDevice]
+            }
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = pipe
@@ -183,9 +192,18 @@ struct SetupView: View {
 
         if !playbackDevice.isEmpty {
             let proc = Process()
-            proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", playbackDevice, "--loopback"]
             proc.currentDirectoryURL = scriptsRoot
+            if let py = embeddedPythonURL {
+                proc.executableURL = py
+                proc.arguments = [scriptPath("level_meter.py"), "--device", playbackDevice, "--loopback"]
+                proc.environment = [
+                    "PYTHONHOME": py.deletingLastPathComponent().deletingLastPathComponent().path,
+                    "PYTHONPATH": scriptsRoot.path
+                ]
+            } else {
+                proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                proc.arguments = ["python3", scriptPath("level_meter.py"), "--device", playbackDevice, "--loopback"]
+            }
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = pipe
@@ -244,13 +262,25 @@ struct SetupView: View {
             }
 #endif
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.currentDirectoryURL = scriptsRoot
-            process.arguments = [
-                "python3",
-                "-c",
-                "import json, sounddevice as sd, sys; json.dump({'devices': sd.query_devices(), 'default': list(sd.default.device)}, sys.stdout)"
-            ]
+            if let py = embeddedPythonURL {
+                process.executableURL = py
+                process.arguments = [
+                    "-c",
+                    "import json, sounddevice as sd, sys; json.dump({'devices': sd.query_devices(), 'default': list(sd.default.device)}, sys.stdout)"
+                ]
+                process.environment = [
+                    "PYTHONHOME": py.deletingLastPathComponent().deletingLastPathComponent().path,
+                    "PYTHONPATH": scriptsRoot.path
+                ]
+            } else {
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                process.arguments = [
+                    "python3",
+                    "-c",
+                    "import json, sounddevice as sd, sys; json.dump({'devices': sd.query_devices(), 'default': list(sd.default.device)}, sys.stdout)"
+                ]
+            }
             let pipe = Pipe()
             process.standardOutput = pipe
             try? process.run()
@@ -292,13 +322,25 @@ struct SetupView: View {
     func loadLayouts() {
         DispatchQueue.global(qos: .userInitiated).async {
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.currentDirectoryURL = scriptsRoot
-            process.arguments = [
-                "python3",
-                "-c",
-                "import json,constants,sys; json.dump(sorted(constants.SPEAKER_LAYOUTS.keys()), sys.stdout)"
-            ]
+            if let py = embeddedPythonURL {
+                process.executableURL = py
+                process.arguments = [
+                    "-c",
+                    "import json,constants,sys; json.dump(sorted(constants.SPEAKER_LAYOUTS.keys()), sys.stdout)"
+                ]
+                process.environment = [
+                    "PYTHONHOME": py.deletingLastPathComponent().deletingLastPathComponent().path,
+                    "PYTHONPATH": scriptsRoot.path
+                ]
+            } else {
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                process.arguments = [
+                    "python3",
+                    "-c",
+                    "import json,constants,sys; json.dump(sorted(constants.SPEAKER_LAYOUTS.keys()), sys.stdout)"
+                ]
+            }
             let pipe = Pipe()
             process.standardOutput = pipe
             try? process.run()
@@ -350,13 +392,25 @@ struct SetupView: View {
 
     func fetchSpeakerLabels(layout: String) -> [String] {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.currentDirectoryURL = scriptsRoot
-        process.arguments = [
-            "python3",
-            "-c",
-            "import json,constants,sys; print(json.dumps([c for g in constants.SPEAKER_LAYOUTS.get('" + layout + "', []) for c in g]))"
-        ]
+        if let py = embeddedPythonURL {
+            process.executableURL = py
+            process.arguments = [
+                "-c",
+                "import json,constants,sys; print(json.dumps([c for g in constants.SPEAKER_LAYOUTS.get('" + layout + "', []) for c in g]))"
+            ]
+            process.environment = [
+                "PYTHONHOME": py.deletingLastPathComponent().deletingLastPathComponent().path,
+                "PYTHONPATH": scriptsRoot.path
+            ]
+        } else {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = [
+                "python3",
+                "-c",
+                "import json,constants,sys; print(json.dumps([c for g in constants.SPEAKER_LAYOUTS.get('" + layout + "', []) for c in g]))"
+            ]
+        }
         let pipe = Pipe()
         process.standardOutput = pipe
         try? process.run()

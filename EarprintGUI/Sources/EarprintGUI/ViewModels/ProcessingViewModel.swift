@@ -23,9 +23,18 @@ final class ProcessingViewModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.currentDirectoryURL = scriptsRoot
-            process.arguments = ["python3", script] + args
+            if let py = embeddedPythonURL {
+                process.executableURL = py
+                process.arguments = [script] + args
+                process.environment = [
+                    "PYTHONHOME": py.deletingLastPathComponent().deletingLastPathComponent().path,
+                    "PYTHONPATH": scriptsRoot.path
+                ]
+            } else {
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                process.arguments = ["python3", script] + args
+            }
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = pipe

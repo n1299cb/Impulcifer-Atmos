@@ -12,6 +12,13 @@ let repoRoot = URL(fileURLWithPath: #filePath)
 /// Directory containing bundled scripts.
 let scriptsRoot = Bundle.module.resourceURL ?? repoRoot
 
+/// URL to the bundled Python interpreter if present.
+let embeddedPythonURL: URL? = Bundle.module
+    .url(forResource: "Python", withExtension: "framework", subdirectory: "EmbeddedPython")?
+    .appendingPathComponent("Versions")
+    .appendingPathComponent("Current")
+    .appendingPathComponent("bin/python3")
+
 /// Returns the path to an included script, searching multiple locations.
 func scriptPath(_ name: String, scriptsRoot: URL = scriptsRoot, repoRoot: URL = repoRoot) -> String {
     let fm = FileManager.default
@@ -30,6 +37,7 @@ func scriptPath(_ name: String, scriptsRoot: URL = scriptsRoot, repoRoot: URL = 
 
 #if canImport(AppKit)
 /// Present an NSOpenPanel configured for files or directories.
+@MainActor
 func openPanel(directory: Bool, startPath: String) -> String? {
     let panel = NSOpenPanel()
     panel.canChooseFiles = !directory
