@@ -120,3 +120,4 @@ research/*/**/*.png
 # Local utility files
 atmos_brir for EQAPO.txt
 webcam.html
+EarprintGUI/.swiftpm/xcode/xcshareddata/xcschemes/EarprintGUI.xcscheme
