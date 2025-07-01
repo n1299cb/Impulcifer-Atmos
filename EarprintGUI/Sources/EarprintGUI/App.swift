@@ -97,7 +97,11 @@ struct EarprintApp: App {
                                  diffuseField: $diffuseField,
                                  xCurveAction: $xCurveAction,
                                  xCurveType: $xCurveType,
-                                 xCurveInCapture: $xCurveInCapture)
+                                 xCurveInCapture: $xCurveInCapture,
+                                 measurementDir: measurementDir,
+                                 testSignal: testSignal,
+                                 playbackDevice: playbackDevice,
+                                 recordingDevice: recordingDevice)
                     .tabItem { Text("Compensation") }
                     .tag(5)
                 PresetView(viewModel: processingVM,

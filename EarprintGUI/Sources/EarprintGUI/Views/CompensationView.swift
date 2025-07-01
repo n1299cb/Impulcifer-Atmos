@@ -13,6 +13,10 @@ struct CompensationView: View {
     @Binding var xCurveAction: String
     @Binding var xCurveType: String
     @Binding var xCurveInCapture: Bool
+    var measurementDir: String = ""
+    var testSignal: String = ""
+    var playbackDevice: String = ""
+    var recordingDevice: String = ""
 
     private let compensationTypes = ["diffuse", "free", "custom"]
     private let xCurveActions = ["None", "Apply X-Curve", "Remove X-Curve"]
@@ -51,10 +55,10 @@ struct CompensationView: View {
             Toggle("Capture Includes X-Curve", isOn: $xCurveInCapture)
             Button("Record Headphone EQ") {
                 viewModel.recordHeadphoneEQ(
-                    measurementDir: FileManager.default.currentDirectoryPath,
-                    testSignal: "",
-                    playbackDevice: "",
-                    recordingDevice: ""
+                    measurementDir: measurementDir,
+                    testSignal: testSignal,
+                    playbackDevice: playbackDevice,
+                    recordingDevice: recordingDevice
                 )
             }
         }
