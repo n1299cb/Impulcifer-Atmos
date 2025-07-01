@@ -1253,9 +1253,20 @@ class EarprintGUI(QMainWindow):
             return
         name = item.text()
         data = preset_manager.load_presets().get(name)
-        if not data:
+        if data is None:
             return
-        self.apply_preset(data)
+        if name == "None":
+            QMessageBox.information(self, "Preset Loaded", "Reverting to default processing settings")
+            self.apply_preset({})
+            return
+        reply = QMessageBox.question(
+            self,
+            "Load Preset",
+            f"Apply preset '{name}' with these settings?\n{json.dumps(data, indent=2)}",
+            QMessageBox.Ok | QMessageBox.Cancel,
+        )
+        if reply == QMessageBox.Ok:
+            self.apply_preset(data)
 
     def delete_selected_preset(self):
         item = self.preset_list.currentItem()
@@ -1293,8 +1304,20 @@ class EarprintGUI(QMainWindow):
             return
         name = item.text()
         data = user_profiles.load_profiles().get(name)
-        if not data:
+        if data is None:
             return
+        if name == "None":
+            QMessageBox.information(self, "Profile Loaded", "Reverting to default profile")
+            data = {}
+        else:
+            reply = QMessageBox.question(
+                self,
+                "Load Profile",
+                f"Apply profile '{name}' with these settings?\n{json.dumps(data, indent=2)}",
+                QMessageBox.Ok | QMessageBox.Cancel,
+            )
+            if reply != QMessageBox.Ok:
+                return
         self.profile_brir_var.setText(data.get("brir_dir", ""))
         self.profile_cal_var.setText(data.get("tracking_calibration", ""))
         self.profile_routing_var.setText(",".join(str(x) for x in data.get("output_routing", [])))
@@ -1311,6 +1334,7 @@ class EarprintGUI(QMainWindow):
 
     def gather_room_preset_data(self):
         from models import RoomPreset
+
         return RoomPreset(
             brir_dir=self.profile_brir_var.text(),
             measurement_dir=self.measurement_dir_var.text(),
@@ -1336,8 +1360,20 @@ class EarprintGUI(QMainWindow):
             return
         name = item.text()
         data = room_presets.load_room_presets().get(name)
-        if not data:
+        if data is None:
             return
+        if name == "None":
+            QMessageBox.information(self, "Room Loaded", "Reverting to default room")
+            data = {}
+        else:
+            reply = QMessageBox.question(
+                self,
+                "Load Room",
+                f"Apply room '{name}' with these settings?\n{json.dumps(data, indent=2)}",
+                QMessageBox.Ok | QMessageBox.Cancel,
+            )
+            if reply != QMessageBox.Ok:
+                return
         self.profile_brir_var.setText(data.get("brir_dir", ""))
         self.measurement_dir_var.setText(data.get("measurement_dir", ""))
         self.room_notes_var.setPlainText(data.get("notes", ""))
@@ -1350,9 +1386,7 @@ class EarprintGUI(QMainWindow):
         self.refresh_room_presets()
 
     def import_room_preset(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Import Room Preset", "", "JSON Files (*.json);;All Files (*)"
-        )
+        file_path, _ = QFileDialog.getOpenFileName(self, "Import Room Preset", "", "JSON Files (*.json);;All Files (*)")
         if file_path:
             try:
                 room_presets.import_room_preset(file_path)
@@ -1408,7 +1442,6 @@ class EarprintGUI(QMainWindow):
             self.layout_var.insertItem(self.layout_var.count() - 1, layout_name)
         self.layout_var.setCurrentText(layout_name)
         self.selected_layout_name = layout_name
-
 
     def create_profile_tab(self):
         tab = QWidget()
@@ -1809,13 +1842,12 @@ class EarprintGUI(QMainWindow):
             issues.append("audio device access")
 
         if issues:
-            self.startup_status_label.setText(
-                "Startup Check: problem with " + ", ".join(issues)
-            )
+            self.startup_status_label.setText("Startup Check: problem with " + ", ".join(issues))
             self.startup_status_label.setStyleSheet("color: red;")
         else:
             self.startup_status_label.setText("Startup Check: OK")
             self.startup_status_label.setStyleSheet("color: green;")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
