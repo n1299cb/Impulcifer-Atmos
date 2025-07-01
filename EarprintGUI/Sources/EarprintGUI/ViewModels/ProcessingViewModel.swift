@@ -98,7 +98,19 @@ final class ProcessingViewModel: ObservableObject {
              diffuseField: Bool,
              xCurveAction: String,
              xCurveType: String?,
-             xCurveInCapture: Bool) {
+             xCurveInCapture: Bool,
+             decayTime: String,
+             decayEnabled: Bool,
+             specificLimit: String,
+             specificLimitEnabled: Bool,
+             genericLimit: String,
+             genericLimitEnabled: Bool,
+             frCombinationMethod: String,
+             frCombinationEnabled: Bool,
+             roomCorrection: Bool,
+             roomTarget: String,
+             micCalibration: String,
+             interactiveDelays: Bool) {
         var args = ["--dir_path", measurementDir, "--test_signal", testSignal]
         if let balance = channelBalance, !balance.isEmpty {
             args += ["--channel_balance", balance]
@@ -106,13 +118,22 @@ final class ProcessingViewModel: ObservableObject {
         if let target = targetLevel, !target.isEmpty {
             args += ["--target_level", target]
         }
+        if decayEnabled, !decayTime.isEmpty { args += ["--decay", decayTime] }
         if let p = playbackDevice { args += ["--playback_device", p] }
         if let r = recordingDevice { args += ["--recording_device", r] }
         if let outs = outputChannels, !outs.isEmpty {
-            args += ["--output_channels", outs.map(String.init).joined(separator: ",")]
+            args += ["--output_channels", outs.map(String.init).joined(separator: ",")] 
         }
         if let ins = inputChannels, !ins.isEmpty {
-            args += ["--input_channels", ins.map(String.init).joined(separator: ",")]
+            args += ["--input_channels", ins.map(String.init).joined(separator: ",")] 
+        }
+        if roomCorrection {
+            args.append("--room_target")
+            args.append(roomTarget)
+            if !micCalibration.isEmpty { args += ["--room_mic_calibration", micCalibration] }
+            if specificLimitEnabled, !specificLimit.isEmpty { args += ["--specific_limit", specificLimit] }
+            if genericLimitEnabled, !genericLimit.isEmpty { args += ["--generic_limit", genericLimit] }
+            if frCombinationEnabled { args += ["--fr_combination_method", frCombinationMethod] }
         }
         if enableCompensation {
             args.append("--compensation")
@@ -130,6 +151,15 @@ final class ProcessingViewModel: ObservableObject {
             args += ["--x_curve_type", ct]
         }
         if xCurveInCapture { args.append("--x_curve_in_capture") }
+        if interactiveDelays {
+            args.append("--interactive_delays")
+        } else {
+            let posFile = URL(fileURLWithPath: measurementDir).appendingPathComponent("speaker_positions.json")
+            if FileManager.default.fileExists(atPath: posFile.path) {
+                let delayFile = URL(fileURLWithPath: measurementDir).appendingPathComponent("speaker_delays.json")
+                args += ["--delay-file", delayFile.path]
+            }
+        }
         startPython(script: scriptPath("earprint.py"), args: args)
     }
 
@@ -218,7 +248,7 @@ final class ProcessingViewModel {
     var remainingTime: Double? = nil
     var autoLog: Bool = false
     var logFile: String = ""
-    func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?, playbackDevice: String?, recordingDevice: String?, outputChannels: [Int]?, inputChannels: [Int]?) {}
+    func run(measurementDir: String, testSignal: String, channelBalance: String?, targetLevel: String?, playbackDevice: String?, recordingDevice: String?, outputChannels: [Int]?, inputChannels: [Int]?, enableCompensation: Bool, headphoneEqEnabled: Bool, headphoneFile: String?, compensationType: String?, diffuseField: Bool, xCurveAction: String, xCurveType: String?, xCurveInCapture: Bool, decayTime: String, decayEnabled: Bool, specificLimit: String, specificLimitEnabled: Bool, genericLimit: String, genericLimitEnabled: Bool, frCombinationMethod: String, frCombinationEnabled: Bool, roomCorrection: Bool, roomTarget: String, micCalibration: String, interactiveDelays: Bool) {}
     func layoutWizard(layout: String, dir: String) {}
     func captureWizard(layout: String, dir: String) {}
     func record(measurementDir: String, testSignal: String, playbackDevice: String, recordingDevice: String, outputFile: String?) {}

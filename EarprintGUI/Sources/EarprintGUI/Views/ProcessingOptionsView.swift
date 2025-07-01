@@ -8,6 +8,18 @@ struct ProcessingOptionsView: View {
     @Binding var channelBalance: String
     @Binding var targetLevel: String
     @Binding var testSignal: String
+    @Binding var decayTime: String
+    @Binding var decayEnabled: Bool
+    @Binding var specificLimit: String
+    @Binding var specificLimitEnabled: Bool
+    @Binding var genericLimit: String
+    @Binding var genericLimitEnabled: Bool
+    @Binding var frCombinationMethod: String
+    @Binding var frCombinationEnabled: Bool
+    @Binding var roomCorrection: Bool
+    @Binding var roomTarget: String
+    @Binding var micCalibration: String
+    @Binding var interactiveDelays: Bool
 
 #if canImport(AVFoundation)
     @StateObject private var previewer = AudioPreviewer()
@@ -26,6 +38,41 @@ struct ProcessingOptionsView: View {
                 Text("Trend").tag("trend")
             }
             TextField("Target Level", text: $targetLevel)
+            Toggle("Decay Time", isOn: $decayEnabled)
+            if decayEnabled {
+                TextField("Seconds", text: $decayTime)
+            }
+            Toggle("Interactive Delays", isOn: $interactiveDelays)
+            Toggle("Enable Room Correction", isOn: $roomCorrection)
+            if roomCorrection {
+                HStack {
+                    TextField("Room Target File", text: $roomTarget)
+                    Button("Browse") {
+                        if let path = openPanel(startPath: roomTarget) { roomTarget = path }
+                    }
+                }
+                HStack {
+                    TextField("Mic Calibration File", text: $micCalibration)
+                    Button("Browse") {
+                        if let path = openPanel(startPath: micCalibration) { micCalibration = path }
+                    }
+                }
+                Toggle("Specific Limit", isOn: $specificLimitEnabled)
+                if specificLimitEnabled {
+                    TextField("Hz", text: $specificLimit)
+                }
+                Toggle("Generic Limit", isOn: $genericLimitEnabled)
+                if genericLimitEnabled {
+                    TextField("Hz", text: $genericLimit)
+                }
+                Toggle("FR Combination", isOn: $frCombinationEnabled)
+                if frCombinationEnabled {
+                    Picker("Method", selection: $frCombinationMethod) {
+                        Text("average").tag("average")
+                        Text("conservative").tag("conservative")
+                    }
+                }
+            }
 #if canImport(AVFoundation)
             Button(isPreviewing ? "Stop Preview" : "Start Preview") {
                 if isPreviewing {
@@ -39,6 +86,20 @@ struct ProcessingOptionsView: View {
 #endif
         }
         .padding()
+    }
+
+    func openPanel(startPath: String) -> String? {
+        #if canImport(AppKit)
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        if !startPath.isEmpty {
+            panel.directoryURL = URL(fileURLWithPath: startPath).deletingLastPathComponent()
+        }
+        return panel.runModal() == .OK ? panel.url?.path : nil
+        #else
+        return nil
+        #endif
     }
 }
 #endif

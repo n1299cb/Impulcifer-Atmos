@@ -31,6 +31,18 @@ struct EarprintApp: App {
     @State private var xCurveAction: String = "None"
     @State private var xCurveType: String = "minus3db_oct"
     @State private var xCurveInCapture: Bool = false
+    @State private var decayTime: String = ""
+    @State private var decayEnabled: Bool = false
+    @State private var specificLimit: String = ""
+    @State private var specificLimitEnabled: Bool = false
+    @State private var genericLimit: String = ""
+    @State private var genericLimitEnabled: Bool = false
+    @State private var frCombinationMethod: String = "average"
+    @State private var frCombinationEnabled: Bool = false
+    @State private var roomCorrection: Bool = false
+    @State private var roomTarget: String = ""
+    @State private var micCalibration: String = ""
+    @State private var interactiveDelays: Bool = false
     @StateObject private var processingVM = ProcessingViewModel()
     @State private var selectedTab: Int = 0
 
@@ -66,7 +78,19 @@ struct EarprintApp: App {
                               diffuseField: $diffuseField,
                               xCurveAction: $xCurveAction,
                               xCurveType: $xCurveType,
-                              xCurveInCapture: $xCurveInCapture)
+                              xCurveInCapture: $xCurveInCapture,
+                              decayTime: decayTime,
+                              decayEnabled: decayEnabled,
+                              specificLimit: specificLimit,
+                              specificLimitEnabled: specificLimitEnabled,
+                              genericLimit: genericLimit,
+                              genericLimitEnabled: genericLimitEnabled,
+                              frCombinationMethod: frCombinationMethod,
+                              frCombinationEnabled: frCombinationEnabled,
+                              roomCorrection: roomCorrection,
+                              roomTarget: roomTarget,
+                              micCalibration: micCalibration,
+                              interactiveDelays: interactiveDelays)
                     .tabItem { Text("Execution") }
                     .tag(1)
                 HeadphoneEQView(viewModel: processingVM,
@@ -85,7 +109,19 @@ struct EarprintApp: App {
                     .tag(3)
                 ProcessingOptionsView(channelBalance: $channelBalance,
                                      targetLevel: $targetLevel,
-                                     testSignal: $testSignal)
+                                     testSignal: $testSignal,
+                                     decayTime: $decayTime,
+                                     decayEnabled: $decayEnabled,
+                                     specificLimit: $specificLimit,
+                                     specificLimitEnabled: $specificLimitEnabled,
+                                     genericLimit: $genericLimit,
+                                     genericLimitEnabled: $genericLimitEnabled,
+                                     frCombinationMethod: $frCombinationMethod,
+                                     frCombinationEnabled: $frCombinationEnabled,
+                                     roomCorrection: $roomCorrection,
+                                     roomTarget: $roomTarget,
+                                     micCalibration: $micCalibration,
+                                     interactiveDelays: $interactiveDelays)
                     .tabItem { Text("Processing Options") }
                     .tag(4)
                 CompensationView(viewModel: processingVM,

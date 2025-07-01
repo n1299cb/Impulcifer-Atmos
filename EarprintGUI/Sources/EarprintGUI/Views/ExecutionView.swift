@@ -22,6 +22,18 @@ struct ExecutionView: View {
     @Binding var xCurveAction: String
     @Binding var xCurveType: String
     @Binding var xCurveInCapture: Bool
+    var decayTime: String
+    var decayEnabled: Bool
+    var specificLimit: String
+    var specificLimitEnabled: Bool
+    var genericLimit: String
+    var genericLimitEnabled: Bool
+    var frCombinationMethod: String
+    var frCombinationEnabled: Bool
+    var roomCorrection: Bool
+    var roomTarget: String
+    var micCalibration: String
+    var interactiveDelays: Bool
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -43,7 +55,19 @@ struct ExecutionView: View {
                         diffuseField: diffuseField,
                         xCurveAction: xCurveAction,
                         xCurveType: xCurveType,
-                        xCurveInCapture: xCurveInCapture
+                        xCurveInCapture: xCurveInCapture,
+                        decayTime: decayTime,
+                        decayEnabled: decayEnabled,
+                        specificLimit: specificLimit,
+                        specificLimitEnabled: specificLimitEnabled,
+                        genericLimit: genericLimit,
+                        genericLimitEnabled: genericLimitEnabled,
+                        frCombinationMethod: frCombinationMethod,
+                        frCombinationEnabled: frCombinationEnabled,
+                        roomCorrection: roomCorrection,
+                        roomTarget: roomTarget,
+                        micCalibration: micCalibration,
+                        interactiveDelays: interactiveDelays
                     )
                 }) {
                     Text(viewModel.isRunning ? "Running..." : "Run Processing")
