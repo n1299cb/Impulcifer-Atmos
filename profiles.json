@@ -3,12 +3,16 @@
     "brir_dir": "data/demo",
     "tracking_calibration": "data/tracking_calibration.json",
     "output_routing": [0, 1],
-    "latency": 128
+    "latency": 128,
+    "headphone_file": "",
+    "playback_device": ""
   },
   "Low Latency": {
     "brir_dir": "data/demo",
     "tracking_calibration": "",
     "output_routing": [0, 1],
-    "latency": 64
+    "latency": 64,
+    "headphone_file": "",
+    "playback_device": ""
   }
 }

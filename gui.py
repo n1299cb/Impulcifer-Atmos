@@ -1281,6 +1281,8 @@ class EarprintGUI(QMainWindow):
             tracking_calibration=self.profile_cal_var.text(),
             output_routing=routing,
             latency=int(self.profile_latency_var.text() or 0),
+            headphone_file=self.profile_headphone_var.text(),
+            playback_device=self.profile_playback_device_var.text(),
         )
         user_profiles.save_profile(name, profile)
         self.refresh_profiles()
@@ -1297,6 +1299,8 @@ class EarprintGUI(QMainWindow):
         self.profile_cal_var.setText(data.get("tracking_calibration", ""))
         self.profile_routing_var.setText(",".join(str(x) for x in data.get("output_routing", [])))
         self.profile_latency_var.setText(str(data.get("latency", 0)))
+        self.profile_headphone_var.setText(data.get("headphone_file", ""))
+        self.profile_playback_device_var.setText(data.get("playback_device", ""))
 
     def delete_selected_profile(self):
         item = self.profile_list.currentItem()
@@ -1419,11 +1423,15 @@ class EarprintGUI(QMainWindow):
         self.profile_cal_var = QLineEdit()
         self.profile_routing_var = QLineEdit()
         self.profile_latency_var = QLineEdit()
+        self.profile_headphone_var = QLineEdit()
+        self.profile_playback_device_var = QLineEdit()
 
         layout.addLayout(self.labeled_row("BRIR Dir:", self.profile_brir_var))
         layout.addLayout(self.labeled_row("Tracking Cal:", self.profile_cal_var))
         layout.addLayout(self.labeled_row("Output Routing:", self.profile_routing_var))
         layout.addLayout(self.labeled_row("Latency:", self.profile_latency_var))
+        layout.addLayout(self.labeled_row("Headphone EQ:", self.profile_headphone_var))
+        layout.addLayout(self.labeled_row("Playback Device:", self.profile_playback_device_var))
 
         btn_row = QHBoxLayout()
         load_btn = QPushButton("Load")

@@ -93,7 +93,9 @@ struct EarprintApp: App {
                     .tabItem { Text("Presets") }
                     .tag(6)
                 ProfileView(viewModel: processingVM,
-                            measurementDir: measurementDir)
+                            measurementDir: $measurementDir,
+                            headphoneFile: $headphoneFile,
+                            playbackDevice: $playbackDevice)
                     .tabItem { Text("Profiles") }
                     .tag(7)
                 RoomPresetView(viewModel: processingVM,

@@ -4,7 +4,9 @@ import AppKit
 
 struct ProfileView: View {
     @ObservedObject var viewModel: ProcessingViewModel
-    var measurementDir: String
+    @Binding var measurementDir: String
+    @Binding var headphoneFile: String
+    @Binding var playbackDevice: String
     @State private var profiles: [String] = []
     @State private var selected: String?
 
@@ -31,16 +33,31 @@ struct ProfileView: View {
     }
 
     func loadProfile(name: String) {
+        let dir = URL(fileURLWithPath: measurementDir).appendingPathComponent("profiles")
+        let file = dir.appendingPathComponent(name)
+        guard
+            let data = try? Data(contentsOf: file),
+            let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return }
+        if let brir = dict["brir_dir"] as? String { measurementDir = brir }
+        if let eq = dict["headphone_file"] as? String { headphoneFile = eq }
+        if let device = dict["playback_device"] as? String { playbackDevice = device }
         viewModel.log += "Loaded profile \(name)\n"
     }
 
     func saveProfile(name: String) {
         let dir = URL(fileURLWithPath: measurementDir).appendingPathComponent("profiles")
-        let src = dir.appendingPathComponent(name)
-        if let url = savePanel(start: dir.path, name: name) {
-            try? FileManager.default.copyItem(at: src, to: url)
-            loadProfiles()
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appendingPathComponent(name)
+        var dict: [String: Any] = [
+            "brir_dir": measurementDir,
+            "headphone_file": headphoneFile,
+            "playback_device": playbackDevice,
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]) {
+            try? data.write(to: file)
         }
+        loadProfiles()
     }
 
     func deleteProfile(name: String) {
