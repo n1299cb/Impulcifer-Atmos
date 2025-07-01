@@ -49,7 +49,7 @@ struct ProfileView: View {
         let dir = URL(fileURLWithPath: measurementDir).appendingPathComponent("profiles")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let file = dir.appendingPathComponent(name)
-        var dict: [String: Any] = [
+        let dict: [String: Any] = [
             "brir_dir": measurementDir,
             "headphone_file": headphoneFile,
             "playback_device": playbackDevice,
