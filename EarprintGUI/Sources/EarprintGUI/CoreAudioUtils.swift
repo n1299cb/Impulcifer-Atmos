@@ -14,7 +14,7 @@ enum CoreAudioUtils {
         var address = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyStreamConfiguration,
             mScope: scope,
-            mElement: kAudioObjectPropertyElementMaster
+            mElement: kAudioObjectPropertyElementMain
         )
         var dataSize: UInt32 = 0
         guard AudioObjectGetPropertyDataSize(deviceID, &address, 0, nil, &dataSize) == noErr else { return 0 }
@@ -33,7 +33,7 @@ enum CoreAudioUtils {
         var addr = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDevices,
             mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMaster
+            mElement: kAudioObjectPropertyElementMain
         )
         var dataSize: UInt32 = 0
         guard AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &dataSize) == noErr else {
@@ -48,11 +48,14 @@ enum CoreAudioUtils {
             var nameAddr = AudioObjectPropertyAddress(
                 mSelector: kAudioObjectPropertyName,
                 mScope: kAudioObjectPropertyScopeGlobal,
-                mElement: kAudioObjectPropertyElementMaster
+                mElement: kAudioObjectPropertyElementMain
             )
             var cfName: CFString = "" as CFString
             var size = UInt32(MemoryLayout<CFString>.size)
-            if AudioObjectGetPropertyData(id, &nameAddr, 0, nil, &size, &cfName) != noErr {
+            let status = withUnsafeMutablePointer(to: &cfName) { ptr -> OSStatus in
+                AudioObjectGetPropertyData(id, &nameAddr, 0, nil, &size, ptr)
+            }
+            if status != noErr {
                 continue
             }
             let inputCh = channelCount(deviceID: id, scope: kAudioDevicePropertyScopeInput)
@@ -66,7 +69,7 @@ enum CoreAudioUtils {
         var defAddr = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDefaultInputDevice,
             mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMaster
+            mElement: kAudioObjectPropertyElementMain
         )
         if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &defAddr, 0, nil, &s, &defaultInput) != noErr {
             defaultInput = 0
