@@ -9,14 +9,15 @@ install the required dependencies.
 
 ## Embedding Python
 
-1. Download the official **Python 3.9** macOS installer from
-   [python.org](https://www.python.org/downloads/macos/).  The
-   "macOS 64‑bit universal2 installer" installs
-   `Python.framework` under `/Library/Frameworks`.
+1. Download a **Python 3.8–3.11** macOS installer from
+   [python.org](https://www.python.org/downloads/macos/).  Versions
+   3.8 through 3.11 are supported. The "macOS 64‑bit universal2 installer"
+   installs `Python.framework` under `/Library/Frameworks`.
 2. Copy the entire `Python.framework` directory into
    `EarprintGUI/Resources/EmbeddedPython` so the interpreter resides at
-   `EarprintGUI/Resources/EmbeddedPython/Python.framework/Versions/3.9/bin/python3`.
-   A symlink `Versions/3.9 → 3.9.x` is expected.
+   `EarprintGUI/Resources/EmbeddedPython/Python.framework/Versions/<VERSION>/bin/python3`.
+   Create a symlink `Versions/<VERSION> → <VERSION>.x` (replace `<VERSION>` with
+   your installed minor version such as `3.9` or `3.11`).
 
 ```
 cp -R /Library/Frameworks/Python.framework \
@@ -26,10 +27,10 @@ cp -R /Library/Frameworks/Python.framework \
 ## Installing Dependencies
 
 Install the Python packages directly into the embedded interpreter. From
-within the `Versions/3.9` directory run:
+within your `Versions/<VERSION>` directory run:
 
 ```
-cd EarprintGUI/Resources/EmbeddedPython/Python.framework/Versions/3.9
+cd EarprintGUI/Resources/EmbeddedPython/Python.framework/Versions/<VERSION>
 ./bin/python3 -m ensurepip --upgrade
 ./bin/pip3 install -r ../../../Scripts/requirements.txt
 ```

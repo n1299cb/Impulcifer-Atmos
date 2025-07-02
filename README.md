@@ -64,7 +64,7 @@ through installing everything that is needed to run Earprint on you own PC.
 
 - Download and install Git: https://git-scm.com/downloads. When installing Git on Windows, use Windows SSL verification
 instead of Open SSL or you might run into problems when installing project dependencies.
-- Download and install 64-bit [Python 3.8](https://www.python.org/getit/). Make sure to check *Add Python 3.8 to PATH*.
+ - Download and install 64-bit [Python 3.8–3.11](https://www.python.org/getit/). Make sure to check *Add Python to PATH*.
 - You may need to install libsndfile if you're having problems with `soundfile` when installing `requirements.txt`.
 - Install the PortAudio library if `sounddevice` reports "PortAudio library not found" (for example `brew install portaudio` on macOS).
 - On Linux you may need to install Python dev packages
